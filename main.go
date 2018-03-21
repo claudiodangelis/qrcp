@@ -42,6 +42,8 @@ func main() {
 	}
 
 	// Generate the QR code
+	fmt.Println("Scan the following QR to start the download.")
+	fmt.Println("Make sure that your smartphone is connected to the same WiFi network as this computer.")
 	qrterminal.GenerateHalfBlock(fmt.Sprintf("http://%s:%d", address, port),
 		qrterminal.L, os.Stdout)
 
@@ -62,7 +64,6 @@ func main() {
 		}
 		os.Exit(0)
 	})
-
 	// Start a new server bound to the chosen address on a random port
 	log.Fatalln(http.ListenAndServe(fmt.Sprintf("%s:%d", address, port), nil))
 
