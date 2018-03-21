@@ -1,8 +1,8 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -31,7 +31,7 @@ func (c *Content) Delete() error {
 // zipContent creates a new zip archive that stores the passed paths.
 // It returns the path to the newly created zip file, and an error
 func zipContent(args []string) (string, error) {
-	log.Println("Adding the following items to a zip file:",
+	fmt.Println("Adding the following items to a zip file:",
 		strings.Join(args, " "))
 	zip := new(archivex.ZipFile)
 	tmpfile, err := ioutil.TempFile("", "qr-filetransfer")
