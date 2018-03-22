@@ -78,7 +78,7 @@ func getAddress(config *Config) (string, error) {
 	}
 	reader := bufio.NewReader(os.Stdin)
 	text, _ := reader.ReadString('\n')
-	index, err := strconv.Atoi(strings.Trim(text, "\n"))
+	index, err := strconv.Atoi(strings.Trim(text, "\n\r"))
 	if err != nil {
 		return "", err
 	}
