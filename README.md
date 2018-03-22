@@ -2,9 +2,7 @@
 
 Transfer files over wifi from your computer to your mobile device by scanning a QR code without leaving the terminal.
 
-`<!-- TODO: insert GIF here -->`
-
-![screenshot](screenshot.jpg)
+![screenshot](demo.gif)
 
 ## Install
 
@@ -25,6 +23,8 @@ http://{address}:{port}
 Most QR apps can detect URLs in decoded text and act accordingly (i.e.: open the URL with the default browser), so when QR the code is scanned the content starts being downloaded by the mobile browser.
 
 ## Usage
+![Screenshot](screenshot.jpg)
+
 
 **Note**: Both computer and device must be on the same wifi network.
 
