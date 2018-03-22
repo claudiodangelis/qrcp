@@ -69,7 +69,7 @@ qr-filetransfer /path/to/directory
 
 - `-debug` increases verbosity
 - `-force` ignores saved configuration
-- `-zip` zips the content before transfering it
+- `-zip` zips the content before transferring it
 
 
 ## Authors
