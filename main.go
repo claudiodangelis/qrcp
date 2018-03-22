@@ -36,11 +36,12 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	// Get a random available port
-	port := freeport.GetPort()
 	if err := config.Update(); err != nil {
 		log.Println("Unable to update configuration", err)
 	}
+
+	// Get a random available port
+	port := freeport.GetPort()
 
 	// Check how many arguments are passed
 	if *uploadFlag == true {

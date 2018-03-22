@@ -64,12 +64,18 @@ Transfer a full directory. Note: the **directory gets zipped** before being tran
 qr-filetransfer /path/to/directory
 ```
 
+To upload a file
+```
+qr-filetransfer -upload /file/to/write
+```
+
 
 ## Arguments
 
 - `-debug` increases verbosity
 - `-force` ignores saved configuration
 - `-zip` zips the content before transferring it
+- `-upload` uploads a file
 
 
 ## Authors
