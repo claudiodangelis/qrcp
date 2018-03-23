@@ -9,6 +9,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // debug prints its argument if the -debug flag is passed
@@ -144,4 +145,11 @@ func shouldBeZipped(args []string) (bool, error) {
 		return true, nil
 	}
 	return false, nil
+}
+
+// getRandomURLPath returns a random string of 4 alphanumeric characters
+func getRandomURLPath() string {
+	timeNum := time.Now().UTC().UnixNano()
+	alphaString := strconv.FormatInt(timeNum, 36)
+	return alphaString[len(alphaString)-4:]
 }
