@@ -9,6 +9,7 @@ Transfer files over wifi from your computer to your mobile device by scanning a 
 ```
 go get github.com/claudiodangelis/qr-filetransfer
 ```
+[AUR (Arch Linux)](https://aur.archlinux.org/packages/qr-filetransfer-git/)
 
 ## How does it work?
 
