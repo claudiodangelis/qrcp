@@ -20,7 +20,7 @@ The program prints a QR code that encodes the text:
 http://{address}:{port}
 ```
 
-Most QR apps can detect URLs in decoded text and act accordingly (i.e.: open the URL with the default browser), so when QR the code is scanned the content starts being downloaded by the mobile browser.
+Most QR apps can detect URLs in decoded text and act accordingly (i.e.: open the URL with the default browser), so when QR code is scanned the content starts being downloaded by the mobile browser.
 
 ## Usage
 ![Screenshot](screenshot.jpg)
