@@ -26,10 +26,12 @@ func findIP(iface net.Interface) (string, error) {
 	}
 	for _, addr := range addrs {
 		if ipnet, ok := addr.(*net.IPNet); ok {
-			return ipnet.IP.String(), nil
+			if ipnet.IP.To4() != nil {
+				return ipnet.IP.String(), nil
+			}
 		}
 	}
-	return "", errors.New("Unable to find an IP for this interface")
+	return "", errors.New("Unable to find an IPv4 address for this interface")
 }
 
 // getAddress returns the address of the network interface to
