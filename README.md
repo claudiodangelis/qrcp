@@ -58,7 +58,7 @@ Zip the file, then transfer it
 qr-filetransfer -zip /path/to/file.txt
 ```
 
-Transfer a full directory. Note: the **directory gets zipped** before being transfered
+Transfer a full directory. Note: the **directory gets zipped** before being transferred
 
 ```
 qr-filetransfer /path/to/directory
