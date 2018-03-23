@@ -44,6 +44,8 @@ func main() {
 	// Generate the QR code
 	fmt.Println("Scan the following QR to start the download.")
 	fmt.Println("Make sure that your smartphone is connected to the same WiFi network as this computer.")
+	fmt.Println("Alternatively, use below URL if you do not have QR code scanner installed on your phone.")
+	fmt.Sprintf("http://%s:%d", address, port)
 	qrterminal.GenerateHalfBlock(fmt.Sprintf("http://%s:%d", address, port),
 		qrterminal.L, os.Stdout)
 
