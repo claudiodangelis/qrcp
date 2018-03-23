@@ -52,7 +52,7 @@ func main() {
 		w.Header().Set("Content-Disposition",
 			"attachment; filename="+content.Name())
 
-		w.Header().Set("Content-Type", r.Header.Get("Content-Type"))
+		//w.Header().Set("Content-Type", r.Header.Get("Content-Type"))
 		http.ServeFile(w, r, content.Path)
 		if content.ShouldBeDeleted {
 			if err := content.Delete(); err != nil {
