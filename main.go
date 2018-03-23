@@ -62,7 +62,7 @@ func main() {
 		if err := config.Update(); err != nil {
 			log.Println("Unable to update configuration", err)
 		}
-		os.Exit(0)
+		// os.Exit(0)
 	})
 	// Start a new server bound to the chosen address on a random port
 	log.Fatalln(http.ListenAndServe(fmt.Sprintf("%s:%d", address, port), nil))
