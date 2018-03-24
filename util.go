@@ -58,7 +58,7 @@ func getAddress(config *Config) (string, error) {
 	}
 	fmt.Println("Choose the network interface to use (type the number):")
 	var filteredIfaces []net.Interface
-	var re = regexp.MustCompile(`^(veth|br\-|docker)`)
+	var re = regexp.MustCompile(`^(veth|br\-|docker|lo|EHC|XHC|bridge|gif|stf|p2p|awdl|utun|tun|tap)`)
 	for _, iface := range ifaces {
 		for range re.FindAllString(iface.Name, -1) {
 			continue
