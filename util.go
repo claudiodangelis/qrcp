@@ -18,7 +18,7 @@ func debug(args ...string) {
 	}
 }
 
-// findIP returns the IPv4 address of the passed interface, and an error
+// findIP returns the IP address of the passed interface, and an error
 func findIP(iface net.Interface) (string, error) {
 	addrs, err := iface.Addrs()
 	if err != nil {
@@ -26,7 +26,12 @@ func findIP(iface net.Interface) (string, error) {
 	}
 	for _, addr := range addrs {
 		if ipnet, ok := addr.(*net.IPNet); ok {
-			return ipnet.IP.String(), nil
+			if !ipnet.IP.IsLinkLocalUnicast() {
+				if ipnet.IP.To4() != nil {
+					return ipnet.IP.String(), nil
+				}
+				return "[" + ipnet.IP.String() + "]", nil
+			}
 		}
 	}
 	return "", errors.New("Unable to find an IP for this interface")
