@@ -26,17 +26,20 @@ func findIP(iface net.Interface) (string, error) {
 	}
 	for _, addr := range addrs {
 		if ipnet, ok := addr.(*net.IPNet); ok {
+			if i := ipnet.IP.To4(); i == nil {
+				continue
+			}
 			return ipnet.IP.String(), nil
 		}
 	}
 	return "", errors.New("Unable to find an IP for this interface")
 }
 
-// getAddress returns the address of the network interface to
+// getIP returns the IP of the network interface to
 // bind the server to. The first time is run it prompts a
 // dialog to choose which network interface should be used
 // for the transfer
-func getAddress(config *Config) (string, error) {
+func getIP(config *Config) (string, error) {
 	ifaces, err := net.Interfaces()
 	if err != nil {
 		return "", err

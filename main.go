@@ -4,8 +4,10 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/mdp/qrterminal"
 	"github.com/phayes/freeport"
@@ -28,8 +30,8 @@ func main() {
 		log.Fatalln("At least one argument is required")
 	}
 
-	// Get addresses
-	address, err := getAddress(&config)
+	// Get ip
+	ip, err := getIP(&config)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -41,11 +43,13 @@ func main() {
 		log.Fatalln(err)
 	}
 
+	address := net.JoinHostPort(ip, strconv.Itoa(port))
+	textURL := fmt.Sprintf("http://%s", address)
+
 	// Generate the QR code
 	fmt.Println("Scan the following QR to start the download.")
 	fmt.Println("Make sure that your smartphone is connected to the same WiFi network as this computer.")
-	qrterminal.GenerateHalfBlock(fmt.Sprintf("http://%s:%d", address, port),
-		qrterminal.L, os.Stdout)
+	qrterminal.GenerateHalfBlock(textURL, qrterminal.L, os.Stdout)
 
 	// Define a default handler for the requests
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -65,6 +69,6 @@ func main() {
 		os.Exit(0)
 	})
 	// Start a new server bound to the chosen address on a random port
-	log.Fatalln(http.ListenAndServe(fmt.Sprintf("%s:%d", address, port), nil))
+	log.Fatalln(http.ListenAndServe(address, nil))
 
 }
