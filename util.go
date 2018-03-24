@@ -26,6 +26,9 @@ func findIP(iface net.Interface) (string, error) {
 	}
 	for _, addr := range addrs {
 		if ipnet, ok := addr.(*net.IPNet); ok {
+			if i := ipnet.IP.To4(); i == nil {
+				continue
+			}
 			return ipnet.IP.String(), nil
 		}
 	}
