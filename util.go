@@ -71,6 +71,9 @@ func getAddress(config *Config) (string, error) {
 		if iface.Name == "lo" {
 			continue
 		}
+		if iface.Flags&net.FlagUp == 0 {
+			continue
+		}
 		filteredIfaces = append(filteredIfaces, iface)
 	}
 	for n, iface := range filteredIfaces {
