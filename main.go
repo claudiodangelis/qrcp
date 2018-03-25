@@ -14,7 +14,7 @@ import (
 var zipFlag = flag.Bool("zip", false, "zip the contents to be transfered")
 var forceFlag = flag.Bool("force", false, "ignore saved configuration")
 var debugFlag = flag.Bool("debug", false, "increase verbosity")
-var urlFlag = flag.Bool("link", false, "transfer an URL")
+var urlFlag = flag.Bool("url", false, "transfer an URL")
 
 func main() {
 	flag.Parse()
