@@ -18,7 +18,6 @@ var debugFlag = flag.Bool("debug", false, "increase verbosity")
 var portFlag = flag.Int("port", 9527, "specify port, default is a 9527")
 var remoteFlag = flag.Bool("remote", false, "if set true, will use public ip address, default is false")
 
-// TODO this feature is not done
 var sshPortFlag = flag.Int("ssh", 22, "specify ssh port, default is 22, this is for generate scp command")
 
 func main() {
@@ -61,7 +60,9 @@ func main() {
 
 	// Generate the QR code
 	fmt.Println("Scan the following QR to start the download.")
-	fmt.Printf("scp %s:%s ./\n", address, dir)
+	if *remoteFlag {
+		fmt.Printf("scp -P %d %s:%s ./\n", *sshPortFlag, address, dir)
+	}
 	qrterminal.GenerateHalfBlock(fmt.Sprintf("http://%s:%d", address, *portFlag),
 		qrterminal.L, os.Stdout)
 
