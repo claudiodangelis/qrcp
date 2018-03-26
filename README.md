@@ -1,6 +1,6 @@
 # qr-filetransfer
 
-Transfer files over wifi from your computer to your mobile device by scanning a QR code without leaving the terminal.
+Transfer files over Wi-Fi from your computer to a mobile device by scanning a QR code without leaving the terminal.
 
 ![screenshot](demo.gif)
 
@@ -12,7 +12,7 @@ go get github.com/claudiodangelis/qr-filetransfer
 
 ## How does it work?
 
-This tool binds a web server to the address of your wifi network interface on a random port, and sets a default handler for it. The default handler serves the content and quits the program when the transfer is complete.
+This tool binds a web server to the address of your Wi-Fi network interface on a random port, and sets a default handler for it. The default handler serves the content and quits the program when the transfer is complete.
 
 The program prints a QR code that encodes the text:
 
@@ -20,15 +20,15 @@ The program prints a QR code that encodes the text:
 http://{address}:{port}
 ```
 
-Most QR apps can detect URLs in decoded text and act accordingly (i.e.: open the URL with the default browser), so when QR the code is scanned the content starts being downloaded by the mobile browser.
+Most QR apps can detect URLs in decoded text and act accordingly (i.e.: open the decoded URL with the default browser), so when the QR code is scanned, the mobile browser starts downloading the content.
 
 ## Usage
 ![Screenshot](screenshot.jpg)
 
 
-**Note**: Both computer and device must be on the same wifi network.
+**Note**: Both computer and device must be on the same Wi-Fi network.
 
-On its first run, `qr-filetransfer` will ask you to choose which **network interface** you want to use to transfer the files. Choose the network interface that is connected to your wifi:
+On its first run, `qr-filetransfer` will ask you to choose which **network interface** you want to use to transfer the files. Choose the network interface that is connected to your Wi-Fi:
 
 ```
 $ qr-filetransfer /tmp/file
@@ -39,7 +39,7 @@ Choose the network interface to use (type the number):
 
 _Note: On Linux it usually starts with `wl`._
 
-The choice will be remembered and you will never be prompted again, unless you pass the `-force` argument, or delete the `.qr-filetransfer.json` file that the program stores in the home directory of current user.
+The chosen network will be saved and no more setup is necessary, unless you pass the `-force` argument, or delete the `.qr-filetransfer.json` file in the home directory of the current user.
 
 
 
