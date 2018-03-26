@@ -1,23 +1,23 @@
 package main
 
 import (
-	"errors"
-	"net"
+	"bytes"
+	"io/ioutil"
+	"net/http"
 )
 
 // GetPublicIP returns public ip address
 func GetPublicIP() (string, error) {
-	addrs, err := net.InterfaceAddrs()
+	rsp, err := http.Get("http://checkip.amazonaws.com")
+	if err != nil {
+		return "", err
+	}
+	defer rsp.Body.Close()
+
+	buf, err := ioutil.ReadAll(rsp.Body)
 	if err != nil {
 		return "", err
 	}
 
-	for _, a := range addrs {
-		if ipnet, ok := a.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
-			if ipnet.IP.To4() != nil {
-				return ipnet.IP.String(), nil
-			}
-		}
-	}
-	return "", errors.New("Failed to find public ip address")
+	return string(bytes.TrimSpace(buf)), nil
 }

@@ -83,5 +83,5 @@ func main() {
 		os.Exit(0)
 	})
 	// Start a new server bound to the chosen address on a 9527 or specified port
-	log.Fatalln(http.ListenAndServe(fmt.Sprintf("%s:%d", address, *portFlag), nil))
+	log.Fatalln(http.ListenAndServe(fmt.Sprintf(":%d", *portFlag), nil))
 }
