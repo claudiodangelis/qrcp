@@ -14,16 +14,10 @@ import (
 )
 
 var zipFlag = flag.Bool("zip", false, "zip the contents to be transfered")
-var forceFlag = flag.Bool("force", false, "ignore saved configuration")
 var debugFlag = flag.Bool("debug", false, "increase verbosity")
 
 func main() {
 	flag.Parse()
-	config := LoadConfig()
-	if *forceFlag == true {
-		config.Delete()
-		config = LoadConfig()
-	}
 
 	// Check how many arguments are passed
 	if len(flag.Args()) == 0 {
@@ -63,9 +57,6 @@ func main() {
 			if err := content.Delete(); err != nil {
 				log.Println("Unable to delete the content from disk", err)
 			}
-		}
-		if err := config.Update(); err != nil {
-			log.Println("Unable to update configuration", err)
 		}
 		os.Exit(0)
 	})

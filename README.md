@@ -68,7 +68,6 @@ qr-filetransfer /path/to/directory
 ## Arguments
 
 - `-debug` increases verbosity
-- `-force` ignores saved configuration
 - `-zip` zips the content before transferring it
 
 
