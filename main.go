@@ -4,8 +4,10 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/mdp/qrterminal"
 	"github.com/phayes/freeport"
@@ -29,10 +31,13 @@ func main() {
 	}
 
 	// Get addresses
-	address, err := getAddress(&config)
+	conn, err := net.Dial("udp", "8.8.8.8:80")
 	if err != nil {
 		log.Fatalln(err)
 	}
+	localAddr := conn.LocalAddr().(*net.UDPAddr)
+	conn.Close()
+	address := strings.Split(localAddr.String(), ":")[0]
 
 	// Get a random available port
 	port := freeport.GetPort()
