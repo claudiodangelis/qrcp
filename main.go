@@ -14,18 +14,29 @@ import (
 var zipFlag = flag.Bool("zip", false, "zip the contents to be transfered")
 var forceFlag = flag.Bool("force", false, "ignore saved configuration")
 var debugFlag = flag.Bool("debug", false, "increase verbosity")
+var urlFlag = flag.Bool("url", false, "transfer an URL")
 
 func main() {
 	flag.Parse()
-	config := LoadConfig()
-	if *forceFlag == true {
-		config.Delete()
-		config = LoadConfig()
-	}
 
 	// Check how many arguments are passed
 	if len(flag.Args()) == 0 {
 		log.Fatalln("At least one argument is required")
+	}
+
+	// Check if the provided path for the content is an URL
+	if *urlFlag == true {
+		url := flag.Args()[0]
+		fmt.Println("Scan the following QR to open the url : " + url)
+		qrterminal.GenerateHalfBlock(url, qrterminal.L, os.Stdout)
+		fmt.Println()
+		return
+	}
+
+	config := LoadConfig()
+	if *forceFlag == true {
+		config.Delete()
+		config = LoadConfig()
 	}
 
 	// Get addresses
