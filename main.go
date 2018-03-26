@@ -7,13 +7,18 @@ import (
 	"net/http"
 	"os"
 
+	"path/filepath"
+
 	"github.com/mdp/qrterminal"
-	"github.com/phayes/freeport"
 )
 
 var zipFlag = flag.Bool("zip", false, "zip the contents to be transfered")
 var forceFlag = flag.Bool("force", false, "ignore saved configuration")
 var debugFlag = flag.Bool("debug", false, "increase verbosity")
+var portFlag = flag.Int("port", 9527, "specify port, default is a 9527")
+
+// TODO this feature is not done
+var sshPortFlag = flag.Int("ssh", 22, "specify ssh port, default is 22, this is for generate scp command")
 
 func main() {
 	flag.Parse()
@@ -34,17 +39,22 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	// Get a random available port
-	port := freeport.GetPort()
 	content, err := getContent(flag.Args())
 	if err != nil {
 		log.Fatalln(err)
 	}
 
+	// Get absolute file path for generating scp command
+	dir, err := filepath.Abs(content.Name())
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
 	// Generate the QR code
 	fmt.Println("Scan the following QR to start the download.")
-	fmt.Println("Make sure that your smartphone is connected to the same WiFi network as this computer.")
-	qrterminal.GenerateHalfBlock(fmt.Sprintf("http://%s:%d", address, port),
+	fmt.Printf("scp %s:%s ./\n", address, dir)
+	qrterminal.GenerateHalfBlock(fmt.Sprintf("http://%s:%d", address, *portFlag),
 		qrterminal.L, os.Stdout)
 
 	// Define a default handler for the requests
@@ -64,7 +74,7 @@ func main() {
 		}
 		os.Exit(0)
 	})
-	// Start a new server bound to the chosen address on a random port
-	log.Fatalln(http.ListenAndServe(fmt.Sprintf("%s:%d", address, port), nil))
+	// Start a new server bound to the chosen address on a 9527 or specified port
+	log.Fatalln(http.ListenAndServe(fmt.Sprintf("%s:%d", address, *portFlag), nil))
 
 }

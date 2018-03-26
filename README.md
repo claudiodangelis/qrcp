@@ -1,3 +1,10 @@
+### This is forked from https://github.com/claudiodangelis/qr-filetransfer
+Now this can download from a remote server.
+
+Port should be specified, default is 9527.
+
+Also generate a `scp` command for copy paste.
+
 # qr-filetransfer
 
 Transfer files over wifi from your computer to your mobile device by scanning a QR code without leaving the terminal.
