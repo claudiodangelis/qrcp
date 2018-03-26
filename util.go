@@ -63,9 +63,6 @@ func getAddress(config *Config) (string, error) {
 		for range re.FindAllString(iface.Name, -1) {
 			continue
 		}
-		if iface.Name == "lo" {
-			continue
-		}
 		filteredIfaces = append(filteredIfaces, iface)
 	}
 	for n, iface := range filteredIfaces {
