@@ -26,12 +26,13 @@ func findIP(iface net.Interface) (string, error) {
 	}
 	for _, addr := range addrs {
 		if ipnet, ok := addr.(*net.IPNet); ok {
-			if !ipnet.IP.IsLinkLocalUnicast() {
-				if ipnet.IP.To4() != nil {
-					return ipnet.IP.String(), nil
-				}
-				return "[" + ipnet.IP.String() + "]", nil
+			if ipnet.IP.IsLinkLocalUnicast() {
+				continue
 			}
+			if ipnet.IP.To4() != nil {
+				return ipnet.IP.String(), nil
+			}
+			return "[" + ipnet.IP.String() + "]", nil
 		}
 	}
 	return "", errors.New("Unable to find an IP for this interface")
