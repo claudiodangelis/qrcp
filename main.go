@@ -16,6 +16,7 @@ var zipFlag = flag.Bool("zip", false, "zip the contents to be transfered")
 var forceFlag = flag.Bool("force", false, "ignore saved configuration")
 var debugFlag = flag.Bool("debug", false, "increase verbosity")
 var portFlag = flag.Int("port", 9527, "specify port, default is a 9527")
+var remoteFlag = flag.Bool("remote", false, "if set true, will use public ip address, default is false")
 
 // TODO this feature is not done
 var sshPortFlag = flag.Int("ssh", 22, "specify ssh port, default is 22, this is for generate scp command")
@@ -34,9 +35,16 @@ func main() {
 	}
 
 	// Get addresses
-	address, err := getAddress(&config)
-	if err != nil {
-		log.Fatalln(err)
+	var address string
+	var err error
+	if *remoteFlag {
+		if address, err = GetPublicIP(); err != nil {
+			log.Fatalln(err)
+		}
+	} else {
+		if address, err = getAddress(&config); err != nil {
+			log.Fatalln(err)
+		}
 	}
 
 	content, err := getContent(flag.Args())
@@ -76,5 +84,4 @@ func main() {
 	})
 	// Start a new server bound to the chosen address on a 9527 or specified port
 	log.Fatalln(http.ListenAndServe(fmt.Sprintf("%s:%d", address, *portFlag), nil))
-
 }
