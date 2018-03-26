@@ -1,9 +1,14 @@
-### This is forked from https://github.com/claudiodangelis/qr-filetransfer
+# This is forked from [qr-filetransfer](https://github.com/claudiodangelis/qr-filetransfer)
 Now this can download from a remote server.
 
 Port should be specified, default is 9527.
 
 Also generate a `scp` command for copy paste.
+## Install
+
+```
+go get github.com/FrontMage/qr-filetransfer
+```
 
 # qr-filetransfer
 
