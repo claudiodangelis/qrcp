@@ -7,21 +7,16 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/mdp/qrterminal"
 )
 
 var zipFlag = flag.Bool("zip", false, "zip the contents to be transfered")
-var forceFlag = flag.Bool("force", false, "ignore saved configuration")
 var debugFlag = flag.Bool("debug", false, "increase verbosity")
 
 func main() {
 	flag.Parse()
-	config := LoadConfig()
-	if *forceFlag == true {
-		config.Delete()
-		config = LoadConfig()
-	}
 
 	// Check how many arguments are passed
 	if len(flag.Args()) == 0 {
@@ -29,10 +24,13 @@ func main() {
 	}
 
 	// Get addresses
-	address, err := getAddress(&config)
+	conn, err := net.Dial("udp", "8.8.8.8:80")
 	if err != nil {
 		log.Fatalln(err)
 	}
+	localAddr := conn.LocalAddr().(*net.UDPAddr)
+	conn.Close()
+	address := strings.Split(localAddr.String(), ":")[0]
 
 	// Create a net.Listener bound to the choosen address on a random port
 	listener, err := net.Listen("tcp", fmt.Sprintf("%s:0", address))
@@ -63,9 +61,6 @@ func main() {
 			if err := content.Delete(); err != nil {
 				log.Println("Unable to delete the content from disk", err)
 			}
-		}
-		if err := config.Update(); err != nil {
-			log.Println("Unable to update configuration", err)
 		}
 		os.Exit(0)
 	})
