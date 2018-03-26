@@ -4,11 +4,11 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
 
 	"github.com/mdp/qrterminal"
-	"github.com/phayes/freeport"
 )
 
 var zipFlag = flag.Bool("zip", false, "zip the contents to be transfered")
@@ -34,8 +34,13 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	// Get a random available port
-	port := freeport.GetPort()
+	// Create a net.Listener bound to the choosen address on a random port
+	listener, err := net.Listen("tcp", fmt.Sprintf("%s:0", address))
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer listener.Close()
+
 	content, err := getContent(flag.Args())
 	if err != nil {
 		log.Fatalln(err)
@@ -44,7 +49,7 @@ func main() {
 	// Generate the QR code
 	fmt.Println("Scan the following QR to start the download.")
 	fmt.Println("Make sure that your smartphone is connected to the same WiFi network as this computer.")
-	qrterminal.GenerateHalfBlock(fmt.Sprintf("http://%s:%d", address, port),
+	qrterminal.GenerateHalfBlock(fmt.Sprintf("http://%s", listener.Addr().String()),
 		qrterminal.L, os.Stdout)
 
 	// Define a default handler for the requests
@@ -64,7 +69,7 @@ func main() {
 		}
 		os.Exit(0)
 	})
-	// Start a new server bound to the chosen address on a random port
-	log.Fatalln(http.ListenAndServe(fmt.Sprintf("%s:%d", address, port), nil))
+	// Start a new server using the listener bound to the choosen address on a random port
+	log.Fatalln(http.Serve(listener, nil))
 
 }
