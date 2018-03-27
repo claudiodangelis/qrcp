@@ -14,6 +14,7 @@ import (
 var zipFlag = flag.Bool("zip", false, "zip the contents to be transfered")
 var forceFlag = flag.Bool("force", false, "ignore saved configuration")
 var debugFlag = flag.Bool("debug", false, "increase verbosity")
+var reverseFlag = flag.Bool("reverse", false, "reverse the colors of the QR code")
 
 func main() {
 	flag.Parse()
@@ -49,8 +50,20 @@ func main() {
 	// Generate the QR code
 	fmt.Println("Scan the following QR to start the download.")
 	fmt.Println("Make sure that your smartphone is connected to the same WiFi network as this computer.")
-	qrterminal.GenerateHalfBlock(fmt.Sprintf("http://%s", listener.Addr().String()),
-		qrterminal.L, os.Stdout)
+
+	qrConfig := qrterminal.Config{
+		Level:     qrterminal.L,
+		Writer:    os.Stdout,
+		BlackChar: qrterminal.BLACK,
+		WhiteChar: qrterminal.WHITE,
+	}
+
+	if *reverseFlag == true {
+		qrConfig.BlackChar = qrterminal.WHITE
+		qrConfig.WhiteChar = qrterminal.BLACK
+	}
+
+	qrterminal.GenerateWithConfig(fmt.Sprintf("http://%s", listener.Addr().String()), qrConfig)
 
 	// Define a default handler for the requests
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
