@@ -61,7 +61,7 @@ func getAddress(config *Config) (string, error) {
 		}
 		return ip, nil
 	}
-	fmt.Println("Choose the network interface to use (type the number):")
+
 	var filteredIfaces []net.Interface
 	for _, iface := range ifaces {
 		// TODO: Replace the following with a regexp
@@ -82,6 +82,15 @@ func getAddress(config *Config) (string, error) {
 		}
 		filteredIfaces = append(filteredIfaces, iface)
 	}
+	if len(filteredIfaces) == 1 {
+		candidateInterface = &filteredIfaces[0]
+		ip, err := findIP(*candidateInterface)
+		if err != nil {
+			return "", err
+		}
+		return ip, nil
+	}
+	fmt.Println("Choose the network interface to use (type the number):")
 	for n, iface := range filteredIfaces {
 		fmt.Printf("[%d] %s\n", n, iface.Name)
 	}
