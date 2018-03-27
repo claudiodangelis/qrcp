@@ -6,11 +6,20 @@ import (
 	"log"
 	"os"
 	"os/user"
+	"path/filepath"
 )
 
 // Config holds the values
 type Config struct {
 	Iface string `json:"interface"`
+}
+
+func configFile() (string, error) {
+	currentUser, err := user.Current()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(currentUser.HomeDir, ".qr-filetransfer.json"), nil
 }
 
 // Update the configuration file
@@ -20,11 +29,11 @@ func (c *Config) Update() error {
 	if err != nil {
 		return err
 	}
-	currentUser, err := user.Current()
+	file, err := configFile()
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(currentUser.HomeDir+"/.qr-filetransfer.json", j, 0644)
+	err = ioutil.WriteFile(file, j, 0644)
 	if err != nil {
 		return err
 	}
@@ -33,14 +42,14 @@ func (c *Config) Update() error {
 
 // Delete the configuration file
 func (c *Config) Delete() (bool, error) {
-	currentUser, err := user.Current()
+	file, err := configFile()
 	if err != nil {
 		return false, err
 	}
-	if _, err := os.Stat(currentUser.HomeDir + "/.qr-filetransfer.json"); os.IsNotExist(err) {
+	if _, err := os.Stat(file); os.IsNotExist(err) {
 		return false, nil
 	}
-	if err := os.Remove(currentUser.HomeDir + "/.qr-filetransfer.json"); err != nil {
+	if err := os.Remove(file); err != nil {
 		return false, err
 	}
 	return true, nil
@@ -49,16 +58,16 @@ func (c *Config) Delete() (bool, error) {
 // LoadConfig from file
 func LoadConfig() Config {
 	var config Config
-	currentUser, err := user.Current()
+	file, err := configFile()
 	if err != nil {
 		return config
 	}
-	debug("Current user is", currentUser.HomeDir)
-	configFile, err := ioutil.ReadFile(currentUser.HomeDir + "/.qr-filetransfer.json")
+	debug("Current config file is", file)
+	b, err := ioutil.ReadFile(file)
 	if err != nil {
 		return config
 	}
-	if err = json.Unmarshal(configFile, &config); err != nil {
+	if err = json.Unmarshal(b, &config); err != nil {
 		log.Println("WARN:", err)
 	}
 	return config
