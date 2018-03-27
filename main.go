@@ -14,6 +14,7 @@ import (
 var zipFlag = flag.Bool("zip", false, "zip the contents to be transfered")
 var forceFlag = flag.Bool("force", false, "ignore saved configuration")
 var debugFlag = flag.Bool("debug", false, "increase verbosity")
+var quietFlag = flag.Bool("quiet", false, "ignores non critical output")
 
 func main() {
 	flag.Parse()
@@ -47,8 +48,8 @@ func main() {
 	}
 
 	// Generate the QR code
-	fmt.Println("Scan the following QR to start the download.")
-	fmt.Println("Make sure that your smartphone is connected to the same WiFi network as this computer.")
+	info("Scan the following QR to start the download.")
+	info("Make sure that your smartphone is connected to the same WiFi network as this computer.")
 	qrterminal.GenerateHalfBlock(fmt.Sprintf("http://%s", listener.Addr().String()),
 		qrterminal.L, os.Stdout)
 

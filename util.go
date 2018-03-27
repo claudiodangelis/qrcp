@@ -12,9 +12,17 @@ import (
 )
 
 // debug prints its argument if the -debug flag is passed
+// and -quiet flag is not passed
 func debug(args ...string) {
-	if *debugFlag == true {
+	if *quietFlag == false && *debugFlag == true {
 		log.Println(args)
+	}
+}
+
+// info prints its argument if the -quiet flag is not passed
+func info(args ...interface{}) {
+	if *quietFlag == false {
+		fmt.Println(args...)
 	}
 }
 
