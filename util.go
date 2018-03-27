@@ -82,6 +82,9 @@ func getAddress(config *Config) (string, error) {
 		}
 		filteredIfaces = append(filteredIfaces, iface)
 	}
+	if len(filteredIfaces) == 0 {
+		return "", errors.New("No network interface available.")
+	}
 	if len(filteredIfaces) == 1 {
 		candidateInterface = &filteredIfaces[0]
 		ip, err := findIP(*candidateInterface)
