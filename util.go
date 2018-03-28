@@ -2,8 +2,11 @@ package main
 
 import (
 	"bufio"
+	"crypto/rand"
+	"encoding/base64"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"os"
@@ -144,4 +147,13 @@ func getRandomURLPath() string {
 	timeNum := time.Now().UTC().UnixNano()
 	alphaString := strconv.FormatInt(timeNum, 36)
 	return alphaString[len(alphaString)-4:]
+}
+
+// getSessionID returns a base64 encoded string of 40 random characters
+func getSessionID() (string, error) {
+	randbytes := make([]byte, 40)
+	if _, err := io.ReadFull(rand.Reader, randbytes); err != nil {
+		return "", err
+	}
+	return base64.StdEncoding.EncodeToString(randbytes), nil
 }
