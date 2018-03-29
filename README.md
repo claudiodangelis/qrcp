@@ -25,6 +25,7 @@ The tool prints a QR code that encodes the text:
 http://{address}:{port}
 ```
 
+Optionally, The file can be uploaded to a 3rd party site for hosting [file.io](https://file.io/). 
 
 Most QR apps can detect URLs in decoded text and act accordingly (i.e. open the decoded URL with the default browser), so when the QR code is scanned the content will begin downloading by the mobile browser.
 
@@ -71,6 +72,12 @@ Transfer a full directory. Note: the **directory gets zipped** before being tran
 ```
 qr-filetransfer /path/to/directory
 ```
+Use 3rd party file host ([file.io](https://file.io)) to serve the file instead of hosting it locally. Useful if your computer is not on the same wifi as your phone, or if your wifi separates wireless and LAN devices.
+
+```
+qr-filetransfer -remote /path/to/file.txt
+```
+
 
 
 ## Arguments
@@ -78,6 +85,7 @@ qr-filetransfer /path/to/directory
 - `-debug` increases verbosity
 - `-force` ignores saved configuration
 - `-zip` zips the content before transferring it
+- `-remote` uploads the file to [file.io](https://file.io) and shows a QR code to that URL
 
 
 ## Authors
