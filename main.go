@@ -12,6 +12,7 @@ import (
 )
 
 var zipFlag = flag.Bool("zip", false, "zip the contents to be transfered")
+var remoteFlag = flag.Bool("remote", false, "transfer file via file.io")
 var forceFlag = flag.Bool("force", false, "ignore saved configuration")
 var debugFlag = flag.Bool("debug", false, "increase verbosity")
 
@@ -46,6 +47,18 @@ func main() {
 		log.Fatalln(err)
 	}
 
+	// If the remote flag is specified, upload and generate QR code for remote url
+	if *remoteFlag {
+		// Upload file to File.io and use that address for connection
+		url, err := UploadFile(content)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Printf("Hosted at %s\n", url)
+		qrterminal.GenerateHalfBlock(url, qrterminal.L, os.Stdout)
+		return
+	}
+
 	// Generate the QR code
 	fmt.Println("Scan the following QR to start the download.")
 	fmt.Println("Make sure that your smartphone is connected to the same WiFi network as this computer.")
@@ -70,5 +83,4 @@ func main() {
 	})
 	// Start a new server using the listener bound to the choosen address on a random port
 	log.Fatalln(http.Serve(listener, nil))
-
 }
