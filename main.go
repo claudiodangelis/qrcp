@@ -18,29 +18,11 @@ var debugFlag = flag.Bool("debug", false, "increase verbosity")
 
 func main() {
 	flag.Parse()
-	config := LoadConfig()
-	if *forceFlag == true {
-		config.Delete()
-		config = LoadConfig()
-	}
 
 	// Check how many arguments are passed
 	if len(flag.Args()) == 0 {
 		log.Fatalln("At least one argument is required")
 	}
-
-	// Get addresses
-	address, err := getAddress(&config)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	// Create a net.Listener bound to the choosen address on a random port
-	listener, err := net.Listen("tcp", fmt.Sprintf("%s:0", address))
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer listener.Close()
 
 	content, err := getContent(flag.Args())
 	if err != nil {
@@ -58,6 +40,25 @@ func main() {
 		qrterminal.GenerateHalfBlock(url, qrterminal.L, os.Stdout)
 		return
 	}
+
+	config := LoadConfig()
+	if *forceFlag == true {
+		config.Delete()
+		config = LoadConfig()
+	}
+
+	// Get addresses
+	address, err := getAddress(&config)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// Create a net.Listener bound to the choosen address on a random port
+	listener, err := net.Listen("tcp", fmt.Sprintf("%s:0", address))
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer listener.Close()
 
 	// Generate the QR code
 	fmt.Println("Scan the following QR to start the download.")
