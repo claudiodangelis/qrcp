@@ -1,15 +1,3 @@
-# This is forked from [qr-filetransfer](https://github.com/claudiodangelis/qr-filetransfer)
-Now this can download from a remote server.
-
-Port should be specified, default is 9527.
-
-Also generate a `scp` command for copy paste.
-## Install
-
-```
-go get github.com/FrontMage/qr-filetransfer
-```
-
 # qr-filetransfer
 
 Transfer files over wifi from your computer to your mobile device by scanning a QR code without leaving the terminal.
@@ -82,6 +70,8 @@ qr-filetransfer /path/to/directory
 - `-debug` increases verbosity
 - `-force` ignores saved configuration
 - `-zip` zips the content before transferring it
+- `-remote` if set true, will use public ip address, default is false
+- `-ssh` specify ssh port, default is 22, this is for generate scp command
 
 
 ## Authors
