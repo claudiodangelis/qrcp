@@ -7,7 +7,9 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"runtime"
 
+	"github.com/mattn/go-colorable"
 	"github.com/mdp/qrterminal"
 )
 
@@ -50,7 +52,7 @@ func main() {
 	// Generate the QR code
 	info("Scan the following QR to start the download.")
 	info("Make sure that your smartphone is connected to the same WiFi network as this computer.")
-  
+
 	qrConfig := qrterminal.Config{
 		HalfBlocks:     true,
 		Level:          qrterminal.L,
@@ -60,9 +62,16 @@ func main() {
 		WhiteBlackChar: "\u001b[30m\u001b[47m\u2585\u001b[0m",
 		WhiteChar:      "\u001b[37m\u001b[47m\u2588\u001b[0m",
 	}
+	if runtime.GOOS == "windows" {
+		qrConfig.HalfBlocks = false
+		qrConfig.Writer = colorable.NewColorableStdout()
+		qrConfig.BlackChar = qrterminal.BLACK
+		qrConfig.WhiteChar = qrterminal.WHITE
+	}
+
 	qrterminal.GenerateWithConfig(fmt.Sprintf("http://%s", listener.Addr().String()), qrConfig)
 
-  // Define a default handler for the requests
+	// Define a default handler for the requests
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Disposition",
 			"attachment; filename="+content.Name())
