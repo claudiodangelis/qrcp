@@ -14,6 +14,7 @@ import (
 var zipFlag = flag.Bool("zip", false, "zip the contents to be transfered")
 var forceFlag = flag.Bool("force", false, "ignore saved configuration")
 var debugFlag = flag.Bool("debug", false, "increase verbosity")
+var reverseFlag = flag.Bool("reverse", false, "reverse the color of qr code")
 
 func main() {
 	flag.Parse()
@@ -51,10 +52,25 @@ func main() {
 	fmt.Println("Make sure that your smartphone is connected to the same WiFi network as this computer.")
 
 	qrConfig := qrterminal.Config{
-		Level:     qrterminal.L,
-		Writer:    os.Stdout,
-		BlackChar: qrterminal.WHITE,
-		WhiteChar: qrterminal.BLACK,
+		HalfBlocks:     true,
+		Level:          qrterminal.L,
+		Writer:         os.Stdout,
+		BlackWhiteChar: qrterminal.WHITE_BLACK,
+		BlackChar:      qrterminal.WHITE_WHITE,
+		WhiteBlackChar: qrterminal.BLACK_WHITE,
+		WhiteChar:      qrterminal.BLACK_BLACK,
+	}
+
+	if *reverseFlag == true {
+		qrConfig = qrterminal.Config{
+			HalfBlocks:     true,
+			Level:          qrterminal.L,
+			Writer:         os.Stdout,
+			BlackWhiteChar: qrterminal.BLACK_WHITE,
+			BlackChar:      qrterminal.BLACK_BLACK,
+			WhiteBlackChar: qrterminal.WHITE_BLACK,
+			WhiteChar:      qrterminal.WHITE_WHITE,
+		}
 	}
 
 	qrterminal.GenerateWithConfig(fmt.Sprintf("http://%s", listener.Addr().String()), qrConfig)
