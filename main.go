@@ -14,6 +14,7 @@ import (
 var zipFlag = flag.Bool("zip", false, "zip the contents to be transfered")
 var forceFlag = flag.Bool("force", false, "ignore saved configuration")
 var debugFlag = flag.Bool("debug", false, "increase verbosity")
+var quietFlag = flag.Bool("quiet", false, "ignores non critical output")
 
 func main() {
 	flag.Parse()
@@ -47,9 +48,9 @@ func main() {
 	}
 
 	// Generate the QR code
-	fmt.Println("Scan the following QR to start the download.")
-	fmt.Println("Make sure that your smartphone is connected to the same WiFi network as this computer.")
-
+	info("Scan the following QR to start the download.")
+	info("Make sure that your smartphone is connected to the same WiFi network as this computer.")
+  
 	qrConfig := qrterminal.Config{
 		HalfBlocks:     true,
 		Level:          qrterminal.L,
@@ -59,10 +60,9 @@ func main() {
 		WhiteBlackChar: "\u001b[30m\u001b[47m\u2585\u001b[0m",
 		WhiteChar:      "\u001b[37m\u001b[47m\u2588\u001b[0m",
 	}
-
 	qrterminal.GenerateWithConfig(fmt.Sprintf("http://%s", listener.Addr().String()), qrConfig)
 
-	// Define a default handler for the requests
+  // Define a default handler for the requests
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Disposition",
 			"attachment; filename="+content.Name())
