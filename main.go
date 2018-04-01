@@ -24,11 +24,6 @@ var quietFlag = flag.Bool("quiet", false, "ignores non critical output")
 
 func main() {
 	flag.Parse()
-	config := LoadConfig()
-	if *forceFlag == true {
-		config.Delete()
-		config = LoadConfig()
-	}
 
 	// Check how many arguments are passed
 	if len(flag.Args()) == 0 {
@@ -41,7 +36,13 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	// Get address
+	config := LoadConfig()
+	if *forceFlag == true {
+		config.Delete()
+		config = LoadConfig()
+	}
+
+	// Get addresses
 	address, err := getAddress(&config)
 	if err != nil {
 		log.Fatalln(err)
