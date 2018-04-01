@@ -23,11 +23,21 @@ var debugFlag = flag.Bool("debug", false, "increase verbosity")
 var quietFlag = flag.Bool("quiet", false, "ignores non critical output")
 
 func main() {
+	// Custom usage function
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr,
+			"usage: %s [-debug] [-force] [-quiet] [-zip] file [file ...]\n",
+			os.Args[0])
+		flag.PrintDefaults()
+		os.Exit(2)
+	}
+
 	flag.Parse()
 
 	// Check how many arguments are passed
 	if len(flag.Args()) == 0 {
-		log.Fatalln("At least one argument is required")
+		fmt.Fprintln(os.Stderr, "At least one file must be provided")
+		flag.Usage()
 	}
 
 	// Get Content
