@@ -80,6 +80,9 @@ qr-filetransfer /path/to/directory
 - `-force` ignores saved configuration
 - `-zip` zips the content before transferring it
 
+## Related
+
+- [quick-transfer](https://github.com/CodeMan99/quick-transfer) - Node.js clone of this project.
 
 ## Authors
 
