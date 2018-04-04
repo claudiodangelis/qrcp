@@ -83,6 +83,11 @@ qr-filetransfer /path/to/directory
 
 ## Authors
 
-- [Claudio d'Angelis](claudiodangelis@gmail.com) ([@daw985](https://twitter.com/daw985) on Twitter)
+**qr-filetransfer** started from an idea of [Claudio d'Angelis](claudiodangelis@gmail.com) ([@daw985](https://twitter.com/daw985) on Twitter), the current maintainer, and it's [developed by the community](https://github.com/claudiodangelis/qr-filetransfer/graphs/contributors).
 
-- [You?](https://github.com/claudiodangelis/qr-filetransfer/fork)
+
+[Join us!](https://github.com/claudiodangelis/qr-filetransfer/fork)
+
+## License
+
+MIT. See [LICENSE](LICENSE).
