@@ -17,7 +17,7 @@ go get github.com/claudiodangelis/qr-filetransfer
 ## How does it work?
 
 
-This tool binds a web server to the address of your Wi-Fi network interface on a random port and creates a handler for it. The default handler serves the content and exits the program when the transfer is complete.
+`qr-filetransfer` binds a web server to the address of your Wi-Fi network interface on a random port and creates a handler for it. The default handler serves the content and exits the program when the transfer is complete.
 
 The tool prints a QR code that encodes the text:
 
@@ -35,7 +35,7 @@ Most QR apps can detect URLs in decoded text and act accordingly (i.e. open the 
 
 **Note**: Both the computer and device must be on the same Wi-Fi network.
 
-On its first run, `qr-filetransfer` will ask you to choose which **network interface** you want to use to transfer the files. Choose the network interface that is connected to your Wi-Fi:
+On the first run, `qr-filetransfer` will ask to choose which **network interface** to use to transfer the files. Choose the network interface connected to your Wi-Fi:
 
 ```
 $ qr-filetransfer /tmp/file
@@ -47,7 +47,7 @@ Choose the network interface to use (type the number):
 _Note: On Linux it usually starts with `wl`._
 
 
-The chosen network will be saved and no more setup is necessary, unless you pass the `-force` argument, or delete the `.qr-filetransfer.json` file that the program stores in the home directory of current user.
+The chosen network will be saved and no more setup is necessary, unless the `-force` argument is passed, or the `.qr-filetransfer.json` file the program stores in the home directory of the current user is deleted.
 
 
 
