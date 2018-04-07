@@ -95,6 +95,7 @@ qr-filetransfer /path/to/directory
 - [qr-filetransfer](https://github.com/svenkatreddy/qr-filetransfer) - Another Node.js clone of this project
 - [share-file-qr](https://pypi.python.org/pypi/share-file-qr/0.1.2) - Python re-implementation of this project
 - [QRDELIVER](https://github.com/realdennis/qrdeliver) - Node.js project similar to this
+- [qrfile](https://github.com/sgbj/qrfile) - Transfer files by scanning a QR code
 - [instant-file-transfer](https://github.com/maximumdata/instant-file-transfer) _(Uncredited)_ - Node.js project similar to this
 - [share-files](https://github.com/antoaravinth/share-files) _(Uncredited)_  - Yet another Node.js clone of this project
 - [qr-filetransfer](https://github.com/sdushantha/qr-filetransfer) _(Uncredited)_ - Python clone of this project
