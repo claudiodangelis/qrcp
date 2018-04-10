@@ -90,16 +90,15 @@ qr-filetransfer /path/to/directory
 
 ## Clones and Similar Projects
 
-- [quick-transfer](https://github.com/CodeMan99/quick-transfer) - Node.js clone of this project
-- [qr-transfer-node](https://github.com/codezoned/qr-transfer-node) - Another Node.js clone of this project
+- [instant-file-transfer](https://github.com/maximumdata/instant-file-transfer) _(Uncredited)_ - Node.js project similar to this
+- [qr-filetransfer](https://github.com/sdushantha/qr-filetransfer) _(Uncredited)_ - Python clone of this project
 - [qr-filetransfer](https://github.com/svenkatreddy/qr-filetransfer) - Another Node.js clone of this project
-- [share-file-qr](https://github.com/pwalch/share-file-qr) - Python re-implementation of this project
+- [qr-transfer-node](https://github.com/codezoned/qr-transfer-node) - Another Node.js clone of this project
 - [QRDELIVER](https://github.com/realdennis/qrdeliver) - Node.js project similar to this
 - [qrfile](https://github.com/sgbj/qrfile) - Transfer files by scanning a QR code
-- [instant-file-transfer](https://github.com/maximumdata/instant-file-transfer) _(Uncredited)_ - Node.js project similar to this
+- [quick-transfer](https://github.com/CodeMan99/quick-transfer) - Node.js clone of this project
+- [share-file-qr](https://github.com/pwalch/share-file-qr) - Python re-implementation of this project
 - [share-files](https://github.com/antoaravinth/share-files) _(Uncredited)_  - Yet another Node.js clone of this project
-- [qr-filetransfer](https://github.com/sdushantha/qr-filetransfer) _(Uncredited)_ - Python clone of this project
-
 
 ## License
 
