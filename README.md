@@ -22,7 +22,7 @@ go get github.com/claudiodangelis/qr-filetransfer
 The tool prints a QR code that encodes the text:
 
 ```
-http://{address}:{port}
+http://{address}:{port}/{random_path}
 ```
 
 

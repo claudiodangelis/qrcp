@@ -49,9 +49,14 @@ func main() {
 		log.Fatalln(err)
 	}
 
+	randomPath := getRandomURLPath()
+
+	generatedAddress := fmt.Sprintf("http://%s/%s", listener.Addr().String(), randomPath)
+
 	// Generate the QR code
 	info("Scan the following QR to start the download.")
 	info("Make sure that your smartphone is connected to the same WiFi network as this computer.")
+	info("Your generated address is", generatedAddress)
 
 	qrConfig := qrterminal.Config{
 		HalfBlocks:     true,
@@ -69,10 +74,11 @@ func main() {
 		qrConfig.WhiteChar = qrterminal.WHITE
 	}
 
-	qrterminal.GenerateWithConfig(fmt.Sprintf("http://%s", listener.Addr().String()), qrConfig)
+	qrterminal.GenerateWithConfig(generatedAddress, qrConfig)
 
 	// Define a default handler for the requests
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	route := fmt.Sprintf("/%s", randomPath)
+	http.HandleFunc(route, func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Disposition",
 			"attachment; filename="+content.Name())
 
