@@ -7,6 +7,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -72,18 +73,9 @@ func getAddress(config *Config) (string, error) {
 	}
 
 	var filteredIfaces []net.Interface
+	var re = regexp.MustCompile(`^(veth|br\-|docker|lo|EHC|XHC|bridge|gif|stf|p2p|awdl|utun|tun|tap)`)
 	for _, iface := range ifaces {
-		// TODO: Replace the following with a regexp
-		if strings.HasPrefix(iface.Name, "veth") {
-			continue
-		}
-		if strings.HasPrefix(iface.Name, "br-") {
-			continue
-		}
-		if strings.HasPrefix(iface.Name, "docker") {
-			continue
-		}
-		if iface.Name == "lo" {
+		if re.MatchString(iface.Name) {
 			continue
 		}
 		if iface.Flags&net.FlagUp == 0 {
