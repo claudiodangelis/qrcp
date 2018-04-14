@@ -91,7 +91,7 @@ qr-filetransfer /path/to/directory
 ## Clones and Similar Projects
 
 - [instant-file-transfer](https://github.com/maximumdata/instant-file-transfer) _(Uncredited)_ - Node.js project similar to this
-- [qr-filetransfer](https://github.com/sdushantha/qr-filetransfer) _(Uncredited)_ - Python clone of this project
+- [qr-filetransfer](https://github.com/sdushantha/qr-filetransfer) - Python clone of this project
 - [qr-filetransfer](https://github.com/svenkatreddy/qr-filetransfer) - Another Node.js clone of this project
 - [qr-transfer-node](https://github.com/codezoned/qr-transfer-node) - Another Node.js clone of this project
 - [QRDELIVER](https://github.com/realdennis/qrdeliver) - Node.js project similar to this
