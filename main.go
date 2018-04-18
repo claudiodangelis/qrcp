@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"os/signal"
 	"runtime"
 	"strings"
 	"sync"
@@ -92,6 +93,14 @@ func main() {
 		if err := srv.Shutdown(context.Background()); err != nil {
 			log.Println(err)
 		}
+	}()
+
+	// Gracefully shutdown when an OS signal is received
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig)
+	go func() {
+		<-sig
+		stop <- true
 	}()
 
 	// The handler adds and removes from the sync.WaitGroup
