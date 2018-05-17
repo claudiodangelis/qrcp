@@ -6,6 +6,8 @@ Transfer files over Wi-Fi from your computer to a mobile device by scanning a QR
 
 ## Install
 
+Go 1.8 is required to run.
+
 ```
 go get github.com/claudiodangelis/qr-filetransfer
 ```

@@ -6,6 +6,6 @@ I'm opening this issue because:
 - [ ] Other
 
 
-- My Go version is: _(paste the output of `go version`)_
+- My Go version is: _(paste the output of `go version` and remember that qr-filetransfer requires at least version 1.8 of Go)_
 - My [GOPATH](https://github.com/golang/go/wiki/GOPATH) is set to: _(paste the output of `echo $GOPATH`)_
 
