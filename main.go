@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -47,8 +48,13 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	// Get a TCP Listener bound to a random port
-	listener, err := net.Listen("tcp", address+":0")
+	port := ":0"
+	if config.Port > 0 {
+		port = ":" + strconv.FormatInt(int64(config.Port), 10)
+	}
+
+	// Get a TCP Listener bound to a random port, or the user specificed port
+	listener, err := net.Listen("tcp", address+port)
 	if err != nil {
 		log.Fatalln(err)
 	}
