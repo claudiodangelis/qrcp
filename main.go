@@ -21,6 +21,7 @@ var zipFlag = flag.Bool("zip", false, "zip the contents to be transfered")
 var forceFlag = flag.Bool("force", false, "ignore saved configuration")
 var debugFlag = flag.Bool("debug", false, "increase verbosity")
 var quietFlag = flag.Bool("quiet", false, "ignores non critical output")
+var portFlag = flag.Int("port", 0, "port to bind the server to")
 
 func main() {
 	flag.Parse()
@@ -47,8 +48,13 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	// Get a TCP Listener bound to a random port
-	listener, err := net.Listen("tcp", address+":0")
+	if *portFlag > 0 {
+		config.Port = *portFlag
+	}
+
+	// Get a TCP Listener bound to a random port, or the user specificed port
+	// listener, err := net.Listen("tcp", address+port)
+	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", address, config.Port))
 	if err != nil {
 		log.Fatalln(err)
 	}
