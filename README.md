@@ -68,12 +68,19 @@ Zip the file, then transfer it
 qr-filetransfer -zip /path/to/file.txt
 ```
 
-Transfer a full directory. Note: the **directory gets zipped** before being transferred
+Transfer a full directory. Note: the **directory is zipped** by the program before being transferred
 
 ```
 qr-filetransfer /path/to/directory
 ```
 
+Specify the port to use for the web server
+
+```
+qr-filetransfer -port=8080 /path/to/my-file
+```
+
+**Note:** if the `-port` argument is passed, the value is stored and used for all future transfers. Use `-force` to reset the stored port value.
 
 ## Arguments
 
@@ -81,6 +88,7 @@ qr-filetransfer /path/to/directory
 - `-quiet` ignores non critical output
 - `-force` ignores saved configuration
 - `-zip` zips the content before transferring it
+- `-port` sets port to bind the server to
 
 
 ## Authors

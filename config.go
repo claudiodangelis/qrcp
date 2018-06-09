@@ -12,7 +12,7 @@ import (
 // Config holds the values
 type Config struct {
 	Iface string `json:"interface"`
-	Port  int    `json:"port,omityempty"`
+	Port  int    `json:"port"`
 }
 
 func configFile() (string, error) {
