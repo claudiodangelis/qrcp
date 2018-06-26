@@ -7,9 +7,14 @@ import (
 	"net/http"
 	"os"
 
-	"path/filepath"
-
 	"github.com/mdp/qrterminal"
+)
+
+const (
+	// https cert path
+	certPath = "./cert"
+	// https key path
+	keyPath = "./key"
 )
 
 var zipFlag = flag.Bool("zip", false, "zip the contents to be transfered")
@@ -17,8 +22,6 @@ var forceFlag = flag.Bool("force", false, "ignore saved configuration")
 var debugFlag = flag.Bool("debug", false, "increase verbosity")
 var portFlag = flag.Int("port", 9527, "specify port, default is a 9527")
 var remoteFlag = flag.Bool("remote", false, "if set true, will use public ip address, default is false")
-
-var sshPortFlag = flag.Int("ssh", 22, "specify ssh port, default is 22, this is for generate scp command")
 
 func main() {
 	flag.Parse()
@@ -46,24 +49,23 @@ func main() {
 		}
 	}
 
+	// generate cert file
+	if err := Generate(certPath, keyPath); err != nil {
+		log.Fatalln(err)
+	}
+
 	content, err := getContent(flag.Args())
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	// Get absolute file path for generating scp command
-	dir, err := filepath.Abs(content.Name())
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
 	// Generate the QR code
 	fmt.Println("Scan the following QR to start the download.")
+	protocol := "http"
 	if *remoteFlag {
-		fmt.Printf("scp -P %d %s:%s ./\n", *sshPortFlag, address, dir)
+		protocol += "s"
 	}
-	qrterminal.GenerateHalfBlock(fmt.Sprintf("http://%s:%d", address, *portFlag),
+	qrterminal.GenerateHalfBlock(fmt.Sprintf("%s://%s:%d", protocol, address, *portFlag),
 		qrterminal.L, os.Stdout)
 
 	// Define a default handler for the requests
@@ -84,5 +86,12 @@ func main() {
 		os.Exit(0)
 	})
 	// Start a new server bound to the chosen address on a 9527 or specified port
-	log.Fatalln(http.ListenAndServe(fmt.Sprintf(":%d", *portFlag), nil))
+	log.Fatalln(
+		http.ListenAndServeTLS(
+			fmt.Sprintf(":%d", *portFlag),
+			certPath,
+			keyPath,
+			nil,
+		),
+	)
 }
