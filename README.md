@@ -70,8 +70,8 @@ qr-filetransfer /path/to/directory
 - `-debug` increases verbosity
 - `-force` ignores saved configuration
 - `-zip` zips the content before transferring it
-- `-remote` if set true, will use public ip address, default is false
-- `-ssh` specify ssh port, default is 22, this is for generate scp command
+- `-external` if set true, will use public ip address, default is false
+- `-cert` if set true, will start a qrcode for downloading the certification file for https, default is false
 
 
 ## Authors
