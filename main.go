@@ -13,9 +13,9 @@ import (
 const (
 	// TODO: windows may require a different path
 	// https cert path
-	certPath = "/var/tmp/qr-filetransfer/cert"
+	certPath = "/var/tmp/qr-filetransfer.cert"
 	// https key path
-	keyPath = "/var/tmp/qr-filetransfer/key"
+	keyPath = "/var/tmp/qr-filetransfer.key"
 )
 
 var zipFlag = flag.Bool("zip", false, "zip the contents to be transfered")
