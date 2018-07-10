@@ -25,6 +25,11 @@ func ServeFileAsHTTPServer(address string, port int, content Content) (srv *http
 
 	generatedAddress = fmt.Sprintf("http://%s/%s", listener.Addr().String(), randomPath)
 
+	// Generate the QR code
+	info("Scan the following QR to start the download.")
+	info("Make sure that your smartphone is connected to the same WiFi network as this computer.")
+	info("Your generated address is", generatedAddress)
+
 	// Create a server
 	srv = &http.Server{Addr: address}
 
