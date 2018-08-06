@@ -23,3 +23,6 @@ Contributions to this project are super welcome, so here's my recommendations:
 - Address one problem per pull request
 
     When possible, avoid submitting a pull request that addresses more than problem
+
+- Run `go fmt` before submitting the pull request and address `golint` issues
+
