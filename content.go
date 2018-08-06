@@ -1,13 +1,13 @@
 package main
 
 import (
+	"archive/zip"
 	"fmt"
-    "io"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
-	"archive/zip"
 )
 
 // Content represents the content to be transfered
@@ -39,45 +39,45 @@ func zipContent(args []string) (string, error) {
 	}
 	zipWriter := zip.NewWriter(tmpfile)
 	for _, item := range args {
-	    err = filepath.Walk(item, func(filePath string, info os.FileInfo, err error) error {
-            // keep walking if directory is encounterd
-            if info.IsDir() {
-                return nil
-            }
-            // stop walking if previosly encounterd error
-            if err != nil {
-                return err
-            }
-            relPath := strings.TrimPrefix(filePath, filepath.Dir(item))
-            zipFile, err := zipWriter.Create(relPath)
-            if err != nil {
-                return err
-            }
-            fileForArchiving, err := os.Open(filePath)
-            if err != nil {
-                return err
-            }
-            defer fileForArchiving.Close()
-            _, err = io.Copy(zipFile, fileForArchiving)
-            if err != nil {
-                return err
-            }
-            // keep walking 
-            return nil
-        })
-        if err != nil {
-            return "", err
-        }
+		err = filepath.Walk(item, func(filePath string, info os.FileInfo, err error) error {
+			// keep walking if directory is encounterd
+			if info.IsDir() {
+				return nil
+			}
+			// stop walking if previosly encounterd error
+			if err != nil {
+				return err
+			}
+			relPath := strings.TrimPrefix(filePath, filepath.Dir(item))
+			zipFile, err := zipWriter.Create(relPath)
+			if err != nil {
+				return err
+			}
+			fileForArchiving, err := os.Open(filePath)
+			if err != nil {
+				return err
+			}
+			defer fileForArchiving.Close()
+			_, err = io.Copy(zipFile, fileForArchiving)
+			if err != nil {
+				return err
+			}
+			// keep walking
+			return nil
+		})
+		if err != nil {
+			return "", err
+		}
 	}
 	err = zipWriter.Close()
-    if err != nil {
-        return "", err
-    }
+	if err != nil {
+		return "", err
+	}
 	tmpfile.Close()
 	if err := os.Rename(tmpfile.Name(), tmpfile.Name()+".zip"); err != nil {
 		return "", err
 	}
-	return tmpfile.Name()+".zip", nil
+	return tmpfile.Name() + ".zip", nil
 }
 
 // getContent returns an instance of Content and an error
