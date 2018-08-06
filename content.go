@@ -2,12 +2,12 @@ package main
 
 import (
 	"fmt"
+    "io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/jhoonb/archivex"
+	"archive/zip"
 )
 
 // Content represents the content to be transfered
@@ -33,31 +33,51 @@ func (c *Content) Delete() error {
 func zipContent(args []string) (string, error) {
 	fmt.Println("Adding the following items to a zip file:",
 		strings.Join(args, " "))
-	zip := new(archivex.ZipFile)
 	tmpfile, err := ioutil.TempFile("", "qr-filetransfer")
 	if err != nil {
 		return "", err
 	}
+	zipWriter := zip.NewWriter(tmpfile)
+	for _, item := range args {
+	    err = filepath.Walk(item, func(filePath string, info os.FileInfo, err error) error {
+            // keep walking if directory is encounterd
+            if info.IsDir() {
+                return nil
+            }
+            // stop walking if previosly encounterd error
+            if err != nil {
+                return err
+            }
+            relPath := strings.TrimPrefix(filePath, filepath.Dir(item))
+            zipFile, err := zipWriter.Create(relPath)
+            if err != nil {
+                return err
+            }
+            fileForArchiving, err := os.Open(filePath)
+            if err != nil {
+                return err
+            }
+            defer fileForArchiving.Close()
+            _, err = io.Copy(zipFile, fileForArchiving)
+            if err != nil {
+                return err
+            }
+            // keep walking 
+            return nil
+        })
+        if err != nil {
+            return "", err
+        }
+	}
+	err = zipWriter.Close()
+    if err != nil {
+        return "", err
+    }
 	tmpfile.Close()
 	if err := os.Rename(tmpfile.Name(), tmpfile.Name()+".zip"); err != nil {
 		return "", err
 	}
-	zip.Create(tmpfile.Name() + ".zip")
-	for _, item := range args {
-		f, err := os.Stat(item)
-		if err != nil {
-			return "", err
-		}
-		if f.IsDir() == true {
-			zip.AddAll(item, true)
-		} else {
-			zip.AddFile(item)
-		}
-	}
-	if err := zip.Close(); err != nil {
-		return "", nil
-	}
-	return zip.Name, nil
+	return tmpfile.Name()+".zip", nil
 }
 
 // getContent returns an instance of Content and an error
