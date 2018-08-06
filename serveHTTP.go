@@ -28,6 +28,7 @@ func ServeFileAsHTTPServer(address string, port int, content Content) (srv *http
 	// Generate the QR code
 	info("Scan the following QR to start the download.")
 	info("Make sure that your smartphone is connected to the same WiFi network as this computer.")
+	info("Size of payload:", humanReadableSizeOf(content.Path))
 	info("Your generated address is", generatedAddress)
 
 	// Create a server

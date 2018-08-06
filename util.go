@@ -157,3 +157,44 @@ func getSessionID() (string, error) {
 	}
 	return base64.StdEncoding.EncodeToString(randbytes), nil
 }
+
+// returns size of the file in human-readable form
+func humanReadableSizeOf(pathToFile string) string {
+	const (
+		B  int64 = 1
+		KB       = B << 10 // same as B*1024
+		MB       = KB << 10
+		GB       = MB << 10
+		TB       = GB << 10
+		PB       = TB << 10
+		EB       = PB << 10
+		// do not add sizes biger than Exabyte
+		// to avoid overflow of int64 that represents file size in os.FileInfo
+	)
+	fileInfo, err := os.Stat(pathToFile)
+	if err != nil {
+		return ""
+	}
+	fileSize := fileInfo.Size()
+	convertSize := func(rawSize, targetSize int64) float64 {
+		v := rawSize / targetSize
+		r := rawSize % targetSize
+		return float64(v) + float64(r)/float64(targetSize)
+	}
+	switch {
+	case fileSize > EB:
+		return fmt.Sprintf("%.1f EB", convertSize(fileSize, EB))
+	case fileSize > PB:
+		return fmt.Sprintf("%.1f PB", convertSize(fileSize, PB))
+	case fileSize > TB:
+		return fmt.Sprintf("%.1f TB", convertSize(fileSize, TB))
+	case fileSize > GB:
+		return fmt.Sprintf("%.1f GB", convertSize(fileSize, GB))
+	case fileSize > MB:
+		return fmt.Sprintf("%.1f MB", convertSize(fileSize, MB))
+	case fileSize > KB:
+		return fmt.Sprintf("%.1f KB", convertSize(fileSize, KB))
+	default:
+		return fmt.Sprintf("%d B", fileSize)
+	}
+}
