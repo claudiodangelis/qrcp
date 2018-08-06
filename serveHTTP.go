@@ -12,9 +12,9 @@ import (
 	"sync"
 )
 
+// ServeFileAsHTTPServer gets a TCP Listener bound to a random port, or the user
+// specificed port
 func ServeFileAsHTTPServer(address string, port int, content Content) (srv *http.Server, listener net.Listener, generatedAddress string) {
-	// Get a TCP Listener bound to a random port, or the user specificed port
-	// listener, err := net.Listen("tcp", address+port)
 	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", address, port))
 	if err != nil {
 		log.Fatalln(err)
