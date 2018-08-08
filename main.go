@@ -17,37 +17,45 @@ var forceFlag = flag.Bool("force", false, "ignore saved configuration")
 var debugFlag = flag.Bool("debug", false, "increase verbosity")
 var quietFlag = flag.Bool("quiet", false, "ignores non critical output")
 var portFlag = flag.Int("port", 0, "port to bind the server to")
+var receiveMode = flag.Bool("recieve", false, "allows to receive files")
 
 func main() {
 	flag.Parse()
+
+	if len(flag.Args()) == 0 {
+		log.Fatalln("At least one argument is required")
+
+	}
+
 	config := LoadConfig()
 	if *forceFlag == true {
 		config.Delete()
 		config = LoadConfig()
 	}
 
-	// Check how many arguments are passed
-	if len(flag.Args()) == 0 {
-		log.Fatalln("At least one argument is required")
-	}
-
-	// Get Content
-	content, err := getContent(flag.Args())
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	// Get address
-	address, err := getAddress(&config)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
 	if *portFlag > 0 {
 		config.Port = *portFlag
 	}
 
-	srv, listener, generatedAddress := ServeFileAsHTTPServer(address, config.Port, content)
+	srv, listener, generatedAddress, route, stopSignal, wg := setupHTTPServer(config)
+
+	if *receiveMode {
+		receiveFilesHTTP(generatedAddress, route, flag.Args()[0], wg, stopSignal)
+	} else {
+		content, err := getContent(flag.Args())
+		if err != nil {
+			log.Fatalln(err)
+		}
+		serveFilesHTTP(generatedAddress, route, content, wg, stopSignal)
+
+		defer func() {
+			if content.ShouldBeDeleted {
+				if err := content.Delete(); err != nil {
+					log.Println("Unable to delete the content from disk", err)
+				}
+			}
+		}()
+	}
 
 	qrConfig := qrterminal.Config{
 		HalfBlocks:     true,
@@ -72,11 +80,6 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	if content.ShouldBeDeleted {
-		if err := content.Delete(); err != nil {
-			log.Println("Unable to delete the content from disk", err)
-		}
-	}
 	if err := config.Update(); err != nil {
 		log.Println("Unable to update configuration", err)
 	}
