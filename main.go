@@ -17,7 +17,7 @@ var forceFlag = flag.Bool("force", false, "ignore saved configuration")
 var debugFlag = flag.Bool("debug", false, "increase verbosity")
 var quietFlag = flag.Bool("quiet", false, "ignores non critical output")
 var portFlag = flag.Int("port", 0, "port to bind the server to")
-var receiveMode = flag.Bool("recieve", false, "allows to receive files")
+var receiveFlag = flag.Bool("receive", false, "receives files")
 
 func main() {
 	flag.Parse()
@@ -39,7 +39,7 @@ func main() {
 
 	srv, listener, generatedAddress, route, stopSignal, wg := setupHTTPServer(config)
 
-	if *receiveMode {
+	if *receiveFlag {
 		receiveFilesHTTP(generatedAddress, route, flag.Args()[0], wg, stopSignal)
 	} else {
 		content, err := getContent(flag.Args())
