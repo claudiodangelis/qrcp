@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
@@ -144,6 +145,26 @@ func receiveFilesHTTP(generatedAddress, route, dirToStore string, wg *sync.WaitG
 		}
 		if r.Method == "POST" {
 			defer wg.Done()
+
+			// make sure dirToStore is exist
+			filesInfo, err := ioutil.ReadDir(dirToStore)
+			if err != nil && os.IsNotExist(err) {
+				// if not exist try to create directories in path to dirToStore
+				if err := os.MkdirAll(dirToStore, os.ModePerm); err != nil {
+					fmt.Fprintf(w, "Unable to create specifyed dir: %s\n", err) //output to server
+					log.Printf("Unable to create specifyed dir: %v\n", err)     //output to console
+					stop <- true                                                // send signal to server to shutdown
+					return
+				}
+			}
+
+			// create array of names of files which are stored in dirToStore
+			// used later to set valid name for received files
+			fileNamesInTargetDir := make([]string, len(filesInfo))
+			for _, fi := range filesInfo {
+				fileNamesInTargetDir = append(fileNamesInTargetDir, fi.Name())
+			}
+
 			r.ParseMultipartForm(32 << 20) // 32MB is the default used by http.Request.FormFile()
 			fileHeaders := r.MultipartForm.File["files"]
 			for _, fileHeader := range fileHeaders {
@@ -152,42 +173,51 @@ func receiveFilesHTTP(generatedAddress, route, dirToStore string, wg *sync.WaitG
 				defer file.Close()
 				if err != nil {
 					fmt.Fprintf(w, "Unable to read provided file: %v\n", err) //output to server
-					log.Printf("Unable to read provided file: %v\n", err) //output to console
-					stop <- true // send signal to server to shutdown
+					log.Printf("Unable to read provided file: %v\n", err)     //output to console
+					stop <- true                                              // send signal to server to shutdown
+					return
+				}
+
+				// seting name of new file
+				// if name isn't taken leave it unchanged
+				// else change name to format "name(number).ext"
+				newFilename := fileHeader.Filename
+				fileExt := filepath.Ext(newFilename)
+				fileName := strings.TrimSuffix(newFilename, fileExt)
+				number := 1
+				i := 0
+				for i < len(fileNamesInTargetDir) {
+					if newFilename == fileNamesInTargetDir[i] {
+						newFilename = fmt.Sprintf("%s(%v)%s", fileName, number, fileExt)
+						number++
+						i = 0 // start search again
+					}
+					i++
 				}
 
 				// try to create output file
-				out, err := os.Create(filepath.Join(dirToStore, fileHeader.Filename))
-				defer out.Close()
+				out, err := os.Create(filepath.Join(dirToStore, newFilename))
 				if err != nil {
-					if os.IsNotExist(err) {
-						err := os.MkdirAll(dirToStore, os.ModePerm)
-						if err != nil {
-							fmt.Fprintf(w, "Unable to create specifyed dir: %s\n", err) //output to server
-							log.Printf("Unable to create specifyed dir: %v\n", err) //output to console
-							stop <- true // send signal to server to shutdown
-						}
-						// create output file if error was handled succesfully
-						out, _ = os.Create(filepath.Join(dirToStore, fileHeader.Filename))
-					} else {
-						fmt.Fprintf(w, "Unable to create the file for writing: %s\n", err) //output to server
-						log.Printf("Unable to create the file for writing: %s\n", err) //output to console
-						stop <- true // send signal to server to shutdown
-					}
+					fmt.Fprintf(w, "Unable to create the file for writing: %s\n", err) //output to server
+					log.Printf("Unable to create the file for writing: %s\n", err)     //output to console
+					stop <- true                                                       // send signal to server to shutdown
+					return
 				}
-				// create output file if error was handled succesfully
-				out, _ = os.Create(filepath.Join(dirToStore, fileHeader.Filename))
+				defer out.Close()
+
+				// add name of new file
+				fileNamesInTargetDir = append(fileNamesInTargetDir, newFilename)
 
 				// write the content from POSTed file to the out
-				_, err = io.Copy(out, file)
-				if err != nil {
+				if _, err = io.Copy(out, file); err != nil {
 					fmt.Fprintf(w, "Unable to write file to disk: %v", err) //output to server
-					log.Printf("Unable to write file to disk: %v", err) //output to console
-					stop <- true // send signal to server to shutdown
+					log.Printf("Unable to write file to disk: %v", err)     //output to console
+					stop <- true                                            // send signal to server to shutdown
+					return
 				}
 
-				fmt.Fprintf(w, "File uploaded successfully: %s\n", fileHeader.Filename) //ouput to server
-				fmt.Printf("File uploaded successfully: %s\n", fileHeader.Filename) //output to console
+				fmt.Fprintf(w, "File uploaded successfully: %s\n", out.Name()) //ouput to server
+				fmt.Printf("File uploaded successfully: %s\n", out.Name())     //output to console
 			}
 		}
 	})
