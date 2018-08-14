@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
@@ -12,7 +11,6 @@ import (
 	"os"
 	"regexp"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -101,9 +99,9 @@ func getAddress(config *Config) (string, error) {
 	for n, iface := range filteredIfaces {
 		fmt.Printf("[%d] %s\n", n, iface.Name)
 	}
-	reader := bufio.NewReader(os.Stdin)
-	text, _ := reader.ReadString('\n')
-	index, err := strconv.Atoi(strings.Trim(text, "\n\r"))
+	var userInput string
+	fmt.Scanln(&userInput)
+	index, err := strconv.Atoi(userInput)
 	if err != nil {
 		return "", err
 	}
