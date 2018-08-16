@@ -166,6 +166,7 @@ func receiveFilesHTTP(generatedAddress, route, dirToStore string, wg *sync.WaitG
 
 			r.ParseMultipartForm(32 << 20) // 32MB is the default used by http.Request.FormFile()
 			fileHeaders := r.MultipartForm.File["files"]
+			transferedFiles := []string{}
 			for _, fileHeader := range fileHeaders {
 				// open provided file
 				file, err := fileHeader.Open()
@@ -214,15 +215,16 @@ func receiveFilesHTTP(generatedAddress, route, dirToStore string, wg *sync.WaitG
 					stop <- true                                            // send signal to server to shutdown
 					return
 				}
-				data.File = out.Name()
-				doneTmpl, err := template.New("done").Parse(donePage)
-				if err != nil {
-					panic(err)
-				}
-				if err := doneTmpl.Execute(w, data); err != nil {
-					panic(err)
-				}
+				transferedFiles = append(transferedFiles, out.Name())
 				fmt.Printf("File uploaded successfully: %s\n", out.Name()) //output to console
+			}
+			data.File = strings.Join(transferedFiles, ", ")
+			doneTmpl, err := template.New("done").Parse(donePage)
+			if err != nil {
+				panic(err)
+			}
+			if err := doneTmpl.Execute(w, data); err != nil {
+				panic(err)
 			}
 		}
 	})
