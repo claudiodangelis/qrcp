@@ -1,4 +1,7 @@
 # qr-filetransfer
+![Logo](logo.svg)
+
+
 
 Transfer files over Wi-Fi from your computer to a mobile device by scanning a QR code without leaving the terminal.
 
@@ -97,6 +100,12 @@ qr-filetransfer -port=8080 /path/to/my-file
 
 
 [Join us!](https://github.com/claudiodangelis/qr-filetransfer/fork)
+
+## Logo Credits
+
+Logo is provided by [@arasatasaygin](https://github.com/arasatasaygin) as part of the [openlogos](https://github.com/arasatasaygin/openlogos) initiative, a collection of free logos for open source projects.
+
+Check out the rules to claim one: [rules of openlogos](https://github.com/arasatasaygin/openlogos#rules).
 
 ## Clones and Similar Projects
 
