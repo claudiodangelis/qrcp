@@ -5,11 +5,11 @@
 
 Transfer files over Wi-Fi from your computer to a mobile device by scanning a QR code without leaving the terminal.
 
-**Desktop to mobile:**
+### Desktop to mobile
 
 ![screenshot](demo.gif)
 
-**Mobile to desktop:**
+### Mobile to desktop
 
 ![Screenshot](mobile-demo.gif)
 
