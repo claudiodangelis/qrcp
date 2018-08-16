@@ -5,7 +5,13 @@
 
 Transfer files over Wi-Fi from your computer to a mobile device by scanning a QR code without leaving the terminal.
 
+**Desktop to mobile:**
+
 ![screenshot](demo.gif)
+
+**Mobile to desktop:**
+
+![Screenshot](mobile-screenshot.png)
 
 ## Install
 
@@ -34,8 +40,9 @@ http://{address}:{port}/{random_path}
 Most QR apps can detect URLs in decoded text and act accordingly (i.e. open the decoded URL with the default browser), so when the QR code is scanned the content will begin downloading by the mobile browser.
 
 ## Usage
-![Screenshot](screenshot.jpg)
 
+
+![Screenshot](screenshot.jpg)
 
 
 **Note**: Both the computer and device must be on the same Wi-Fi network.
@@ -58,6 +65,10 @@ The chosen network will be saved and no more setup is necessary, unless the `-fo
 
 ---
 
+Two transfers mode are supported: **desktop-to-mobile** and **mobile-to-desktop**
+
+
+## Desktop to Mobile
 
 Transfer a single file
 
@@ -77,6 +88,16 @@ Transfer a full directory. Note: the **directory is zipped** by the program befo
 qr-filetransfer /path/to/directory
 ```
 
+## Mobile to Desktop
+
+If you want to use it the other way, you need to pass the `-receive` flag. 
+
+The first argument is the directory you want to transfer mobile files to.
+
+```
+qr-filetransfer -receive ~/Downloads
+```
+
 Specify the port to use for the web server
 
 ```
@@ -85,6 +106,8 @@ qr-filetransfer -port=8080 /path/to/my-file
 
 **Note:** if the `-port` argument is passed, the value is stored and used for all future transfers. Use `-force` to reset the stored port value.
 
+
+
 ## Arguments
 
 - `-debug` increases verbosity
@@ -92,6 +115,7 @@ qr-filetransfer -port=8080 /path/to/my-file
 - `-force` ignores saved configuration
 - `-zip` zips the content before transferring it
 - `-port` sets port to bind the server to
+- `-receive` enables transfers from mobile to desktop
 
 
 ## Authors
