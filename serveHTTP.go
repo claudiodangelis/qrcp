@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"html/template"
 	"io"
 	"io/ioutil"
 	"log"
@@ -126,22 +127,20 @@ func receiveFilesHTTP(generatedAddress, route, dirToStore string, wg *sync.WaitG
 	info("Your generated address is", generatedAddress)
 
 	http.HandleFunc(route, func(w http.ResponseWriter, r *http.Request) {
+		data := struct {
+			Route string
+			File  string
+		}{}
+		data.Route = route
 		if r.Method == "GET" {
-			fmt.Fprintf(w, `<html>
-<head>
-  <title>qr-filetransfer</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-</head>
-<body>
-<h2>Upload a file</h2>
-<form action="`+route+`" method="post" enctype="multipart/form-data">
-  <label for="file">Filename:</label>
-  <input type="file" name="files" id="files" multiple>
-  <br>
-  <input type="submit" name="submit" value="Submit">
-</form>
-</body>
-</html>`)
+			tmpl, err := template.New("upload").Parse(uploadPage)
+			if err != nil {
+				// TODO: Handle panic
+				panic(err)
+			}
+			if err = tmpl.Execute(w, data); err != nil {
+				panic(err)
+			}
 		}
 		if r.Method == "POST" {
 			defer wg.Done()
@@ -215,9 +214,15 @@ func receiveFilesHTTP(generatedAddress, route, dirToStore string, wg *sync.WaitG
 					stop <- true                                            // send signal to server to shutdown
 					return
 				}
-
-				fmt.Fprintf(w, "File uploaded successfully: %s\n", out.Name()) //ouput to server
-				fmt.Printf("File uploaded successfully: %s\n", out.Name())     //output to console
+				data.File = out.Name()
+				doneTmpl, err := template.New("done").Parse(donePage)
+				if err != nil {
+					panic(err)
+				}
+				if err := doneTmpl.Execute(w, data); err != nil {
+					panic(err)
+				}
+				fmt.Printf("File uploaded successfully: %s\n", out.Name()) //output to console
 			}
 		}
 	})
