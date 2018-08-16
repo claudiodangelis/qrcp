@@ -11,7 +11,7 @@ Transfer files over Wi-Fi from your computer to a mobile device by scanning a QR
 
 **Mobile to desktop:**
 
-![Screenshot](mobile-screenshot.png)
+![Screenshot](mobile-demo.gif)
 
 ## Install
 
