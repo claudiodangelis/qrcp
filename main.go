@@ -18,6 +18,7 @@ var debugFlag = flag.Bool("debug", false, "increase verbosity")
 var quietFlag = flag.Bool("quiet", false, "ignores non critical output")
 var portFlag = flag.Int("port", 0, "port to bind the server to")
 var receiveFlag = flag.Bool("receive", false, "receives files")
+var keepAliveFlag = flag.Bool("keep-alive", false, "keeps server alive, won't shut it down after transfer")
 
 func main() {
 	flag.Parse()

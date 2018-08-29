@@ -51,7 +51,7 @@ func setupHTTPServer(config Config) (srv *http.Server, listener net.Listener, ge
 
 	// Gracefully shutdown when an OS signal is received
 	sig := make(chan os.Signal, 1)
-	signal.Notify(sig)
+	signal.Notify(sig, os.Interrupt)
 	go func() {
 		<-sig
 		stop <- true
@@ -65,7 +65,9 @@ func setupHTTPServer(config Config) (srv *http.Server, listener net.Listener, ge
 	(*wg).Add(1)
 	go func() {
 		(*wg).Wait()
-		stop <- true
+		if *keepAliveFlag == false {
+			stop <- true
+		}
 	}()
 	return
 }
