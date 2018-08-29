@@ -110,7 +110,7 @@ qr-filetransfer -port=8080 /path/to/my-file
 
 ### Keep server alive
 
-If you are trying to transfer a file that the browser on the receiving end is considering harmful, you can be asked by the browser if you really want to keep the file or discard it; this condition (browser awaiting your answer) can lead to qr-filetransfer disconnection. To prevent qr-filetransfer from disconnecting, use the `-keep-alive` flag
+If you are trying to transfer a file that the browser on the receiving end is considering harmful, you can be asked by the browser if you really want to keep the file or discard it; this condition (browser awaiting your answer) can lead to qr-filetransfer disconnection. To prevent qr-filetransfer from disconnecting, use the `-keep-alive` flag:
 
 ```sh
 qr-filetransfer -keep-alive /path/to/my/totally/cool.apk
