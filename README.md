@@ -142,6 +142,7 @@ Check out the rules to claim one: [rules of openlogos](https://github.com/arasat
 
 ## Clones and Similar Projects
 
+- [qr-fileshare](https://github.com/shivensinha4/qr-fileshare) - A similar idea executed in NodeJS with a React interface.
 - [instant-file-transfer](https://github.com/maximumdata/instant-file-transfer) _(Uncredited)_ - Node.js project similar to this
 - [qr-filetransfer](https://github.com/sdushantha/qr-filetransfer) - Python clone of this project
 - [qr-filetransfer](https://github.com/svenkatreddy/qr-filetransfer) - Another Node.js clone of this project
