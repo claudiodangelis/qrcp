@@ -14,6 +14,8 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+
+	"gopkg.in/cheggaaa/pb.v1"
 )
 
 // returns http server, tcp listner, address of server, route, and channel used for gracefull shutdown
@@ -166,39 +168,36 @@ func receiveFilesHTTP(generatedAddress, route, dirToStore string, wg *sync.WaitG
 				fileNamesInTargetDir = append(fileNamesInTargetDir, fi.Name())
 			}
 
-			r.ParseMultipartForm(32 << 20) // 32MB is the default used by http.Request.FormFile()
-			fileHeaders := r.MultipartForm.File["files"]
+			reader, err := r.MultipartReader()
+			if err != nil {
+				fmt.Fprintf(w, "Upload error: %v\n", err)
+				log.Printf("Upload error: %v\n", err)
+				stop <- true
+				return
+			}
+
 			transferedFiles := []string{}
-			for _, fileHeader := range fileHeaders {
-				// open provided file
-				file, err := fileHeader.Open()
-				defer file.Close()
-				if err != nil {
-					fmt.Fprintf(w, "Unable to read provided file: %v\n", err) //output to server
-					log.Printf("Unable to read provided file: %v\n", err)     //output to console
-					stop <- true                                              // send signal to server to shutdown
-					return
+			info("Transferring files...")
+			progressBar := pb.New64(r.ContentLength)
+			progressBar.ShowCounters = false
+			if *quietFlag == true { 
+				progressBar.NotPrint = true
+			}
+			
+			for {
+				part, err := reader.NextPart()
+
+				if err == io.EOF {
+					break
+				}
+				// if part.FileName() is empty, skip this iteration.
+				if part.FileName() == "" {
+					continue
 				}
 
-				// seting name of new file
-				// if name isn't taken leave it unchanged
-				// else change name to format "name(number).ext"
-				newFilename := fileHeader.Filename
-				fileExt := filepath.Ext(newFilename)
-				fileName := strings.TrimSuffix(newFilename, fileExt)
-				number := 1
-				i := 0
-				for i < len(fileNamesInTargetDir) {
-					if newFilename == fileNamesInTargetDir[i] {
-						newFilename = fmt.Sprintf("%s(%v)%s", fileName, number, fileExt)
-						number++
-						i = 0 // start search again
-					}
-					i++
-				}
-
-				// try to create output file
-				out, err := os.Create(filepath.Join(dirToStore, newFilename))
+				// prepare the dst
+				fileName := getFileName(part.FileName(), fileNamesInTargetDir)
+				out, err := os.Create(filepath.Join(dirToStore, fileName))
 				if err != nil {
 					fmt.Fprintf(w, "Unable to create the file for writing: %s\n", err) //output to server
 					log.Printf("Unable to create the file for writing: %s\n", err)     //output to console
@@ -208,18 +207,40 @@ func receiveFilesHTTP(generatedAddress, route, dirToStore string, wg *sync.WaitG
 				defer out.Close()
 
 				// add name of new file
-				fileNamesInTargetDir = append(fileNamesInTargetDir, newFilename)
+				fileNamesInTargetDir = append(fileNamesInTargetDir, fileName)
 
 				// write the content from POSTed file to the out
-				if _, err = io.Copy(out, file); err != nil {
-					fmt.Fprintf(w, "Unable to write file to disk: %v", err) //output to server
-					log.Printf("Unable to write file to disk: %v", err)     //output to console
-					stop <- true                                            // send signal to server to shutdown
-					return
+				info("Transferring file: ", out.Name())
+				progressBar.Prefix(out.Name())
+				progressBar.Start()
+				buf := make([]byte, 1024)
+				for {
+					// read a chunk
+					n, err := part.Read(buf)
+					if err != nil && err != io.EOF {
+						fmt.Fprintf(w, "Unable to write file to disk: %v", err) //output to server
+						log.Printf("Unable to write file to disk: %v", err)     //output to console
+						stop <- true                                            // send signal to server to shutdown
+						return
+					}
+					if n == 0 {
+						break
+					}
+					// write a chunk
+					if _, err := out.Write(buf[:n]); err != nil {
+						fmt.Fprintf(w, "Unable to write file to disk: %v", err) //output to server
+						log.Printf("Unable to write file to disk: %v", err)     //output to console
+						stop <- true                                            // send signal to server to shutdown
+						return
+					}
+					progressBar.Add(n)
 				}
+
 				transferedFiles = append(transferedFiles, out.Name())
-				fmt.Printf("File uploaded successfully: %s\n", out.Name()) //output to console
 			}
+
+			progressBar.FinishPrint("File transfer completed")
+
 			data.File = strings.Join(transferedFiles, ", ")
 			doneTmpl, err := template.New("done").Parse(donePage)
 			if err != nil {
@@ -230,4 +251,23 @@ func receiveFilesHTTP(generatedAddress, route, dirToStore string, wg *sync.WaitG
 			}
 		}
 	})
+}
+
+//getFileName generates a file name based on the existing files in the directory
+// if name isn't taken leave it unchanged
+// else change name to format "name(number).ext"
+func getFileName(newFilename string, fileNamesInTargetDir []string) string {
+	fileExt := filepath.Ext(newFilename)
+	fileName := strings.TrimSuffix(newFilename, fileExt)
+	number := 1
+	i := 0
+	for i < len(fileNamesInTargetDir) {
+		if newFilename == fileNamesInTargetDir[i] {
+			newFilename = fmt.Sprintf("%s(%v)%s", fileName, number, fileExt)
+			number++
+			i = 0 // start search again
+		}
+		i++
+	}
+	return newFilename
 }
