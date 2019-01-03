@@ -139,7 +139,8 @@ func receiveFilesHTTP(generatedAddress, route, dirToStore string, wg *sync.WaitG
 		if r.Method == "GET" {
 			tmpl, err := template.New("upload").Parse(uploadPage)
 			if err != nil {
-				// TODO: Handle panic
+				fmt.Fprintf(w, "Unable to display the download page: %s\n", err) //output to server
+				log.Printf("Unable to display the download page: %v\n", err)     //output to console
 				panic(err)
 			}
 			if err = tmpl.Execute(w, data); err != nil {
@@ -180,10 +181,10 @@ func receiveFilesHTTP(generatedAddress, route, dirToStore string, wg *sync.WaitG
 			info("Transferring files...")
 			progressBar := pb.New64(r.ContentLength)
 			progressBar.ShowCounters = false
-			if *quietFlag == true { 
+			if *quietFlag == true {
 				progressBar.NotPrint = true
 			}
-			
+
 			for {
 				part, err := reader.NextPart()
 
