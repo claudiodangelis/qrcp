@@ -10,6 +10,7 @@ import (
 
 	"github.com/claudiodangelis/qr-filetransfer/config"
 	"github.com/claudiodangelis/qr-filetransfer/content"
+	"github.com/claudiodangelis/qr-filetransfer/server"
 	"github.com/mattn/go-colorable"
 	"github.com/mdp/qrterminal"
 )
@@ -40,16 +41,15 @@ func main() {
 		cfg.Port = *portFlag
 	}
 
-	srv, listener, generatedAddress, route, stopSignal, wg := setupHTTPServer(cfg)
-
+	srv, listener, generatedAddress, route, stopSignal, wg := server.New(cfg)
 	if *receiveFlag {
-		receiveFilesHTTP(generatedAddress, route, flag.Args()[0], wg, stopSignal)
+		server.Receive(generatedAddress, route, flag.Args()[0], wg, stopSignal)
 	} else {
 		c, err := content.Get(flag.Args())
 		if err != nil {
 			log.Fatalln(err)
 		}
-		serveFilesHTTP(generatedAddress, route, c, wg, stopSignal)
+		server.Serve(generatedAddress, route, c, wg, stopSignal)
 
 		defer func() {
 			if c.ShouldBeDeleted {
@@ -86,5 +86,4 @@ func main() {
 	if err := cfg.Update(); err != nil {
 		log.Println("Unable to update configuration", err)
 	}
-
 }

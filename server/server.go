@@ -1,7 +1,8 @@
-package main
+package server
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"html/template"
 	"io"
@@ -18,12 +19,13 @@ import (
 	"github.com/claudiodangelis/qr-filetransfer/config"
 	"github.com/claudiodangelis/qr-filetransfer/content"
 	l "github.com/claudiodangelis/qr-filetransfer/log"
+	"github.com/claudiodangelis/qr-filetransfer/page"
 	"github.com/claudiodangelis/qr-filetransfer/util"
 	"gopkg.in/cheggaaa/pb.v1"
 )
 
-// returns http server, tcp listner, address of server, route, and channel used for gracefull shutdown
-func setupHTTPServer(cfg config.Config) (srv *http.Server, listener net.Listener, generatedAddress, route string, stop chan bool, wg *sync.WaitGroup) {
+// New returns http server, tcp listner, address of server, route, and channel used for gracefull shutdown
+func New(cfg config.Config) (srv *http.Server, listener net.Listener, generatedAddress, route string, stop chan bool, wg *sync.WaitGroup) {
 	// Get address
 	address, err := util.GetAddress(&cfg)
 	if err != nil {
@@ -71,14 +73,15 @@ func setupHTTPServer(cfg config.Config) (srv *http.Server, listener net.Listener
 	(*wg).Add(1)
 	go func() {
 		(*wg).Wait()
-		if *keepAliveFlag == false {
+		if flag.Lookup("keep-alive").Value.(flag.Getter).Get().(bool) == false {
 			stop <- true
 		}
 	}()
 	return
 }
 
-func serveFilesHTTP(generatedAddress, route string, content content.Content, wg *sync.WaitGroup, stop chan bool) {
+// Serve serves files
+func Serve(generatedAddress, route string, content content.Content, wg *sync.WaitGroup, stop chan bool) {
 	logger := l.New()
 	logger.Info("Scan the following QR to start the download.")
 	logger.Info("Make sure that your smartphone is connected to the same WiFi network as this computer.")
@@ -130,7 +133,8 @@ func serveFilesHTTP(generatedAddress, route string, content content.Content, wg 
 	})
 }
 
-func receiveFilesHTTP(generatedAddress, route, dirToStore string, wg *sync.WaitGroup, stop chan bool) {
+// Receive receives files
+func Receive(generatedAddress, route, dirToStore string, wg *sync.WaitGroup, stop chan bool) {
 	logger := l.New()
 	logger.Info("Scan the following QR to start the upload.")
 	logger.Info("Make sure that your smartphone is connected to the same WiFi network as this computer.")
@@ -143,7 +147,7 @@ func receiveFilesHTTP(generatedAddress, route, dirToStore string, wg *sync.WaitG
 		}{}
 		data.Route = route
 		if r.Method == "GET" {
-			tmpl, err := template.New("upload").Parse(uploadPage)
+			tmpl, err := template.New("upload").Parse(page.Upload)
 			if err != nil {
 				// TODO: Handle panic
 				panic(err)
@@ -186,7 +190,7 @@ func receiveFilesHTTP(generatedAddress, route, dirToStore string, wg *sync.WaitG
 			logger.Info("Transferring files...")
 			progressBar := pb.New64(r.ContentLength)
 			progressBar.ShowCounters = false
-			if *quietFlag == true {
+			if flag.Lookup("quiet").Value.(flag.Getter).Get().(bool) == true {
 				progressBar.NotPrint = true
 			}
 
@@ -248,7 +252,7 @@ func receiveFilesHTTP(generatedAddress, route, dirToStore string, wg *sync.WaitG
 			progressBar.FinishPrint("File transfer completed")
 
 			data.File = strings.Join(transferedFiles, ", ")
-			doneTmpl, err := template.New("done").Parse(donePage)
+			doneTmpl, err := template.New("done").Parse(page.Done)
 			if err != nil {
 				panic(err)
 			}

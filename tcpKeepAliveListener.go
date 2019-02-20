@@ -33,11 +33,12 @@ import (
 	"time"
 )
 
-// Apply TCP keepalives to the listener
+// tcpKeepAliveListener applies TCP keepalives to the listener
 type tcpKeepAliveListener struct {
 	*net.TCPListener
 }
 
+// Accept accepts TCP
 func (ln tcpKeepAliveListener) Accept() (net.Conn, error) {
 	tc, err := ln.AcceptTCP()
 	if err != nil {
