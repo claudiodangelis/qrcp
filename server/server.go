@@ -164,8 +164,8 @@ func Receive(generatedAddress, route, dirToStore string, wg *sync.WaitGroup, sto
 			if err != nil && os.IsNotExist(err) {
 				// if not exist try to create directories in path to dirToStore
 				if err := os.MkdirAll(dirToStore, os.ModePerm); err != nil {
-					fmt.Fprintf(w, "Unable to create specifyed dir: %s\n", err) //output to server
-					log.Printf("Unable to create specifyed dir: %v\n", err)     //output to console
+					fmt.Fprintf(w, "Unable to create specified dir: %s\n", err) //output to server
+					log.Printf("Unable to create specified dir: %v\n", err)     //output to console
 					stop <- true                                                // send signal to server to shutdown
 					return
 				}
