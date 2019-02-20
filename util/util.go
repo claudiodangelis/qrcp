@@ -7,6 +7,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net"
 	"os"
 	"regexp"
@@ -36,6 +37,22 @@ func FindIP(iface net.Interface) (string, error) {
 	return "", errors.New("Unable to find an IP for this interface")
 }
 
+func filterInterfaces(ifaces []net.Interface) []net.Interface {
+	filtered := []net.Interface{}
+	var re = regexp.MustCompile(`^(veth|br\-|docker|lo|EHC|XHC|bridge|gif|stf|p2p|awdl|utun|tun|tap)`)
+	for _, iface := range ifaces {
+		if re.MatchString(iface.Name) {
+			continue
+		}
+		if iface.Flags&net.FlagUp == 0 {
+			continue
+		}
+		filtered = append(filtered, iface)
+	}
+	return filtered
+
+}
+
 // GetAddress returns the address of the network interface to
 // bind the server to. The first time is run it prompts a
 // dialog to choose which network interface should be used
@@ -60,17 +77,8 @@ func GetAddress(cfg *config.Config) (string, error) {
 		return ip, nil
 	}
 
-	var filteredIfaces []net.Interface
-	var re = regexp.MustCompile(`^(veth|br\-|docker|lo|EHC|XHC|bridge|gif|stf|p2p|awdl|utun|tun|tap)`)
-	for _, iface := range ifaces {
-		if re.MatchString(iface.Name) {
-			continue
-		}
-		if iface.Flags&net.FlagUp == 0 {
-			continue
-		}
-		filteredIfaces = append(filteredIfaces, iface)
-	}
+	filteredIfaces := filterInterfaces(ifaces)
+
 	if len(filteredIfaces) == 0 {
 		return "", errors.New("no network interface available")
 	}
@@ -183,4 +191,33 @@ func ShouldBeZipped(args []string) (bool, error) {
 		return true, nil
 	}
 	return false, nil
+}
+
+// EnsureDirExists on disk
+func EnsureDirExists(dir string) (bool, error) {
+	if _, err := ioutil.ReadDir(dir); err != nil {
+		// There is an error
+		if os.IsNotExist(err) == false {
+			panic(err)
+		}
+		if err := os.MkdirAll(dir, os.ModePerm); err != nil {
+			return false, err
+		}
+	}
+	return true, nil
+}
+
+// ReadFilenames from dir
+func ReadFilenames(dir string) []string {
+	files, err := ioutil.ReadDir(dir)
+	if err != nil {
+		panic(err)
+	}
+	// create array of names of files which are stored in dir
+	// used later to set valid name for received files
+	filenames := make([]string, len(files))
+	for _, fi := range files {
+		filenames = append(filenames, fi.Name())
+	}
+	return filenames
 }

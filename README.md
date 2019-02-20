@@ -1,9 +1,13 @@
 # qr-filetransfer
+
+
 ![Logo](logo.svg)
 
 
 
 Transfer files over Wi-Fi from your computer to a mobile device by scanning a QR code without leaving the terminal.
+
+[![Go Report Card](https://goreportcard.com/badge/github.com/claudiodangelis/qr-filetransfer)](https://goreportcard.com/report/github.com/claudiodangelis/qr-filetransfer)
 
 ### Desktop to mobile
 
