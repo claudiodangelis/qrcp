@@ -19,13 +19,13 @@ import (
 )
 
 // returns http server, tcp listner, address of server, route, and channel used for gracefull shutdown
-func setupHTTPServer(config Config) (srv *http.Server, listener net.Listener, generatedAddress, route string, stop chan bool, wg *sync.WaitGroup) {
+func setupHTTPServer(cfg Config) (srv *http.Server, listener net.Listener, generatedAddress, route string, stop chan bool, wg *sync.WaitGroup) {
 	// Get address
-	address, err := getAddress(&config)
+	address, err := getAddress(&cfg)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	listener, err = net.Listen("tcp", fmt.Sprintf("%s:%d", address, config.Port))
+	listener, err = net.Listen("tcp", fmt.Sprintf("%s:%d", address, cfg.Port))
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -180,10 +180,10 @@ func receiveFilesHTTP(generatedAddress, route, dirToStore string, wg *sync.WaitG
 			info("Transferring files...")
 			progressBar := pb.New64(r.ContentLength)
 			progressBar.ShowCounters = false
-			if *quietFlag == true { 
+			if *quietFlag == true {
 				progressBar.NotPrint = true
 			}
-			
+
 			for {
 				part, err := reader.NextPart()
 

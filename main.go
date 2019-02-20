@@ -28,17 +28,17 @@ func main() {
 
 	}
 
-	config := LoadConfig()
+	cfg := LoadConfig()
 	if *forceFlag == true {
-		config.Delete()
-		config = LoadConfig()
+		cfg.Delete()
+		cfg = LoadConfig()
 	}
 
 	if *portFlag > 0 {
-		config.Port = *portFlag
+		cfg.Port = *portFlag
 	}
 
-	srv, listener, generatedAddress, route, stopSignal, wg := setupHTTPServer(config)
+	srv, listener, generatedAddress, route, stopSignal, wg := setupHTTPServer(cfg)
 
 	if *receiveFlag {
 		receiveFilesHTTP(generatedAddress, route, flag.Args()[0], wg, stopSignal)
@@ -81,7 +81,7 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	if err := config.Update(); err != nil {
+	if err := cfg.Update(); err != nil {
 		log.Println("Unable to update configuration", err)
 	}
 

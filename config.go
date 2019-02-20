@@ -58,18 +58,18 @@ func (c *Config) Delete() (bool, error) {
 
 // LoadConfig from file
 func LoadConfig() Config {
-	var config Config
+	var cfg Config
 	file, err := configFile()
 	if err != nil {
-		return config
+		return cfg
 	}
 	debug("Current config file is", file)
 	b, err := ioutil.ReadFile(file)
 	if err != nil {
-		return config
+		return cfg
 	}
-	if err = json.Unmarshal(b, &config); err != nil {
+	if err = json.Unmarshal(b, &cfg); err != nil {
 		log.Println("WARN:", err)
 	}
-	return config
+	return cfg
 }

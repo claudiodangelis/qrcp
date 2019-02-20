@@ -53,14 +53,14 @@ func findIP(iface net.Interface) (string, error) {
 // bind the server to. The first time is run it prompts a
 // dialog to choose which network interface should be used
 // for the transfer
-func getAddress(config *Config) (string, error) {
+func getAddress(cfg *Config) (string, error) {
 	ifaces, err := net.Interfaces()
 	if err != nil {
 		return "", err
 	}
 	var candidateInterface *net.Interface
 	for _, iface := range ifaces {
-		if iface.Name == config.Iface {
+		if iface.Name == cfg.Iface {
 			candidateInterface = &iface
 			break
 		}
@@ -113,7 +113,7 @@ func getAddress(config *Config) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	config.Iface = candidateInterface.Name
+	cfg.Iface = candidateInterface.Name
 	return ip, nil
 }
 
