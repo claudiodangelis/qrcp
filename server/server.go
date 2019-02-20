@@ -24,7 +24,7 @@ import (
 	"gopkg.in/cheggaaa/pb.v1"
 )
 
-// New returns http server, tcp listner, address of server, route, and channel used for gracefull shutdown
+// New returns http server, tcp listner, address of server, route, and channel used for graceful shutdown
 func New(cfg config.Config) (srv *http.Server, listener net.Listener, generatedAddress, route string, stop chan bool, wg *sync.WaitGroup) {
 	// Get address
 	address, err := util.GetAddress(&cfg)

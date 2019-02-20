@@ -222,7 +222,7 @@ var Done = `
         <div class="alert alert-success" role="alert">
             <h4 class="alert-heading">Done!</h4>
             <p>
-                Successfully transfered to:<br/> <b>{{.File}}</b>.<br/> You can close this page now.
+                Successfully transferred to:<br/> <b>{{.File}}</b>.<br/> You can close this page now.
             </p>
         </div>
     </div>

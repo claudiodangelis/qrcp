@@ -12,15 +12,15 @@ import (
 	"github.com/claudiodangelis/qr-filetransfer/util"
 )
 
-// Content represents the content to be transfered
+// Content represents the content to be transferred
 type Content struct {
 	Path string
-	// Should the content be deleted from disk after transfering? This is true
+	// Should the content be deleted from disk after transferring? This is true
 	// only if the content has been zipped by qr-filetransfer
 	ShouldBeDeleted bool
 }
 
-// Name returns the base name of the content being transfered
+// Name returns the base name of the content being transferred
 func (c *Content) Name() string {
 	return filepath.Base(c.Path)
 }
@@ -42,11 +42,11 @@ func zipContent(args []string) (string, error) {
 	zipWriter := zip.NewWriter(tmpfile)
 	for _, item := range args {
 		err = filepath.Walk(item, func(filePath string, info os.FileInfo, err error) error {
-			// keep walking if directory is encounterd
+			// keep walking if directory is encountered
 			if info.IsDir() {
 				return nil
 			}
-			// stop walking if previosly encounterd error
+			// stop walking if previously encountered error
 			if err != nil {
 				return err
 			}

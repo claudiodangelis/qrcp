@@ -15,7 +15,7 @@ import (
 	"github.com/mdp/qrterminal"
 )
 
-var zipFlag = flag.Bool("zip", false, "zip the contents to be transfered")
+var zipFlag = flag.Bool("zip", false, "zip the contents to be transferred")
 var forceFlag = flag.Bool("force", false, "ignore saved configuration")
 var debugFlag = flag.Bool("debug", false, "increase verbosity")
 var quietFlag = flag.Bool("quiet", false, "ignores non critical output")
