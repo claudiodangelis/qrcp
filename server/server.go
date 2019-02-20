@@ -4,9 +4,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"html/template"
-	"io"
-	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
@@ -19,9 +16,7 @@ import (
 	"github.com/claudiodangelis/qr-filetransfer/config"
 	"github.com/claudiodangelis/qr-filetransfer/content"
 	l "github.com/claudiodangelis/qr-filetransfer/log"
-	"github.com/claudiodangelis/qr-filetransfer/page"
 	"github.com/claudiodangelis/qr-filetransfer/util"
-	"gopkg.in/cheggaaa/pb.v1"
 )
 
 // New returns http server, tcp listner, address of server, route, and channel used for graceful shutdown
@@ -130,136 +125,6 @@ func Serve(generatedAddress, route string, content content.Content, wg *sync.Wai
 		w.Header().Set("Content-Disposition",
 			"attachment; filename="+content.Name())
 		http.ServeFile(w, r, content.Path)
-	})
-}
-
-// Receive receives files
-func Receive(generatedAddress, route, dirToStore string, wg *sync.WaitGroup, stop chan bool) {
-	logger := l.New()
-	logger.Info("Scan the following QR to start the upload.")
-	logger.Info("Make sure that your smartphone is connected to the same WiFi network as this computer.")
-	logger.Info("Your generated address is", generatedAddress)
-
-	http.HandleFunc(route, func(w http.ResponseWriter, r *http.Request) {
-		data := struct {
-			Route string
-			File  string
-		}{}
-		data.Route = route
-		if r.Method == "GET" {
-			tmpl, err := template.New("upload").Parse(page.Upload)
-			if err != nil {
-				// TODO: Handle panic
-				panic(err)
-			}
-			if err = tmpl.Execute(w, data); err != nil {
-				panic(err)
-			}
-		}
-		if r.Method == "POST" {
-			defer wg.Done()
-
-			// make sure dirToStore is exist
-			filesInfo, err := ioutil.ReadDir(dirToStore)
-			if err != nil && os.IsNotExist(err) {
-				// if not exist try to create directories in path to dirToStore
-				if err := os.MkdirAll(dirToStore, os.ModePerm); err != nil {
-					fmt.Fprintf(w, "Unable to create specified dir: %s\n", err) //output to server
-					log.Printf("Unable to create specified dir: %v\n", err)     //output to console
-					stop <- true                                                // send signal to server to shutdown
-					return
-				}
-			}
-
-			// create array of names of files which are stored in dirToStore
-			// used later to set valid name for received files
-			fileNamesInTargetDir := make([]string, len(filesInfo))
-			for _, fi := range filesInfo {
-				fileNamesInTargetDir = append(fileNamesInTargetDir, fi.Name())
-			}
-
-			reader, err := r.MultipartReader()
-			if err != nil {
-				fmt.Fprintf(w, "Upload error: %v\n", err)
-				log.Printf("Upload error: %v\n", err)
-				stop <- true
-				return
-			}
-
-			transferedFiles := []string{}
-			logger.Info("Transferring files...")
-			progressBar := pb.New64(r.ContentLength)
-			progressBar.ShowCounters = false
-			if flag.Lookup("quiet").Value.(flag.Getter).Get().(bool) == true {
-				progressBar.NotPrint = true
-			}
-
-			for {
-				part, err := reader.NextPart()
-
-				if err == io.EOF {
-					break
-				}
-				// if part.FileName() is empty, skip this iteration.
-				if part.FileName() == "" {
-					continue
-				}
-
-				// prepare the dst
-				fileName := getFileName(part.FileName(), fileNamesInTargetDir)
-				out, err := os.Create(filepath.Join(dirToStore, fileName))
-				if err != nil {
-					fmt.Fprintf(w, "Unable to create the file for writing: %s\n", err) //output to server
-					log.Printf("Unable to create the file for writing: %s\n", err)     //output to console
-					stop <- true                                                       // send signal to server to shutdown
-					return
-				}
-				defer out.Close()
-
-				// add name of new file
-				fileNamesInTargetDir = append(fileNamesInTargetDir, fileName)
-
-				// write the content from POSTed file to the out
-				logger.Info("Transferring file: ", out.Name())
-				progressBar.Prefix(out.Name())
-				progressBar.Start()
-				buf := make([]byte, 1024)
-				for {
-					// read a chunk
-					n, err := part.Read(buf)
-					if err != nil && err != io.EOF {
-						fmt.Fprintf(w, "Unable to write file to disk: %v", err) //output to server
-						log.Printf("Unable to write file to disk: %v", err)     //output to console
-						stop <- true                                            // send signal to server to shutdown
-						return
-					}
-					if n == 0 {
-						break
-					}
-					// write a chunk
-					if _, err := out.Write(buf[:n]); err != nil {
-						fmt.Fprintf(w, "Unable to write file to disk: %v", err) //output to server
-						log.Printf("Unable to write file to disk: %v", err)     //output to console
-						stop <- true                                            // send signal to server to shutdown
-						return
-					}
-					progressBar.Add(n)
-				}
-
-				transferedFiles = append(transferedFiles, out.Name())
-			}
-
-			progressBar.FinishPrint("File transfer completed")
-
-			data.File = strings.Join(transferedFiles, ", ")
-			doneTmpl, err := template.New("done").Parse(page.Done)
-			if err != nil {
-				panic(err)
-			}
-			if err := doneTmpl.Execute(w, data); err != nil {
-				panic(err)
-			}
-		}
 	})
 }
 
