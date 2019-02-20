@@ -1,7 +1,8 @@
-package main
+package server
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"html/template"
 	"io"
@@ -15,23 +16,28 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/claudiodangelis/qr-filetransfer/config"
+	"github.com/claudiodangelis/qr-filetransfer/content"
+	l "github.com/claudiodangelis/qr-filetransfer/log"
+	"github.com/claudiodangelis/qr-filetransfer/page"
+	"github.com/claudiodangelis/qr-filetransfer/util"
 	"gopkg.in/cheggaaa/pb.v1"
 )
 
-// returns http server, tcp listner, address of server, route, and channel used for gracefull shutdown
-func setupHTTPServer(config Config) (srv *http.Server, listener net.Listener, generatedAddress, route string, stop chan bool, wg *sync.WaitGroup) {
+// New returns http server, tcp listner, address of server, route, and channel used for gracefull shutdown
+func New(cfg config.Config) (srv *http.Server, listener net.Listener, generatedAddress, route string, stop chan bool, wg *sync.WaitGroup) {
 	// Get address
-	address, err := getAddress(&config)
+	address, err := util.GetAddress(&cfg)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	listener, err = net.Listen("tcp", fmt.Sprintf("%s:%d", address, config.Port))
+	listener, err = net.Listen("tcp", fmt.Sprintf("%s:%d", address, cfg.Port))
 	if err != nil {
 		log.Fatalln(err)
 	}
 	address = fmt.Sprintf("%s:%d", address, listener.Addr().(*net.TCPAddr).Port)
 
-	randomPath := getRandomURLPath()
+	randomPath := util.GetRandomURLPath()
 
 	generatedAddress = fmt.Sprintf("http://%s/%s", listener.Addr().String(), randomPath)
 
@@ -67,18 +73,20 @@ func setupHTTPServer(config Config) (srv *http.Server, listener net.Listener, ge
 	(*wg).Add(1)
 	go func() {
 		(*wg).Wait()
-		if *keepAliveFlag == false {
+		if flag.Lookup("keep-alive").Value.(flag.Getter).Get().(bool) == false {
 			stop <- true
 		}
 	}()
 	return
 }
 
-func serveFilesHTTP(generatedAddress, route string, content Content, wg *sync.WaitGroup, stop chan bool) {
-	info("Scan the following QR to start the download.")
-	info("Make sure that your smartphone is connected to the same WiFi network as this computer.")
-	info("Size of transfer:", humanReadableSizeOf(content.Path))
-	info("Your generated address is", generatedAddress)
+// Serve serves files
+func Serve(generatedAddress, route string, content content.Content, wg *sync.WaitGroup, stop chan bool) {
+	logger := l.New()
+	logger.Info("Scan the following QR to start the download.")
+	logger.Info("Make sure that your smartphone is connected to the same WiFi network as this computer.")
+	logger.Info("Size of transfer:", util.HumanReadableSizeOf(content.Path))
+	logger.Info("Your generated address is", generatedAddress)
 
 	// Create cookie used to verify request is coming from first client to connect
 	cookie := http.Cookie{Name: "qr-filetransfer", Value: ""}
@@ -95,7 +103,7 @@ func serveFilesHTTP(generatedAddress, route string, content Content, wg *sync.Wa
 				return
 			}
 			initCookie.Do(func() {
-				value, err := getSessionID()
+				value, err := util.GetSessionID()
 				if err != nil {
 					log.Println("Unable to generate session ID", err)
 					stop <- true
@@ -125,10 +133,12 @@ func serveFilesHTTP(generatedAddress, route string, content Content, wg *sync.Wa
 	})
 }
 
-func receiveFilesHTTP(generatedAddress, route, dirToStore string, wg *sync.WaitGroup, stop chan bool) {
-	info("Scan the following QR to start the upload.")
-	info("Make sure that your smartphone is connected to the same WiFi network as this computer.")
-	info("Your generated address is", generatedAddress)
+// Receive receives files
+func Receive(generatedAddress, route, dirToStore string, wg *sync.WaitGroup, stop chan bool) {
+	logger := l.New()
+	logger.Info("Scan the following QR to start the upload.")
+	logger.Info("Make sure that your smartphone is connected to the same WiFi network as this computer.")
+	logger.Info("Your generated address is", generatedAddress)
 
 	http.HandleFunc(route, func(w http.ResponseWriter, r *http.Request) {
 		data := struct {
@@ -137,7 +147,7 @@ func receiveFilesHTTP(generatedAddress, route, dirToStore string, wg *sync.WaitG
 		}{}
 		data.Route = route
 		if r.Method == "GET" {
-			tmpl, err := template.New("upload").Parse(uploadPage)
+			tmpl, err := template.New("upload").Parse(page.Upload)
 			if err != nil {
 				// TODO: Handle panic
 				panic(err)
@@ -177,13 +187,13 @@ func receiveFilesHTTP(generatedAddress, route, dirToStore string, wg *sync.WaitG
 			}
 
 			transferedFiles := []string{}
-			info("Transferring files...")
+			logger.Info("Transferring files...")
 			progressBar := pb.New64(r.ContentLength)
 			progressBar.ShowCounters = false
-			if *quietFlag == true { 
+			if flag.Lookup("quiet").Value.(flag.Getter).Get().(bool) == true {
 				progressBar.NotPrint = true
 			}
-			
+
 			for {
 				part, err := reader.NextPart()
 
@@ -210,7 +220,7 @@ func receiveFilesHTTP(generatedAddress, route, dirToStore string, wg *sync.WaitG
 				fileNamesInTargetDir = append(fileNamesInTargetDir, fileName)
 
 				// write the content from POSTed file to the out
-				info("Transferring file: ", out.Name())
+				logger.Info("Transferring file: ", out.Name())
 				progressBar.Prefix(out.Name())
 				progressBar.Start()
 				buf := make([]byte, 1024)
@@ -242,7 +252,7 @@ func receiveFilesHTTP(generatedAddress, route, dirToStore string, wg *sync.WaitG
 			progressBar.FinishPrint("File transfer completed")
 
 			data.File = strings.Join(transferedFiles, ", ")
-			doneTmpl, err := template.New("done").Parse(donePage)
+			doneTmpl, err := template.New("done").Parse(page.Done)
 			if err != nil {
 				panic(err)
 			}

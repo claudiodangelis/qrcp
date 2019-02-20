@@ -1,4 +1,4 @@
-package main
+package content
 
 import (
 	"archive/zip"
@@ -8,6 +8,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/claudiodangelis/qr-filetransfer/util"
 )
 
 // Content represents the content to be transfered
@@ -80,12 +82,12 @@ func zipContent(args []string) (string, error) {
 	return tmpfile.Name() + ".zip", nil
 }
 
-// getContent returns an instance of Content and an error
-func getContent(args []string) (Content, error) {
+// Get returns an instance of Content and an error
+func Get(args []string) (Content, error) {
 	content := Content{
 		ShouldBeDeleted: false,
 	}
-	toBeZipped, err := shouldBeZipped(args)
+	toBeZipped, err := util.ShouldBeZipped(args)
 	if err != nil {
 		return content, err
 	}

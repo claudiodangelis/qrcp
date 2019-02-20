@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"encoding/json"
@@ -7,6 +7,8 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+
+	l "github.com/claudiodangelis/qr-filetransfer/log"
 )
 
 // Config holds the values
@@ -25,7 +27,8 @@ func configFile() (string, error) {
 
 // Update the configuration file
 func (c *Config) Update() error {
-	debug("Updating config file")
+	logger := l.New()
+	logger.Debug("Updating config file")
 	j, err := json.Marshal(c)
 	if err != nil {
 		return err
@@ -56,20 +59,21 @@ func (c *Config) Delete() (bool, error) {
 	return true, nil
 }
 
-// LoadConfig from file
-func LoadConfig() Config {
-	var config Config
+// New config from file
+func New() Config {
+	var cfg Config
 	file, err := configFile()
 	if err != nil {
-		return config
+		return cfg
 	}
-	debug("Current config file is", file)
+	logger := l.New()
+	logger.Debug("Current config file is", file)
 	b, err := ioutil.ReadFile(file)
 	if err != nil {
-		return config
+		return cfg
 	}
-	if err = json.Unmarshal(b, &config); err != nil {
+	if err = json.Unmarshal(b, &cfg); err != nil {
 		log.Println("WARN:", err)
 	}
-	return config
+	return cfg
 }

@@ -1,36 +1,23 @@
-package main
+package util
 
 import (
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
+	"flag"
 	"fmt"
 	"io"
-	"log"
 	"net"
 	"os"
 	"regexp"
 	"strconv"
 	"time"
+
+	"github.com/claudiodangelis/qr-filetransfer/config"
 )
 
-// debug prints its argument if the -debug flag is passed
-// and -quiet flag is not passed
-func debug(args ...string) {
-	if *quietFlag == false && *debugFlag == true {
-		log.Println(args)
-	}
-}
-
-// info prints its argument if the -quiet flag is not passed
-func info(args ...interface{}) {
-	if *quietFlag == false {
-		fmt.Println(args...)
-	}
-}
-
-// findIP returns the IP address of the passed interface, and an error
-func findIP(iface net.Interface) (string, error) {
+// FindIP returns the IP address of the passed interface, and an error
+func FindIP(iface net.Interface) (string, error) {
 	addrs, err := iface.Addrs()
 	if err != nil {
 		return "", err
@@ -49,24 +36,24 @@ func findIP(iface net.Interface) (string, error) {
 	return "", errors.New("Unable to find an IP for this interface")
 }
 
-// getAddress returns the address of the network interface to
+// GetAddress returns the address of the network interface to
 // bind the server to. The first time is run it prompts a
 // dialog to choose which network interface should be used
 // for the transfer
-func getAddress(config *Config) (string, error) {
+func GetAddress(cfg *config.Config) (string, error) {
 	ifaces, err := net.Interfaces()
 	if err != nil {
 		return "", err
 	}
 	var candidateInterface *net.Interface
 	for _, iface := range ifaces {
-		if iface.Name == config.Iface {
+		if iface.Name == cfg.Iface {
 			candidateInterface = &iface
 			break
 		}
 	}
 	if candidateInterface != nil {
-		ip, err := findIP(*candidateInterface)
+		ip, err := FindIP(*candidateInterface)
 		if err != nil {
 			return "", err
 		}
@@ -89,7 +76,7 @@ func getAddress(config *Config) (string, error) {
 	}
 	if len(filteredIfaces) == 1 {
 		candidateInterface = &filteredIfaces[0]
-		ip, err := findIP(*candidateInterface)
+		ip, err := FindIP(*candidateInterface)
 		if err != nil {
 			return "", err
 		}
@@ -109,46 +96,23 @@ func getAddress(config *Config) (string, error) {
 		return "", errors.New("Wrong number")
 	}
 	candidateInterface = &filteredIfaces[index]
-	ip, err := findIP(*candidateInterface)
+	ip, err := FindIP(*candidateInterface)
 	if err != nil {
 		return "", err
 	}
-	config.Iface = candidateInterface.Name
+	cfg.Iface = candidateInterface.Name
 	return ip, nil
 }
 
-// shouldBeZipped returns a boolean value indicating if the
-// content should be zipped or not, and an error.
-// The content should be zipped if:
-// 1. the user passed the `-zip` flag
-// 2. there are more than one file
-// 3. the file is a directory
-func shouldBeZipped(args []string) (bool, error) {
-	if *zipFlag == true {
-		return true, nil
-	}
-	if len(args) > 1 {
-		return true, nil
-	}
-	file, err := os.Stat(args[0])
-	if err != nil {
-		return false, err
-	}
-	if file.IsDir() {
-		return true, nil
-	}
-	return false, nil
-}
-
-// getRandomURLPath returns a random string of 4 alphanumeric characters
-func getRandomURLPath() string {
+// GetRandomURLPath returns a random string of 4 alphanumeric characters
+func GetRandomURLPath() string {
 	timeNum := time.Now().UTC().UnixNano()
 	alphaString := strconv.FormatInt(timeNum, 36)
 	return alphaString[len(alphaString)-4:]
 }
 
-// getSessionID returns a base64 encoded string of 40 random characters
-func getSessionID() (string, error) {
+// GetSessionID returns a base64 encoded string of 40 random characters
+func GetSessionID() (string, error) {
 	randbytes := make([]byte, 40)
 	if _, err := io.ReadFull(rand.Reader, randbytes); err != nil {
 		return "", err
@@ -156,8 +120,8 @@ func getSessionID() (string, error) {
 	return base64.StdEncoding.EncodeToString(randbytes), nil
 }
 
-// returns size of the file in human-readable form
-func humanReadableSizeOf(pathToFile string) string {
+// HumanReadableSizeOf returns size of the file in human-readable form
+func HumanReadableSizeOf(pathToFile string) string {
 	const (
 		B  int64 = 1
 		KB       = B << 10 // same as B*1024
@@ -195,4 +159,28 @@ func humanReadableSizeOf(pathToFile string) string {
 	default:
 		return fmt.Sprintf("%d B", fileSize)
 	}
+}
+
+// ShouldBeZipped returns a boolean value indicating if the
+// content should be zipped or not, and an error.
+// The content should be zipped if:
+// 1. the user passed the `-zip` flag
+// 2. there are more than one file
+// 3. the file is a directory
+func ShouldBeZipped(args []string) (bool, error) {
+
+	if flag.Lookup("zip").Value.(flag.Getter).Get().(bool) == true {
+		return true, nil
+	}
+	if len(args) > 1 {
+		return true, nil
+	}
+	file, err := os.Stat(args[0])
+	if err != nil {
+		return false, err
+	}
+	if file.IsDir() {
+		return true, nil
+	}
+	return false, nil
 }

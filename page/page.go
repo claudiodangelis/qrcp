@@ -1,6 +1,7 @@
-package main
+package page
 
-var uploadPage = `
+// Upload page
+var Upload = `
 <!doctype html>
 <html lang="en">
 
@@ -197,7 +198,8 @@ var uploadPage = `
 </html>
 `
 
-var donePage = `
+// Done page
+var Done = `
 <!doctype html>
 <html lang="en">
 
