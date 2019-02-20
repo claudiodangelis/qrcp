@@ -16,6 +16,7 @@ import (
 	"sync"
 
 	"github.com/claudiodangelis/qr-filetransfer/config"
+	l "github.com/claudiodangelis/qr-filetransfer/log"
 	"gopkg.in/cheggaaa/pb.v1"
 )
 
@@ -76,10 +77,11 @@ func setupHTTPServer(cfg config.Config) (srv *http.Server, listener net.Listener
 }
 
 func serveFilesHTTP(generatedAddress, route string, content Content, wg *sync.WaitGroup, stop chan bool) {
-	info("Scan the following QR to start the download.")
-	info("Make sure that your smartphone is connected to the same WiFi network as this computer.")
-	info("Size of transfer:", humanReadableSizeOf(content.Path))
-	info("Your generated address is", generatedAddress)
+	logger := l.New()
+	logger.Info("Scan the following QR to start the download.")
+	logger.Info("Make sure that your smartphone is connected to the same WiFi network as this computer.")
+	logger.Info("Size of transfer:", humanReadableSizeOf(content.Path))
+	logger.Info("Your generated address is", generatedAddress)
 
 	// Create cookie used to verify request is coming from first client to connect
 	cookie := http.Cookie{Name: "qr-filetransfer", Value: ""}
@@ -127,9 +129,10 @@ func serveFilesHTTP(generatedAddress, route string, content Content, wg *sync.Wa
 }
 
 func receiveFilesHTTP(generatedAddress, route, dirToStore string, wg *sync.WaitGroup, stop chan bool) {
-	info("Scan the following QR to start the upload.")
-	info("Make sure that your smartphone is connected to the same WiFi network as this computer.")
-	info("Your generated address is", generatedAddress)
+	logger := l.New()
+	logger.Info("Scan the following QR to start the upload.")
+	logger.Info("Make sure that your smartphone is connected to the same WiFi network as this computer.")
+	logger.Info("Your generated address is", generatedAddress)
 
 	http.HandleFunc(route, func(w http.ResponseWriter, r *http.Request) {
 		data := struct {
@@ -178,7 +181,7 @@ func receiveFilesHTTP(generatedAddress, route, dirToStore string, wg *sync.WaitG
 			}
 
 			transferedFiles := []string{}
-			info("Transferring files...")
+			logger.Info("Transferring files...")
 			progressBar := pb.New64(r.ContentLength)
 			progressBar.ShowCounters = false
 			if *quietFlag == true {
@@ -211,7 +214,7 @@ func receiveFilesHTTP(generatedAddress, route, dirToStore string, wg *sync.WaitG
 				fileNamesInTargetDir = append(fileNamesInTargetDir, fileName)
 
 				// write the content from POSTed file to the out
-				info("Transferring file: ", out.Name())
+				logger.Info("Transferring file: ", out.Name())
 				progressBar.Prefix(out.Name())
 				progressBar.Start()
 				buf := make([]byte, 1024)

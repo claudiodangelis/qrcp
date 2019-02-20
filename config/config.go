@@ -7,6 +7,8 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+
+	l "github.com/claudiodangelis/qr-filetransfer/log"
 )
 
 // Config holds the values
@@ -25,7 +27,8 @@ func configFile() (string, error) {
 
 // Update the configuration file
 func (c *Config) Update() error {
-	// debug("Updating config file")
+	logger := l.New()
+	logger.Debug("Updating config file")
 	j, err := json.Marshal(c)
 	if err != nil {
 		return err
@@ -63,7 +66,8 @@ func New() Config {
 	if err != nil {
 		return cfg
 	}
-	// debug("Current config file is", file)
+	logger := l.New()
+	logger.Debug("Current config file is", file)
 	b, err := ioutil.ReadFile(file)
 	if err != nil {
 		return cfg

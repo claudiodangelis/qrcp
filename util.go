@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net"
 	"os"
 	"regexp"
@@ -15,21 +14,6 @@ import (
 
 	"github.com/claudiodangelis/qr-filetransfer/config"
 )
-
-// debug prints its argument if the -debug flag is passed
-// and -quiet flag is not passed
-func debug(args ...string) {
-	if *quietFlag == false && *debugFlag == true {
-		log.Println(args)
-	}
-}
-
-// info prints its argument if the -quiet flag is not passed
-func info(args ...interface{}) {
-	if *quietFlag == false {
-		fmt.Println(args...)
-	}
-}
 
 // findIP returns the IP address of the passed interface, and an error
 func findIP(iface net.Interface) (string, error) {
