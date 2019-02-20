@@ -15,11 +15,12 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/claudiodangelis/qr-filetransfer/config"
 	"gopkg.in/cheggaaa/pb.v1"
 )
 
 // returns http server, tcp listner, address of server, route, and channel used for gracefull shutdown
-func setupHTTPServer(cfg Config) (srv *http.Server, listener net.Listener, generatedAddress, route string, stop chan bool, wg *sync.WaitGroup) {
+func setupHTTPServer(cfg config.Config) (srv *http.Server, listener net.Listener, generatedAddress, route string, stop chan bool, wg *sync.WaitGroup) {
 	// Get address
 	address, err := getAddress(&cfg)
 	if err != nil {

@@ -8,6 +8,7 @@ import (
 	"os"
 	"runtime"
 
+	"github.com/claudiodangelis/qr-filetransfer/config"
 	"github.com/mattn/go-colorable"
 	"github.com/mdp/qrterminal"
 )
@@ -28,10 +29,10 @@ func main() {
 
 	}
 
-	cfg := LoadConfig()
+	cfg := config.New()
 	if *forceFlag == true {
 		cfg.Delete()
-		cfg = LoadConfig()
+		cfg = config.New()
 	}
 
 	if *portFlag > 0 {

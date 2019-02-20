@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"encoding/json"
@@ -25,7 +25,7 @@ func configFile() (string, error) {
 
 // Update the configuration file
 func (c *Config) Update() error {
-	debug("Updating config file")
+	// debug("Updating config file")
 	j, err := json.Marshal(c)
 	if err != nil {
 		return err
@@ -56,14 +56,14 @@ func (c *Config) Delete() (bool, error) {
 	return true, nil
 }
 
-// LoadConfig from file
-func LoadConfig() Config {
+// New config from file
+func New() Config {
 	var cfg Config
 	file, err := configFile()
 	if err != nil {
 		return cfg
 	}
-	debug("Current config file is", file)
+	// debug("Current config file is", file)
 	b, err := ioutil.ReadFile(file)
 	if err != nil {
 		return cfg

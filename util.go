@@ -12,6 +12,8 @@ import (
 	"regexp"
 	"strconv"
 	"time"
+
+	"github.com/claudiodangelis/qr-filetransfer/config"
 )
 
 // debug prints its argument if the -debug flag is passed
@@ -53,7 +55,7 @@ func findIP(iface net.Interface) (string, error) {
 // bind the server to. The first time is run it prompts a
 // dialog to choose which network interface should be used
 // for the transfer
-func getAddress(cfg *Config) (string, error) {
+func getAddress(cfg *config.Config) (string, error) {
 	ifaces, err := net.Interfaces()
 	if err != nil {
 		return "", err
