@@ -9,6 +9,7 @@ import (
 	"runtime"
 
 	"github.com/claudiodangelis/qr-filetransfer/config"
+	"github.com/claudiodangelis/qr-filetransfer/content"
 	"github.com/mattn/go-colorable"
 	"github.com/mdp/qrterminal"
 )
@@ -44,15 +45,15 @@ func main() {
 	if *receiveFlag {
 		receiveFilesHTTP(generatedAddress, route, flag.Args()[0], wg, stopSignal)
 	} else {
-		content, err := getContent(flag.Args())
+		c, err := content.Get(flag.Args())
 		if err != nil {
 			log.Fatalln(err)
 		}
-		serveFilesHTTP(generatedAddress, route, content, wg, stopSignal)
+		serveFilesHTTP(generatedAddress, route, c, wg, stopSignal)
 
 		defer func() {
-			if content.ShouldBeDeleted {
-				if err := content.Delete(); err != nil {
+			if c.ShouldBeDeleted {
+				if err := c.Delete(); err != nil {
 					log.Println("Unable to delete the content from disk", err)
 				}
 			}

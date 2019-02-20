@@ -16,14 +16,16 @@ import (
 	"sync"
 
 	"github.com/claudiodangelis/qr-filetransfer/config"
+	"github.com/claudiodangelis/qr-filetransfer/content"
 	l "github.com/claudiodangelis/qr-filetransfer/log"
+	"github.com/claudiodangelis/qr-filetransfer/util"
 	"gopkg.in/cheggaaa/pb.v1"
 )
 
 // returns http server, tcp listner, address of server, route, and channel used for gracefull shutdown
 func setupHTTPServer(cfg config.Config) (srv *http.Server, listener net.Listener, generatedAddress, route string, stop chan bool, wg *sync.WaitGroup) {
 	// Get address
-	address, err := getAddress(&cfg)
+	address, err := util.GetAddress(&cfg)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -33,7 +35,7 @@ func setupHTTPServer(cfg config.Config) (srv *http.Server, listener net.Listener
 	}
 	address = fmt.Sprintf("%s:%d", address, listener.Addr().(*net.TCPAddr).Port)
 
-	randomPath := getRandomURLPath()
+	randomPath := util.GetRandomURLPath()
 
 	generatedAddress = fmt.Sprintf("http://%s/%s", listener.Addr().String(), randomPath)
 
@@ -76,11 +78,11 @@ func setupHTTPServer(cfg config.Config) (srv *http.Server, listener net.Listener
 	return
 }
 
-func serveFilesHTTP(generatedAddress, route string, content Content, wg *sync.WaitGroup, stop chan bool) {
+func serveFilesHTTP(generatedAddress, route string, content content.Content, wg *sync.WaitGroup, stop chan bool) {
 	logger := l.New()
 	logger.Info("Scan the following QR to start the download.")
 	logger.Info("Make sure that your smartphone is connected to the same WiFi network as this computer.")
-	logger.Info("Size of transfer:", humanReadableSizeOf(content.Path))
+	logger.Info("Size of transfer:", util.HumanReadableSizeOf(content.Path))
 	logger.Info("Your generated address is", generatedAddress)
 
 	// Create cookie used to verify request is coming from first client to connect
@@ -98,7 +100,7 @@ func serveFilesHTTP(generatedAddress, route string, content Content, wg *sync.Wa
 				return
 			}
 			initCookie.Do(func() {
-				value, err := getSessionID()
+				value, err := util.GetSessionID()
 				if err != nil {
 					log.Println("Unable to generate session ID", err)
 					stop <- true
