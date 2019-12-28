@@ -1,19 +1,14 @@
 package util
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
-	"strings"
 
 	"github.com/jhoonb/archivex"
 )
 
 // ZipFiles and return the resulting zip's filename
-func ZipFiles(filenames []string) (string, error) {
-	// TODO: Refactor to take []os.FileInfo rather than []string
-	fmt.Println("Adding the following items to a zip file:",
-		strings.Join(filenames, " "))
+func ZipFiles(files []os.FileInfo) (string, error) {
 	zip := new(archivex.ZipFile)
 	tmpfile, err := ioutil.TempFile("", "qr-filetransfer")
 	if err != nil {
@@ -24,15 +19,11 @@ func ZipFiles(filenames []string) (string, error) {
 		return "", err
 	}
 	zip.Create(tmpfile.Name() + ".zip")
-	for _, item := range filenames {
-		f, err := os.Stat(item)
-		if err != nil {
-			return "", err
-		}
-		if f.IsDir() == true {
-			zip.AddAll(item, true)
+	for _, file := range files {
+		if file.IsDir() {
+			zip.AddAll(file.Name(), true)
 		} else {
-			zip.AddFile(item)
+			zip.AddFile(file.Name())
 		}
 	}
 	if err := zip.Close(); err != nil {

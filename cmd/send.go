@@ -11,21 +11,23 @@ import (
 func sendCmdFunc(command *cobra.Command, args []string) {
 	// Check if the content should be zipped
 	shouldzip := len(args) > 1 || zipFlag
+	var files []os.FileInfo
 	// Check if content exists
-	for _, file := range args {
-		info, err := os.Stat(file)
+	for _, arg := range args {
+		file, err := os.Stat(arg)
 		if err != nil {
 			panic(err)
 		}
 		// If at least one argument is dir, the content will be zipped
-		if info.IsDir() {
+		if file.IsDir() {
 			shouldzip = true
 		}
+		files = append(files, file)
 	}
 	// Prepare the content
 	var content string
 	if shouldzip {
-		zip, err := util.ZipFiles(args)
+		zip, err := util.ZipFiles(files)
 		if err != nil {
 			panic(err)
 		}
