@@ -16,7 +16,7 @@ var zipFlag bool
 var rootCmd = &cobra.Command{
 	Use:  "qrcp",
 	Args: cobra.ArbitraryArgs,
-	Run:  sendCmdFunc,
+	RunE: sendCmdFunc,
 }
 
 // Execute the root command

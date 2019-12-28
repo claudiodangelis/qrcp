@@ -10,7 +10,7 @@ import (
 // ZipFiles and return the resulting zip's filename
 func ZipFiles(files []os.FileInfo) (string, error) {
 	zip := new(archivex.ZipFile)
-	tmpfile, err := ioutil.TempFile("", "qr-filetransfer")
+	tmpfile, err := ioutil.TempFile("", "qrcp")
 	if err != nil {
 		return "", err
 	}

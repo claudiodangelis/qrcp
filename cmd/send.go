@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/claudiodangelis/qrcp/server"
 	"github.com/claudiodangelis/qrcp/util"
 	"github.com/spf13/cobra"
 )
 
-func sendCmdFunc(command *cobra.Command, args []string) {
+func sendCmdFunc(command *cobra.Command, args []string) error {
 	// Check if the content should be zipped
 	shouldzip := len(args) > 1 || zipFlag
 	var files []os.FileInfo
@@ -16,7 +17,7 @@ func sendCmdFunc(command *cobra.Command, args []string) {
 	for _, arg := range args {
 		file, err := os.Stat(arg)
 		if err != nil {
-			panic(err)
+			return err
 		}
 		// If at least one argument is dir, the content will be zipped
 		if file.IsDir() {
@@ -25,11 +26,12 @@ func sendCmdFunc(command *cobra.Command, args []string) {
 		files = append(files, file)
 	}
 	// Prepare the content
+	// TODO: Make less ugly
 	var content string
 	if shouldzip {
 		zip, err := util.ZipFiles(files)
 		if err != nil {
-			panic(err)
+			return err
 		}
 		content = zip
 	} else {
@@ -37,10 +39,18 @@ func sendCmdFunc(command *cobra.Command, args []string) {
 	}
 	// Prepare the server
 	fmt.Println(content)
+	srv, err := server.Start("", 123)
+	if err != nil {
+		return err
+	}
+	srv.Send(content)
+	// TODO: Print QR
+	return nil
 }
 
 var sendCmd = &cobra.Command{
-	Use:     "send",
+	Use: "send",
+	// TODO: Add usage
 	Aliases: []string{"s"},
-	Run:     sendCmdFunc,
+	RunE:    sendCmdFunc,
 }
