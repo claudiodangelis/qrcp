@@ -15,7 +15,7 @@ var zipFlag bool
 
 var rootCmd = &cobra.Command{
 	Use:  "qrcp",
-	Args: cobra.ArbitraryArgs,
+	Args: cobra.MinimumNArgs(1),
 	RunE: sendCmdFunc,
 }
 

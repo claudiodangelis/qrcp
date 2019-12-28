@@ -1,5 +1,7 @@
 package server
 
+import "fmt"
+
 // Server is the server
 type Server struct {
 	filename  string
@@ -24,5 +26,8 @@ func (s Server) SetOutput(directory string) error {
 
 // Start the server
 func Start(address string, port int) (Server, error) {
-	return Server{}, nil
+	return Server{
+		SendURL:    fmt.Sprintf("http://%s:%d", address, port),
+		ReceiveURL: fmt.Sprintf("http://%s:%d/upload", address, port),
+	}, nil
 }

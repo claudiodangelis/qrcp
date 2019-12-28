@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/claudiodangelis/qrcp/qr"
+
 	"github.com/claudiodangelis/qrcp/server"
 	"github.com/claudiodangelis/qrcp/util"
 	"github.com/spf13/cobra"
@@ -43,8 +45,8 @@ func sendCmdFunc(command *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	srv.Send(content)
-	// TODO: Print QR
+	srv.SetFilename(content)
+	qr.RenderString(srv.SendURL)
 	return nil
 }
 
@@ -52,5 +54,6 @@ var sendCmd = &cobra.Command{
 	Use: "send",
 	// TODO: Add usage
 	Aliases: []string{"s"},
+	Args:    cobra.MinimumNArgs(1),
 	RunE:    sendCmdFunc,
 }
