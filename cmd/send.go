@@ -41,6 +41,7 @@ func sendCmdFunc(command *cobra.Command, args []string) error {
 	}
 	// Prepare the server
 	fmt.Println(content)
+	// TODO: Abstract
 	srv, err := server.Start("", 123)
 	if err != nil {
 		return err
