@@ -44,6 +44,7 @@ func AddressByInterfaceName(name string) (string, error) {
 			if ipnet.IP.To4() != nil {
 				return ipnet.IP.String(), nil
 			}
+			// TODO: Explain why this is needed
 			return "[" + ipnet.IP.String() + "]", nil
 		}
 	}

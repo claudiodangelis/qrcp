@@ -1,6 +1,8 @@
 package server
 
-import "fmt"
+import (
+	"github.com/claudiodangelis/qrcp/config"
+)
 
 // Server is the server
 type Server struct {
@@ -25,9 +27,6 @@ func (s Server) SetOutput(directory string) error {
 }
 
 // Start the server
-func Start(address string, port int) (Server, error) {
-	return Server{
-		SendURL:    fmt.Sprintf("http://%s:%d", address, port),
-		ReceiveURL: fmt.Sprintf("http://%s:%d/upload", address, port),
-	}, nil
+func Start(cfg *config.Config) (*Server, error) {
+	return nil, nil
 }

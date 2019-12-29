@@ -1,9 +1,9 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 
+	"github.com/claudiodangelis/qrcp/config"
 	"github.com/claudiodangelis/qrcp/qr"
 
 	"github.com/claudiodangelis/qrcp/server"
@@ -12,6 +12,7 @@ import (
 )
 
 func sendCmdFunc(command *cobra.Command, args []string) error {
+	cfg := config.Load()
 	// Check if the content should be zipped
 	shouldzip := len(args) > 1 || zipFlag
 	var files []os.FileInfo
@@ -40,9 +41,10 @@ func sendCmdFunc(command *cobra.Command, args []string) error {
 		content = args[0]
 	}
 	// Prepare the server
-	fmt.Println(content)
-	// TODO: Abstract
-	srv, err := server.Start("", 123)
+	if portFlag > 0 {
+		cfg.Port = portFlag
+	}
+	srv, err := server.Start(&cfg)
 	if err != nil {
 		return err
 	}
