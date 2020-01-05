@@ -13,7 +13,7 @@ import (
 )
 
 // ZipFiles and return the resulting zip's filename
-func ZipFiles(files []os.FileInfo) (string, error) {
+func ZipFiles(files []string) (string, error) {
 	zip := new(archivex.ZipFile)
 	tmpfile, err := ioutil.TempFile("", "qrcp")
 	if err != nil {
@@ -25,10 +25,14 @@ func ZipFiles(files []os.FileInfo) (string, error) {
 	}
 	zip.Create(tmpfile.Name() + ".zip")
 	for _, file := range files {
-		if file.IsDir() {
-			zip.AddAll(file.Name(), true)
+		f, err := os.Stat(file)
+		if err != nil {
+			return "", err
+		}
+		if f.IsDir() {
+			zip.AddAll(file, true)
 		} else {
-			zip.AddFile(file.Name())
+			zip.AddFile(file)
 		}
 	}
 	if err := zip.Close(); err != nil {
@@ -41,7 +45,7 @@ func ZipFiles(files []os.FileInfo) (string, error) {
 func GetRandomURLPath() string {
 	timeNum := time.Now().UTC().UnixNano()
 	alphaString := strconv.FormatInt(timeNum, 36)
-	return alphaString[len(alphaString)-4:]
+	return "/" + alphaString[len(alphaString)-4:]
 }
 
 // GetSessionID returns a base64 encoded string of 40 random characters

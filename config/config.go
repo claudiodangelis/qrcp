@@ -70,5 +70,6 @@ func Load() Config {
 			panic(err)
 		}
 	}
+	// TODO: Pass port
 	return cfg
 }

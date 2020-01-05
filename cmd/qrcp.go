@@ -9,11 +9,14 @@ func init() {
 	rootCmd.AddCommand(receiveCmd)
 	rootCmd.PersistentFlags().BoolVarP(&zipFlag, "zip", "z", false, "true if the content should be zipped before transfering")
 	rootCmd.PersistentFlags().IntVarP(&portFlag, "port", "p", 0, "port to use for the server")
+	rootCmd.PersistentFlags().StringVarP(&interfaceFlag, "interface", "i", "", "network interface to use for the server")
 }
 
 // Flags
 var zipFlag bool
 var portFlag int
+var interfaceFlag string
+
 var rootCmd = &cobra.Command{
 	Use:  "qrcp",
 	Args: cobra.MinimumNArgs(1),

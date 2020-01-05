@@ -2,8 +2,10 @@ package cmd
 
 import (
 	"os"
+	"path/filepath"
 
 	"github.com/claudiodangelis/qrcp/config"
+	"github.com/claudiodangelis/qrcp/payload"
 	"github.com/claudiodangelis/qrcp/qr"
 
 	"github.com/claudiodangelis/qrcp/server"
@@ -15,7 +17,7 @@ func sendCmdFunc(command *cobra.Command, args []string) error {
 	cfg := config.Load()
 	// Check if the content should be zipped
 	shouldzip := len(args) > 1 || zipFlag
-	var files []os.FileInfo
+	var files []string
 	// Check if content exists
 	for _, arg := range args {
 		file, err := os.Stat(arg)
@@ -26,7 +28,7 @@ func sendCmdFunc(command *cobra.Command, args []string) error {
 		if file.IsDir() {
 			shouldzip = true
 		}
-		files = append(files, file)
+		files = append(files, arg)
 	}
 	// Prepare the content
 	// TODO: Make less ugly
@@ -44,12 +46,20 @@ func sendCmdFunc(command *cobra.Command, args []string) error {
 	if portFlag > 0 {
 		cfg.Port = portFlag
 	}
-	srv, err := server.Start(&cfg)
+	if interfaceFlag != "" {
+		cfg.Interface = interfaceFlag
+	}
+	payload := payload.Payload{
+		Path:                content,
+		Filename:            filepath.Base(content),
+		DeleteAfterTransfer: shouldzip,
+	}
+	srv, err := server.Start(&cfg, &payload)
 	if err != nil {
 		return err
 	}
-	srv.SetFilename(content)
 	qr.RenderString(srv.SendURL)
+	srv.Wait()
 	return nil
 }
 
