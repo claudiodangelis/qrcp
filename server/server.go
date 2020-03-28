@@ -14,7 +14,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/claudiodangelis/qr-filetransfer/page"
 	"github.com/claudiodangelis/qrcp/logger"
 	"github.com/claudiodangelis/qrcp/pages"
 	"github.com/claudiodangelis/qrcp/payload"
@@ -171,7 +170,7 @@ func New(iface string, port int) (*Server, error) {
 			progressBar.FinishPrint("File transfer completed")
 
 			data.File = strings.Join(transferedFiles, ", ")
-			serveTemplate("done", page.Done, w, data)
+			serveTemplate("done", pages.Done, w, data)
 		case "GET":
 			serveTemplate("upload", pages.Upload, w, data)
 		}
