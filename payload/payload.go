@@ -16,7 +16,7 @@ type Payload struct {
 
 // Delete the payload from disk
 func (p Payload) Delete() error {
-	return nil
+	return os.RemoveAll(p.Path)
 }
 
 // FromArgs returns a payload from args
