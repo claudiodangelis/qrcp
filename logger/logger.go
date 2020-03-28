@@ -1,7 +1,6 @@
 package logger
 
 import (
-	"flag"
 	"fmt"
 	"log"
 )
@@ -29,9 +28,5 @@ type Logger struct {
 
 // New logger
 func New() Logger {
-	var l Logger
-	// Lookup the flags defined in main package
-	l.quiet = flag.Lookup("quiet").Value.(flag.Getter).Get().(bool)
-	l.debug = flag.Lookup("debug").Value.(flag.Getter).Get().(bool)
-	return l
+	return Logger{}
 }
