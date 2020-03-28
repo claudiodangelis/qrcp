@@ -78,7 +78,41 @@ func New(iface string, port int) (*Server, error) {
 	theserver.stopchannel = make(chan bool)
 	// Create handlers
 	// Send handler (sends file to caller)
+	// Create cookie used to verify request is coming from first client to connect
+	cookie := http.Cookie{Name: "qr-filetransfer", Value: ""}
+
+	var initCookie sync.Once
 	http.HandleFunc("/send/"+randomPath, func(w http.ResponseWriter, r *http.Request) {
+		if cookie.Value == "" {
+			if !strings.HasPrefix(r.Header.Get("User-Agent"), "Mozilla") {
+				http.Error(w, "", http.StatusOK)
+				return
+			}
+			initCookie.Do(func() {
+				value, err := util.GetSessionID()
+				if err != nil {
+					log.Println("Unable to generate session ID", err)
+					theserver.stopchannel <- true
+				}
+				cookie.Value = value
+				http.SetCookie(w, &cookie)
+			})
+		} else {
+			// Check for the expected cookie and value
+			// If it is missing or doesn't match
+			// return a 404 status
+			rcookie, err := r.Cookie(cookie.Name)
+			if err != nil || rcookie.Value != cookie.Value {
+				http.Error(w, "", http.StatusNotFound)
+				return
+			}
+			// If the cookie exits and matches
+			// this is an aadditional request.
+			// Increment the waitgroup
+			wg.Add(1)
+		}
+
+		defer wg.Done()
 		w.Header().Set("Content-Disposition", "attachment; filename="+
 			theserver.p.Filename)
 		http.ServeFile(w, r, theserver.p.Path)
