@@ -3,7 +3,6 @@ package config
 import (
 	"encoding/json"
 	"io/ioutil"
-	"os"
 	"os/user"
 	"path/filepath"
 
@@ -28,11 +27,8 @@ func configFile() string {
 // Load a new configuration
 func Load() Config {
 	var cfg Config
-	// Read the file
-	file, err := ioutil.ReadFile(configFile())
-	if err != nil && !os.IsNotExist(err) {
-		panic(err)
-	} else {
+	// Read the configuration file, if it exists
+	if file, err := ioutil.ReadFile(configFile()); err == nil {
 		// Read the config
 		if err := json.Unmarshal(file, &cfg); err != nil {
 			panic(err)
