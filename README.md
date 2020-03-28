@@ -156,6 +156,7 @@ Check out the rules to claim one: [rules of openlogos](https://github.com/arasat
 - [quick-transfer](https://github.com/CodeMan99/quick-transfer) - Node.js clone of this project
 - [share-file-qr](https://github.com/pwalch/share-file-qr) - Python re-implementation of this project
 - [share-files](https://github.com/antoaravinth/share-files) _(Uncredited)_  - Yet another Node.js clone of this project
+- [ezshare](https://github.com/mifi/ezshare) - Another Node.js two way file sharing tool supporting folders and multiple files
 
 ## License
 
