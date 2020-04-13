@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"io"
 	"log"
@@ -29,19 +28,39 @@ type Server struct {
 	ReceiveURL  string
 	instance    *http.Server
 	payload     payload.Payload
-	stopchannel chan bool
+	outputDir   string
+	stopChannel chan bool
+	// expectParallelRequests is set to true when qrcp sends files, in order
+	// to support downloading of parallel chunks
+	expectParallelRequests bool
 }
 
-// SetForSend adds a handler for sending the file
-func (s *Server) SetForSend(p payload.Payload) error {
+// ReceiveTo sets the output directory
+func (s *Server) ReceiveTo(dir string) error {
+	output, err := filepath.Abs(dir)
+	if err != nil {
+		return err
+	}
+	// Check if the output dir exists
+	if dir, _ := os.Stat(output); !dir.IsDir() {
+		return fmt.Errorf("%s is not a valid directory", output)
+	}
+	s.outputDir = output
+	return nil
+}
+
+// Send adds a handler for sending the file
+// TODO: Remove the `error` return type
+func (s *Server) Send(p payload.Payload) error {
 	// Add handler
 	s.payload = p
+	s.expectParallelRequests = true
 	return nil
 }
 
 // Wait for transfer to be completed, it waits forever if kept awlive
 func (s Server) Wait() error {
-	<-s.stopchannel
+	<-s.stopChannel
 	if err := s.instance.Shutdown(context.Background()); err != nil {
 		log.Println(err)
 	}
@@ -52,7 +71,8 @@ func (s Server) Wait() error {
 }
 
 // New instance of the server
-func New(iface string, port int, keepalive bool) (*Server, error) {
+// TODO: New should accept a configuration file
+func New(iface string, port int, keepAlive bool) (*Server, error) {
 	logger := logger.New()
 	app := &Server{}
 	// Create the server
@@ -77,7 +97,7 @@ func New(iface string, port int, keepalive bool) (*Server, error) {
 	// Create a server
 	httpserver := &http.Server{Addr: address}
 	// Create channel to send message to stop server
-	app.stopchannel = make(chan bool)
+	app.stopChannel = make(chan bool)
 	// Create handlers
 	// Send handler (sends file to caller)
 	// Create cookie used to verify request is coming from first client to connect
@@ -87,7 +107,7 @@ func New(iface string, port int, keepalive bool) (*Server, error) {
 	signal.Notify(sig, os.Interrupt)
 	go func() {
 		<-sig
-		app.stopchannel <- true
+		app.stopChannel <- true
 	}()
 
 	// The handler adds and removes from the sync.WaitGroup
@@ -98,16 +118,17 @@ func New(iface string, port int, keepalive bool) (*Server, error) {
 	waitgroup.Add(1)
 	var initCookie sync.Once
 	http.HandleFunc("/send/"+randomPath, func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("/send called")
 		if cookie.Value == "" {
-			// if !strings.HasPrefix(r.Header.Get("User-Agent"), "Mozilla") {
-			// 	http.Error(w, "", http.StatusOK)
-			// 	return
-			// }
+			if !strings.HasPrefix(r.Header.Get("User-Agent"), "Mozilla") {
+				http.Error(w, "", http.StatusOK)
+				return
+			}
 			initCookie.Do(func() {
 				value, err := util.GetSessionID()
 				if err != nil {
 					log.Println("Unable to generate session ID", err)
-					app.stopchannel <- true
+					app.stopChannel <- true
 					return
 				}
 				cookie.Value = value
@@ -119,7 +140,6 @@ func New(iface string, port int, keepalive bool) (*Server, error) {
 			// return a 404 status
 			rcookie, err := r.Cookie(cookie.Name)
 			if err != nil || rcookie.Value != cookie.Value {
-				fmt.Println("oops")
 				http.Error(w, "", http.StatusNotFound)
 				return
 			}
@@ -145,23 +165,18 @@ func New(iface string, port int, keepalive bool) (*Server, error) {
 		data.Route = "/receive/" + randomPath
 		switch r.Method {
 		case "POST":
-			// TODO: DO this
-			dirToStore := "/tmp"
-			filenames := util.ReadFilenames(dirToStore)
+			filenames := util.ReadFilenames(app.outputDir)
 			reader, err := r.MultipartReader()
 			if err != nil {
 				fmt.Fprintf(w, "Upload error: %v\n", err)
 				log.Printf("Upload error: %v\n", err)
-				app.stopchannel <- true
+				app.stopChannel <- true
 				return
 			}
 
 			transferedFiles := []string{}
 			progressBar := pb.New64(r.ContentLength)
 			progressBar.ShowCounters = false
-			if flag.Lookup("quiet").Value.(flag.Getter).Get().(bool) == true {
-				progressBar.NotPrint = true
-			}
 
 			for {
 				part, err := reader.NextPart()
@@ -173,14 +188,13 @@ func New(iface string, port int, keepalive bool) (*Server, error) {
 				if part.FileName() == "" {
 					continue
 				}
-
 				// prepare the dst
 				fileName := getFileName(part.FileName(), filenames)
-				out, err := os.Create(filepath.Join(dirToStore, fileName))
+				out, err := os.Create(filepath.Join(app.outputDir, fileName))
 				if err != nil {
 					fmt.Fprintf(w, "Unable to create the file for writing: %s\n", err) //output to server
 					log.Printf("Unable to create the file for writing: %s\n", err)     //output to console
-					app.stopchannel <- true                                            // send signal to server to shutdown
+					app.stopChannel <- true                                            // send signal to server to shutdown
 					return
 				}
 				defer out.Close()
@@ -199,7 +213,7 @@ func New(iface string, port int, keepalive bool) (*Server, error) {
 					if err != nil && err != io.EOF {
 						fmt.Fprintf(w, "Unable to write file to disk: %v", err) //output to server
 						log.Printf("Unable to write file to disk: %v", err)     //output to console
-						app.stopchannel <- true                                 // send signal to server to shutdown
+						app.stopChannel <- true                                 // send signal to server to shutdown
 						return
 					}
 					if n == 0 {
@@ -209,7 +223,7 @@ func New(iface string, port int, keepalive bool) (*Server, error) {
 					if _, err := out.Write(buf[:n]); err != nil {
 						fmt.Fprintf(w, "Unable to write file to disk: %v", err) //output to server
 						log.Printf("Unable to write file to disk: %v", err)     //output to console
-						app.stopchannel <- true                                 // send signal to server to shutdown
+						app.stopChannel <- true                                 // send signal to server to shutdown
 						return
 					}
 					progressBar.Add(n)
@@ -222,18 +236,20 @@ func New(iface string, port int, keepalive bool) (*Server, error) {
 
 			data.File = strings.Join(transferedFiles, ", ")
 			serveTemplate("done", pages.Done, w, data)
+			if keepAlive == false {
+				app.stopChannel <- true
+			}
 		case "GET":
 			serveTemplate("upload", pages.Upload, w, data)
 		}
-		app.stopchannel <- true
 	})
 	// Wait for all wg to be done, then send shutdown signal
 	go func() {
 		waitgroup.Wait()
-		if keepalive {
+		if keepAlive || !app.expectParallelRequests {
 			return
 		}
-		app.stopchannel <- true
+		app.stopChannel <- true
 	}()
 	// Receive handler (receives file from caller)
 	go func() {

@@ -11,12 +11,14 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&keepaliveFlag, "keep-alive", "k", false, "keep server alive after transfering")
 	rootCmd.PersistentFlags().IntVarP(&portFlag, "port", "p", 0, "port to use for the server")
 	rootCmd.PersistentFlags().StringVarP(&interfaceFlag, "interface", "i", "", "network interface to use for the server")
+	rootCmd.PersistentFlags().StringVarP(&outputFlag, "output", "o", "", "output directory for receiving files")
 }
 
 // Flags
 var zipFlag bool
 var portFlag int
 var interfaceFlag string
+var outputFlag string
 var keepaliveFlag bool
 
 var rootCmd = &cobra.Command{

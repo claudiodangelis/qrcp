@@ -14,7 +14,6 @@ import (
 type Config struct {
 	Interface string `json:"interface"`
 	Port      int    `json:"port"`
-	KeepAlive bool   `json:"keep-alive"`
 }
 
 func configFile() string {
