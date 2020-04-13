@@ -28,14 +28,14 @@ type Server struct {
 	// ReceiveURL is the URL used to Receive the file
 	ReceiveURL  string
 	instance    *http.Server
-	p           payload.Payload
+	payload     payload.Payload
 	stopchannel chan bool
 }
 
 // SetForSend adds a handler for sending the file
 func (s *Server) SetForSend(p payload.Payload) error {
 	// Add handler
-	s.p = p
+	s.payload = p
 	return nil
 }
 
@@ -79,20 +79,34 @@ func New(iface string, port int) (*Server, error) {
 	// Create handlers
 	// Send handler (sends file to caller)
 	// Create cookie used to verify request is coming from first client to connect
-	cookie := http.Cookie{Name: "qr-filetransfer", Value: ""}
+	cookie := http.Cookie{Name: "qrcp", Value: ""}
+	// Gracefully shutdown when an OS signal is received
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt)
+	go func() {
+		<-sig
+		theserver.stopchannel <- true
+	}()
 
+	// The handler adds and removes from the sync.WaitGroup
+	// When the group is zero all requests are completed
+	// and the server is shutdown
+	// TODO: Refactor this
+	var waitgroup sync.WaitGroup
+	waitgroup.Add(1)
 	var initCookie sync.Once
 	http.HandleFunc("/send/"+randomPath, func(w http.ResponseWriter, r *http.Request) {
 		if cookie.Value == "" {
-			if !strings.HasPrefix(r.Header.Get("User-Agent"), "Mozilla") {
-				http.Error(w, "", http.StatusOK)
-				return
-			}
+			// if !strings.HasPrefix(r.Header.Get("User-Agent"), "Mozilla") {
+			// 	http.Error(w, "", http.StatusOK)
+			// 	return
+			// }
 			initCookie.Do(func() {
 				value, err := util.GetSessionID()
 				if err != nil {
 					log.Println("Unable to generate session ID", err)
 					theserver.stopchannel <- true
+					return
 				}
 				cookie.Value = value
 				http.SetCookie(w, &cookie)
@@ -109,14 +123,14 @@ func New(iface string, port int) (*Server, error) {
 			// If the cookie exits and matches
 			// this is an aadditional request.
 			// Increment the waitgroup
-			wg.Add(1)
+			waitgroup.Add(1)
 		}
 
-		defer wg.Done()
+		defer waitgroup.Done()
 		w.Header().Set("Content-Disposition", "attachment; filename="+
-			theserver.p.Filename)
-		http.ServeFile(w, r, theserver.p.Path)
-		theserver.stopchannel <- true
+			theserver.payload.Filename)
+		http.ServeFile(w, r, theserver.payload.Path)
+
 	})
 	// Upload handler (serves the upload page)
 	http.HandleFunc("/receive/"+randomPath, func(w http.ResponseWriter, r *http.Request) {
@@ -210,31 +224,12 @@ func New(iface string, port int) (*Server, error) {
 		}
 		theserver.stopchannel <- true
 	})
-	// Receive handler (receives file from caller)
-
-	// Gracefully shutdown when an OS signal is received
-	sig := make(chan os.Signal, 1)
-	signal.Notify(sig, os.Interrupt)
+	// Wait for all wg to be done, then send shutdown signal
 	go func() {
-		<-sig
+		waitgroup.Wait()
 		theserver.stopchannel <- true
 	}()
-
-	// The handler adds and removes from the sync.WaitGroup
-	// When the group is zero all requests are completed
-	// and the server is shutdown
-	// TODO: Refactor this
-	var waitgroup sync.WaitGroup
-	wg := &waitgroup // little hack to return wg as pointer
-	(*wg).Add(1)
-	go func() {
-		(*wg).Wait()
-		// TODO: what is this
-		if flag.Lookup("keep-alive").Value.(flag.Getter).Get().(bool) == false {
-			theserver.stopchannel <- true
-		}
-	}()
-	fmt.Println("about to serve", theserver.SendURL)
+	// Receive handler (receives file from caller)
 	go func() {
 		if err := (s.Serve(tcpKeepAliveListener{listener.(*net.TCPListener)})); err != http.ErrServerClosed {
 			log.Fatalln(err)

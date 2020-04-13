@@ -47,6 +47,7 @@ func ZipFiles(files []string) (string, error) {
 
 // GetRandomURLPath returns a random string of 4 alphanumeric characters
 func GetRandomURLPath() string {
+	return ""
 	timeNum := time.Now().UTC().UnixNano()
 	alphaString := strconv.FormatInt(timeNum, 36)
 	return alphaString[len(alphaString)-4:]
