@@ -16,14 +16,7 @@ func sendCmdFunc(command *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	cfg := config.Load()
-	// TODO: Maybe move this somewhere else?
-	if portFlag > 0 {
-		cfg.Port = portFlag
-	}
-	if interfaceFlag != "" {
-		cfg.Interface = interfaceFlag
-	}
+	cfg := config.New(command.Flags())
 	srv, err := server.New(cfg.Interface, cfg.Port, keepaliveFlag)
 	if err != nil {
 		return err

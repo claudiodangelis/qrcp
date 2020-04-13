@@ -7,6 +7,7 @@ import (
 func init() {
 	rootCmd.AddCommand(sendCmd)
 	rootCmd.AddCommand(receiveCmd)
+	rootCmd.AddCommand(configCmd)
 	rootCmd.PersistentFlags().BoolVarP(&zipFlag, "zip", "z", false, "zip content before transfering")
 	rootCmd.PersistentFlags().BoolVarP(&keepaliveFlag, "keep-alive", "k", false, "keep server alive after transfering")
 	rootCmd.PersistentFlags().IntVarP(&portFlag, "port", "p", 0, "port to use for the server")
