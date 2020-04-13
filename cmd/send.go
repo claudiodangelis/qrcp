@@ -36,9 +36,6 @@ func sendCmdFunc(command *cobra.Command, args []string) error {
 	if err := srv.Wait(); err != nil {
 		return err
 	}
-	if payload.DeleteAfterTransfer {
-		payload.Delete()
-	}
 	return nil
 }
 

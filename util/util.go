@@ -47,7 +47,6 @@ func ZipFiles(files []string) (string, error) {
 
 // GetRandomURLPath returns a random string of 4 alphanumeric characters
 func GetRandomURLPath() string {
-	return ""
 	timeNum := time.Now().UTC().UnixNano()
 	alphaString := strconv.FormatInt(timeNum, 36)
 	return alphaString[len(alphaString)-4:]
@@ -62,7 +61,7 @@ func GetSessionID() (string, error) {
 	return base64.StdEncoding.EncodeToString(randbytes), nil
 }
 
-// GetAddress returns the address of the network interface to
+// GetInterfaceAddress returns the address of the network interface to
 // bind the server to. The first time is run it prompts a
 // dialog to choose which network interface should be used
 // for the transfer

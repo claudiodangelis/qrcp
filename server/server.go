@@ -39,11 +39,14 @@ func (s *Server) SetForSend(p payload.Payload) error {
 	return nil
 }
 
-// Wait for transfer to be completed
+// Wait for transfer to be completed, it waits forever if kept awlive
 func (s Server) Wait() error {
 	<-s.stopchannel
 	if err := s.instance.Shutdown(context.Background()); err != nil {
 		log.Println(err)
+	}
+	if s.payload.DeleteAfterTransfer {
+		s.payload.Delete()
 	}
 	return nil
 }
@@ -51,8 +54,7 @@ func (s Server) Wait() error {
 // New instance of the server
 func New(iface string, port int) (*Server, error) {
 	logger := logger.New()
-
-	theserver := &Server{}
+	app := &Server{}
 	// Create the server
 	address, err := util.GetInterfaceAddress(iface)
 	if err != nil {
@@ -67,15 +69,15 @@ func New(iface string, port int) (*Server, error) {
 
 	randomPath := util.GetRandomURLPath()
 	// TODO: Refactor this
-	theserver.SendURL = fmt.Sprintf("http://%s/send/%s",
+	app.SendURL = fmt.Sprintf("http://%s/send/%s",
 		listener.Addr().String(), randomPath)
-	theserver.ReceiveURL = fmt.Sprintf("http://%s/receive/%s",
+	app.ReceiveURL = fmt.Sprintf("http://%s/receive/%s",
 		listener.Addr().String(), randomPath)
 
 	// Create a server
-	s := &http.Server{Addr: address}
+	httpserver := &http.Server{Addr: address}
 	// Create channel to send message to stop server
-	theserver.stopchannel = make(chan bool)
+	app.stopchannel = make(chan bool)
 	// Create handlers
 	// Send handler (sends file to caller)
 	// Create cookie used to verify request is coming from first client to connect
@@ -85,7 +87,7 @@ func New(iface string, port int) (*Server, error) {
 	signal.Notify(sig, os.Interrupt)
 	go func() {
 		<-sig
-		theserver.stopchannel <- true
+		app.stopchannel <- true
 	}()
 
 	// The handler adds and removes from the sync.WaitGroup
@@ -105,7 +107,7 @@ func New(iface string, port int) (*Server, error) {
 				value, err := util.GetSessionID()
 				if err != nil {
 					log.Println("Unable to generate session ID", err)
-					theserver.stopchannel <- true
+					app.stopchannel <- true
 					return
 				}
 				cookie.Value = value
@@ -128,8 +130,8 @@ func New(iface string, port int) (*Server, error) {
 
 		defer waitgroup.Done()
 		w.Header().Set("Content-Disposition", "attachment; filename="+
-			theserver.payload.Filename)
-		http.ServeFile(w, r, theserver.payload.Path)
+			app.payload.Filename)
+		http.ServeFile(w, r, app.payload.Path)
 
 	})
 	// Upload handler (serves the upload page)
@@ -149,7 +151,7 @@ func New(iface string, port int) (*Server, error) {
 			if err != nil {
 				fmt.Fprintf(w, "Upload error: %v\n", err)
 				log.Printf("Upload error: %v\n", err)
-				theserver.stopchannel <- true
+				app.stopchannel <- true
 				return
 			}
 
@@ -177,7 +179,7 @@ func New(iface string, port int) (*Server, error) {
 				if err != nil {
 					fmt.Fprintf(w, "Unable to create the file for writing: %s\n", err) //output to server
 					log.Printf("Unable to create the file for writing: %s\n", err)     //output to console
-					theserver.stopchannel <- true                                      // send signal to server to shutdown
+					app.stopchannel <- true                                            // send signal to server to shutdown
 					return
 				}
 				defer out.Close()
@@ -196,7 +198,7 @@ func New(iface string, port int) (*Server, error) {
 					if err != nil && err != io.EOF {
 						fmt.Fprintf(w, "Unable to write file to disk: %v", err) //output to server
 						log.Printf("Unable to write file to disk: %v", err)     //output to console
-						theserver.stopchannel <- true                           // send signal to server to shutdown
+						app.stopchannel <- true                                 // send signal to server to shutdown
 						return
 					}
 					if n == 0 {
@@ -206,7 +208,7 @@ func New(iface string, port int) (*Server, error) {
 					if _, err := out.Write(buf[:n]); err != nil {
 						fmt.Fprintf(w, "Unable to write file to disk: %v", err) //output to server
 						log.Printf("Unable to write file to disk: %v", err)     //output to console
-						theserver.stopchannel <- true                           // send signal to server to shutdown
+						app.stopchannel <- true                                 // send signal to server to shutdown
 						return
 					}
 					progressBar.Add(n)
@@ -222,19 +224,19 @@ func New(iface string, port int) (*Server, error) {
 		case "GET":
 			serveTemplate("upload", pages.Upload, w, data)
 		}
-		theserver.stopchannel <- true
+		app.stopchannel <- true
 	})
 	// Wait for all wg to be done, then send shutdown signal
 	go func() {
 		waitgroup.Wait()
-		theserver.stopchannel <- true
+		app.stopchannel <- true
 	}()
 	// Receive handler (receives file from caller)
 	go func() {
-		if err := (s.Serve(tcpKeepAliveListener{listener.(*net.TCPListener)})); err != http.ErrServerClosed {
+		if err := (httpserver.Serve(tcpKeepAliveListener{listener.(*net.TCPListener)})); err != http.ErrServerClosed {
 			log.Fatalln(err)
 		}
 	}()
-	theserver.instance = s
-	return theserver, nil
+	app.instance = httpserver
+	return app, nil
 }
