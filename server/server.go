@@ -13,7 +13,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/claudiodangelis/qrcp/logger"
 	"github.com/claudiodangelis/qrcp/pages"
 	"github.com/claudiodangelis/qrcp/payload"
 	"github.com/claudiodangelis/qrcp/util"
@@ -73,7 +72,6 @@ func (s Server) Wait() error {
 // New instance of the server
 // TODO: New should accept a configuration file
 func New(iface string, port int, keepAlive bool) (*Server, error) {
-	logger := logger.New()
 	app := &Server{}
 	// Create the server
 	address, err := util.GetInterfaceAddress(iface)
@@ -118,7 +116,6 @@ func New(iface string, port int, keepAlive bool) (*Server, error) {
 	waitgroup.Add(1)
 	var initCookie sync.Once
 	http.HandleFunc("/send/"+randomPath, func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("/send called")
 		if cookie.Value == "" {
 			if !strings.HasPrefix(r.Header.Get("User-Agent"), "Mozilla") {
 				http.Error(w, "", http.StatusOK)
@@ -203,7 +200,7 @@ func New(iface string, port int, keepAlive bool) (*Server, error) {
 				filenames = append(filenames, fileName)
 
 				// write the content from POSTed file to the out
-				logger.Info("Transferring file: ", out.Name())
+				fmt.Println("Transferring file: ", out.Name())
 				progressBar.Prefix(out.Name())
 				progressBar.Start()
 				buf := make([]byte, 1024)
@@ -212,7 +209,7 @@ func New(iface string, port int, keepAlive bool) (*Server, error) {
 					n, err := part.Read(buf)
 					if err != nil && err != io.EOF {
 						fmt.Fprintf(w, "Unable to write file to disk: %v", err) //output to server
-						log.Printf("Unable to write file to disk: %v", err)     //output to console
+						fmt.Printf("Unable to write file to disk: %v", err)     //output to console
 						app.stopChannel <- true                                 // send signal to server to shutdown
 						return
 					}

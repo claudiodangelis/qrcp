@@ -9,6 +9,7 @@ func init() {
 	rootCmd.AddCommand(receiveCmd)
 	rootCmd.AddCommand(configCmd)
 	rootCmd.PersistentFlags().BoolVarP(&zipFlag, "zip", "z", false, "zip content before transfering")
+	rootCmd.PersistentFlags().BoolVarP(&quietFlag, "quiet", "q", false, "only print errors")
 	rootCmd.PersistentFlags().BoolVarP(&keepaliveFlag, "keep-alive", "k", false, "keep server alive after transfering")
 	rootCmd.PersistentFlags().IntVarP(&portFlag, "port", "p", 0, "port to use for the server")
 	rootCmd.PersistentFlags().StringVarP(&interfaceFlag, "interface", "i", "", "network interface to use for the server")
@@ -21,6 +22,7 @@ var portFlag int
 var interfaceFlag string
 var outputFlag string
 var keepaliveFlag bool
+var quietFlag bool
 
 var rootCmd = &cobra.Command{
 	Use:  "qrcp",

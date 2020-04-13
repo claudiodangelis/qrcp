@@ -1,15 +1,15 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/claudiodangelis/qrcp/config"
+	"github.com/claudiodangelis/qrcp/logger"
 	"github.com/claudiodangelis/qrcp/qr"
 	"github.com/claudiodangelis/qrcp/server"
 	"github.com/spf13/cobra"
 )
 
 func receiveCmdFunc(command *cobra.Command, args []string) error {
+	log := logger.New(quietFlag)
 	// Load configuration
 	cfg := config.Load()
 	// Create the server
@@ -18,7 +18,7 @@ func receiveCmdFunc(command *cobra.Command, args []string) error {
 		return err
 	}
 	srv.ReceiveTo(outputFlag)
-	fmt.Println(srv.ReceiveURL)
+	log.Print(srv.ReceiveURL)
 	qr.RenderString(srv.ReceiveURL)
 	if err := srv.Wait(); err != nil {
 		return err
