@@ -35,9 +35,21 @@ func sendCmdFunc(command *cobra.Command, args []string) error {
 }
 
 var sendCmd = &cobra.Command{
-	Use: "send",
-	// TODO: Add usage
-	Aliases: []string{"s"},
-	Args:    cobra.MinimumNArgs(1),
-	RunE:    sendCmdFunc,
+	Use:     "send",
+	Short:   "Send a file(s) or directories from this host",
+	Long:    "Send a file(s) or directories from this host",
+	Aliases: []string{"s", "transfer"},
+	Example: `# Send /path/file.gif. Webserver listens on a random port
+qrcp send /path/file.gif
+# Shorter version:
+qrcp /path/file.gif
+# Zip file1.gif and file2.gif, then send the zip package
+qrcp /path/file1.gif /path/file2.gif
+# Zip teh content of directory, then send the zip package
+qrcp /path/directory
+# Send file.gif by creating a webserver on port 8080
+qrcp --port 8080 /path/file.gif
+`,
+	Args: cobra.MinimumNArgs(1),
+	RunE: sendCmdFunc,
 }

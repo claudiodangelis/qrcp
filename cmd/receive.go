@@ -29,6 +29,13 @@ func receiveCmdFunc(command *cobra.Command, args []string) error {
 var receiveCmd = &cobra.Command{
 	Use:     "receive",
 	Aliases: []string{"r"},
-	// TODO add usage
+	Short:   "Receive one or more files",
+	Long:    "Receive one or more files. If not specified with the --output flag, the current working directory will be used as a destination.",
+	Example: `# Receive files in the current directory
+qrcp receive
+# Receive files in a specific directory
+qrcp receive --output /tmp
+`,
+	Args: cobra.MinimumNArgs(1),
 	RunE: receiveCmdFunc,
 }
