@@ -17,6 +17,8 @@ func sendCmdFunc(command *cobra.Command, args []string) error {
 		return err
 	}
 	cfg := config.Load()
+	cfg.KeepAlive = keepaliveFlag
+	fmt.Println("keep alive is", cfg.KeepAlive)
 	// TODO: Maybe move this somewhere else?
 	if portFlag > 0 {
 		cfg.Port = portFlag
@@ -24,7 +26,7 @@ func sendCmdFunc(command *cobra.Command, args []string) error {
 	if interfaceFlag != "" {
 		cfg.Interface = interfaceFlag
 	}
-	srv, err := server.New(cfg.Interface, cfg.Port)
+	srv, err := server.New(cfg.Interface, cfg.Port, cfg.KeepAlive)
 	if err != nil {
 		return err
 	}

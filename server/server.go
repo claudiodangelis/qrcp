@@ -52,7 +52,7 @@ func (s Server) Wait() error {
 }
 
 // New instance of the server
-func New(iface string, port int) (*Server, error) {
+func New(iface string, port int, keepalive bool) (*Server, error) {
 	logger := logger.New()
 	app := &Server{}
 	// Create the server
@@ -119,6 +119,7 @@ func New(iface string, port int) (*Server, error) {
 			// return a 404 status
 			rcookie, err := r.Cookie(cookie.Name)
 			if err != nil || rcookie.Value != cookie.Value {
+				fmt.Println("oops")
 				http.Error(w, "", http.StatusNotFound)
 				return
 			}
@@ -229,6 +230,9 @@ func New(iface string, port int) (*Server, error) {
 	// Wait for all wg to be done, then send shutdown signal
 	go func() {
 		waitgroup.Wait()
+		if keepalive {
+			return
+		}
 		app.stopchannel <- true
 	}()
 	// Receive handler (receives file from caller)
