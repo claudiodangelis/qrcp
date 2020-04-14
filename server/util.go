@@ -21,7 +21,6 @@ func serveTemplate(name string, tmpl string, w io.Writer, data interface{}) {
 // getFileName generates a file name based on the existing files in the directory
 // if name isn't taken leave it unchanged
 // else change name to format "name(number).ext"
-// TODO: I see room for improvement
 func getFileName(newFilename string, fileNamesInTargetDir []string) string {
 	fileExt := filepath.Ext(newFilename)
 	fileName := strings.TrimSuffix(newFilename, fileExt)
@@ -31,7 +30,7 @@ func getFileName(newFilename string, fileNamesInTargetDir []string) string {
 		if newFilename == fileNamesInTargetDir[i] {
 			newFilename = fmt.Sprintf("%s(%v)%s", fileName, number, fileExt)
 			number++
-			i = 0 // start search again
+			i = 0
 		}
 		i++
 	}

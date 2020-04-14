@@ -48,7 +48,6 @@ func Load() Config {
 		if len(interfacenames) == 0 {
 			panic("no interfaces found")
 		} else if len(interfacenames) > 1 {
-			// TODO: Consider showing addresses too
 			prompt := promptui.Select{
 				Items: interfacenames,
 				Label: "Choose interface",
@@ -86,7 +85,6 @@ func Wizard() error {
 	if len(interfacenames) == 0 {
 		panic("no interfaces found")
 	} else {
-		// TODO: Consider showing addresses too
 		promptInterface := promptui.Select{
 			Items: interfacenames,
 			Label: "Choose interface",
@@ -111,7 +109,6 @@ func Wizard() error {
 		Label:    "Choose port, 0 means random port",
 		Default:  fmt.Sprintf("%d", cfg.Port),
 	}
-	// TODO: Rename this variable maybe?
 	if promptPortResultString, err := promptPort.Run(); err == nil {
 		if port, err := strconv.ParseInt(promptPortResultString, 10, 16); err == nil {
 			cfg.Port = int(port)
@@ -153,7 +150,6 @@ func write(cfg Config) error {
 func New(flags *pflag.FlagSet) Config {
 	// Load saved file / defults
 	cfg := Load()
-	// TODO: It looks like there is room for improvement here
 	if iface, _ := flags.GetString("interface"); iface != "" {
 		cfg.Interface = iface
 	}

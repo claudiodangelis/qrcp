@@ -98,7 +98,6 @@ func GetInterfaceAddress(ifaceString string) (string, error) {
 		}
 		return ip, nil
 	}
-	// TODO: This should be managed by a library
 	fmt.Println("Choose the network interface to use (type the number):")
 	for n, iface := range filteredIfaces {
 		fmt.Printf("[%d] %s\n", n, iface.Name)

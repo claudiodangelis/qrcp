@@ -49,12 +49,9 @@ func (s *Server) ReceiveTo(dir string) error {
 }
 
 // Send adds a handler for sending the file
-// TODO: Remove the `error` return type
-func (s *Server) Send(p payload.Payload) error {
-	// Add handler
+func (s *Server) Send(p payload.Payload) {
 	s.payload = p
 	s.expectParallelRequests = true
-	return nil
 }
 
 // Wait for transfer to be completed, it waits forever if kept awlive
@@ -70,7 +67,6 @@ func (s Server) Wait() error {
 }
 
 // New instance of the server
-// TODO: New should accept a configuration file
 func New(iface string, port int, keepAlive bool) (*Server, error) {
 	app := &Server{}
 	// Create the server

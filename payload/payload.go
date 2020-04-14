@@ -36,7 +36,7 @@ func FromArgs(args []string, zipFlag bool) (Payload, error) {
 		files = append(files, arg)
 	}
 	// Prepare the content
-	// TODO: Make less ugly
+	// TODO: Research cleaner code
 	var content string
 	if shouldzip {
 		zip, err := util.ZipFiles(files)

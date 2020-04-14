@@ -2,6 +2,7 @@ package util
 
 import (
 	"errors"
+	"fmt"
 	"net"
 	"regexp"
 )
@@ -45,7 +46,7 @@ func AddressByInterfaceName(name string) (string, error) {
 				return ipnet.IP.String(), nil
 			}
 			// TODO: Explain why this is needed
-			return "[" + ipnet.IP.String() + "]", nil
+			return fmt.Sprintf("[%s]", ipnet.IP.String()), nil
 		}
 	}
 	return "", errors.New("unable to find an IP for this interface")
