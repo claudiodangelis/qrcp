@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os/user"
 	"path/filepath"
 	"strconv"
@@ -29,30 +30,42 @@ func configFile() string {
 	return filepath.Join(currentUser.HomeDir, ".qrcp.json")
 }
 
-func chooseInterface() (string, error) {
-	interfacenames, err := util.InterfaceNames()
+type chooseInterfaceOptions struct {
+	interactive bool
+}
+
+func chooseInterface(opts chooseInterfaceOptions) (string, error) {
+	interfaces, err := util.Interfaces()
 	if err != nil {
 		return "", err
 	}
-	if len(interfacenames) == 0 {
+	if len(interfaces) == 0 {
 		return "", errors.New("no interfaces found")
 	}
 
-	if len(interfacenames) == 1 {
-		iface := interfacenames[0]
-		fmt.Printf("only one interface found: %s, using this one\n", iface)
-		return iface, nil
+	if len(interfaces) == 1 && opts.interactive == false {
+		for name := range interfaces {
+			fmt.Printf("only one interface found: %s, using this one\n", name)
+			return name, nil
+		}
 	}
-
+	// Map for pretty printing
+	m := make(map[string]string)
+	items := []string{}
+	for name, ip := range interfaces {
+		label := fmt.Sprintf("%s (%s)", name, ip)
+		m[label] = name
+		items = append(items, label)
+	}
 	prompt := promptui.Select{
-		Items: interfacenames,
+		Items: items,
 		Label: "Choose interface",
 	}
 	_, result, err := prompt.Run()
 	if err != nil {
 		return "", err
 	}
-	return result, nil
+	return m[result], nil
 }
 
 // Load a new configuration
@@ -67,9 +80,9 @@ func Load() Config {
 	}
 	// Prompt if needed
 	if cfg.Interface == "" {
-		iface, err := chooseInterface()
+		iface, err := chooseInterface(chooseInterfaceOptions{})
 		if err != nil {
-			panic(err)
+			log.Fatalln(err)
 		}
 		cfg.Interface = iface
 		// Write config
@@ -90,9 +103,12 @@ func Wizard() error {
 		}
 	}
 	// Ask for interface
-	iface, err := chooseInterface()
+	opts := chooseInterfaceOptions{
+		interactive: true,
+	}
+	iface, err := chooseInterface(opts)
 	if err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
 	cfg.Interface = iface
 	// Ask for port

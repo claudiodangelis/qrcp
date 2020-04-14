@@ -5,9 +5,9 @@ import (
 	"regexp"
 )
 
-// InterfaceNames returns the names of the available interface
-func InterfaceNames() ([]string, error) {
-	var names []string
+// Interfaces returns a `name:ip` map of the suitable interfaces found
+func Interfaces() (map[string]string, error) {
+	names := make(map[string]string)
 	ifaces, err := net.Interfaces()
 	if err != nil {
 		return names, err
@@ -20,7 +20,11 @@ func InterfaceNames() ([]string, error) {
 		if iface.Flags&net.FlagUp == 0 {
 			continue
 		}
-		names = append(names, iface.Name)
+		ip, err := FindIP(iface)
+		if err != nil {
+			return names, err
+		}
+		names[iface.Name] = ip
 	}
 	return names, nil
 }
