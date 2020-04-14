@@ -13,6 +13,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/claudiodangelis/qrcp/config"
 	"github.com/claudiodangelis/qrcp/pages"
 	"github.com/claudiodangelis/qrcp/payload"
 	"github.com/claudiodangelis/qrcp/util"
@@ -67,14 +68,15 @@ func (s Server) Wait() error {
 }
 
 // New instance of the server
-func New(iface string, port int, keepAlive bool) (*Server, error) {
+func New(cfg *config.Config) (*Server, error) {
+	// iface string, port int, keepAlive bool
 	app := &Server{}
 	// Create the server
-	address, err := util.GetInterfaceAddress(iface)
+	address, err := util.GetInterfaceAddress(cfg.Interface)
 	if err != nil {
 		return &Server{}, err
 	}
-	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", address, port))
+	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", address, cfg.Port))
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -229,7 +231,7 @@ func New(iface string, port int, keepAlive bool) (*Server, error) {
 
 			data.File = strings.Join(transferedFiles, ", ")
 			serveTemplate("done", pages.Done, w, data)
-			if keepAlive == false {
+			if cfg.KeepAlive == false {
 				app.stopChannel <- true
 			}
 		case "GET":
@@ -239,7 +241,7 @@ func New(iface string, port int, keepAlive bool) (*Server, error) {
 	// Wait for all wg to be done, then send shutdown signal
 	go func() {
 		waitgroup.Wait()
-		if keepAlive || !app.expectParallelRequests {
+		if cfg.KeepAlive || !app.expectParallelRequests {
 			return
 		}
 		app.stopChannel <- true

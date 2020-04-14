@@ -24,6 +24,7 @@ var outputFlag string
 var keepaliveFlag bool
 var quietFlag bool
 
+// The root command (`qrcp`) is like a shortcut of the `send` command
 var rootCmd = &cobra.Command{
 	Use:  "qrcp",
 	Args: cobra.MinimumNArgs(1),

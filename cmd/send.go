@@ -17,13 +17,12 @@ func sendCmdFunc(command *cobra.Command, args []string) error {
 		return err
 	}
 	cfg := config.New(command.Flags())
-	srv, err := server.New(cfg.Interface, cfg.Port, keepaliveFlag)
+	srv, err := server.New(&cfg)
 	if err != nil {
 		return err
 	}
-	if err := srv.Send(payload); err != nil {
-		return err
-	}
+	// Sets the payload
+	srv.Send(payload)
 	log.Print("Scan the following URL with a QR reader to start the file transfer:")
 	log.Print(srv.SendURL)
 	qr.RenderString(srv.SendURL)

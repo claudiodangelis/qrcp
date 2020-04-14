@@ -11,14 +11,18 @@ import (
 func receiveCmdFunc(command *cobra.Command, args []string) error {
 	log := logger.New(quietFlag)
 	// Load configuration
-	cfg := config.Load()
+	cfg := config.New(command.Flags())
 	// Create the server
-	srv, err := server.New(cfg.Interface, cfg.Port, false)
+	srv, err := server.New(&cfg)
 	if err != nil {
 		return err
 	}
+	// Sets the output directory
 	srv.ReceiveTo(outputFlag)
+	// Prints the URL to scan to screen
+	log.Print("Scan the following URL with a QR reader to start the file transfer:")
 	log.Print(srv.ReceiveURL)
+	// Renders the QR
 	qr.RenderString(srv.ReceiveURL)
 	if err := srv.Wait(); err != nil {
 		return err
