@@ -1,8 +1,6 @@
 package util
 
 import (
-	"errors"
-	"fmt"
 	"net"
 	"regexp"
 )
@@ -25,29 +23,4 @@ func InterfaceNames() ([]string, error) {
 		names = append(names, iface.Name)
 	}
 	return names, nil
-}
-
-// AddressByInterfaceName returns the address of the passed interface name
-func AddressByInterfaceName(name string) (string, error) {
-	iface, err := net.InterfaceByName(name)
-	if err != nil {
-		return "", err
-	}
-	addrs, err := iface.Addrs()
-	if err != nil {
-		return "", err
-	}
-	for _, addr := range addrs {
-		if ipnet, ok := addr.(*net.IPNet); ok {
-			if ipnet.IP.IsLinkLocalUnicast() {
-				continue
-			}
-			if ipnet.IP.To4() != nil {
-				return ipnet.IP.String(), nil
-			}
-			// TODO: Explain why this is needed
-			return fmt.Sprintf("[%s]", ipnet.IP.String()), nil
-		}
-	}
-	return "", errors.New("unable to find an IP for this interface")
 }
