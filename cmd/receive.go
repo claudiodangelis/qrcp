@@ -40,6 +40,5 @@ qrcp receive
 # Receive files in a specific directory
 qrcp receive --output /tmp
 `,
-	Args: cobra.MinimumNArgs(1),
 	RunE: receiveCmdFunc,
 }
