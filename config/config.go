@@ -29,6 +29,32 @@ func configFile() string {
 	return filepath.Join(currentUser.HomeDir, ".qrcp.json")
 }
 
+func chooseInterface() (string, error) {
+	interfacenames, err := util.InterfaceNames()
+	if err != nil {
+		return "", err
+	}
+	if len(interfacenames) == 0 {
+		return "", errors.New("no interfaces found")
+	}
+
+	if len(interfacenames) == 1 {
+		iface := interfacenames[0]
+		fmt.Printf("only one interface found: %s, using this one\n", iface)
+		return iface, nil
+	}
+
+	prompt := promptui.Select{
+		Items: interfacenames,
+		Label: "Choose interface",
+	}
+	_, result, err := prompt.Run()
+	if err != nil {
+		return "", err
+	}
+	return result, nil
+}
+
 // Load a new configuration
 func Load() Config {
 	var cfg Config
@@ -41,25 +67,11 @@ func Load() Config {
 	}
 	// Prompt if needed
 	if cfg.Interface == "" {
-		interfacenames, err := util.InterfaceNames()
+		iface, err := chooseInterface()
 		if err != nil {
 			panic(err)
 		}
-		if len(interfacenames) == 0 {
-			panic("no interfaces found")
-		} else if len(interfacenames) > 1 {
-			prompt := promptui.Select{
-				Items: interfacenames,
-				Label: "Choose interface",
-			}
-			_, result, err := prompt.Run()
-			if err != nil {
-				panic(err)
-			}
-			cfg.Interface = result
-		} else {
-			cfg.Interface = interfacenames[0]
-		}
+		cfg.Interface = iface
 		// Write config
 		if err := write(cfg); err != nil {
 			panic(err)
@@ -78,23 +90,11 @@ func Wizard() error {
 		}
 	}
 	// Ask for interface
-	interfacenames, err := util.InterfaceNames()
+	iface, err := chooseInterface()
 	if err != nil {
 		panic(err)
 	}
-	if len(interfacenames) == 0 {
-		panic("no interfaces found")
-	} else {
-		promptInterface := promptui.Select{
-			Items: interfacenames,
-			Label: "Choose interface",
-		}
-		_, result, err := promptInterface.Run()
-		if err != nil {
-			panic(err)
-		}
-		cfg.Interface = result
-	}
+	cfg.Interface = iface
 	// Ask for port
 	validatePort := func(input string) error {
 		_, err := strconv.ParseInt(input, 10, 16)
@@ -130,6 +130,11 @@ func Wizard() error {
 	if err := write(cfg); err != nil {
 		return err
 	}
+	b, err := json.MarshalIndent(cfg, "", "  ")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Configuration updated:\n%s\n", string(b))
 	return nil
 }
 
