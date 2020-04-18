@@ -7,6 +7,7 @@ Transfer files over Wi-Fi from your computer to a mobile device by scanning a QR
 [![Go Report Card](https://goreportcard.com/badge/github.com/claudiodangelis/qrcp)](https://goreportcard.com/report/github.com/claudiodangelis/qrcp)
 
 ## How does it work?
+![Screenshot](screenshot.png)
 
 `qrcp` binds a web server to the address of your Wi-Fi network interface on a random port and creates a handler for it. The default handler serves the content and exits the program when the transfer is complete. When used to receive files, `qrcp` serves an upload page and handles the transfer.
 
