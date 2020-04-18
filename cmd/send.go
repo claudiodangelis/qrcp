@@ -37,7 +37,7 @@ var sendCmd = &cobra.Command{
 	Use:     "send",
 	Short:   "Send a file(s) or directories from this host",
 	Long:    "Send a file(s) or directories from this host",
-	Aliases: []string{"s", "transfer"},
+	Aliases: []string{"s"},
 	Example: `# Send /path/file.gif. Webserver listens on a random port
 qrcp send /path/file.gif
 # Shorter version:
