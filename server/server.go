@@ -78,7 +78,7 @@ func New(cfg *config.Config) (*Server, error) {
 	// Create a listener. If `port: 0`, a random one is chosen
 	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", bind, cfg.Port))
 	if err != nil {
-		log.Fatalln(err)
+		return nil, err
 	}
 	// Set the value of computed port
 	port := listener.Addr().(*net.TCPAddr).Port

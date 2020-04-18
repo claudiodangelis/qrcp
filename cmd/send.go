@@ -16,7 +16,10 @@ func sendCmdFunc(command *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	cfg := config.New(interfaceFlag, portFlag, pathFlag, fqdnFlag, keepaliveFlag, listallinterfacesFlag)
+	cfg, err := config.New(interfaceFlag, portFlag, pathFlag, fqdnFlag, keepaliveFlag, listallinterfacesFlag)
+	if err != nil {
+		return err
+	}
 	srv, err := server.New(&cfg)
 	if err != nil {
 		return err
@@ -29,7 +32,6 @@ func sendCmdFunc(command *cobra.Command, args []string) error {
 	if err := srv.Wait(); err != nil {
 		return err
 	}
-	log.Print("Done")
 	return nil
 }
 

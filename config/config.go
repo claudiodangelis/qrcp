@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os/user"
 	"path/filepath"
 	"strconv"
@@ -78,28 +77,28 @@ func chooseInterface(opts configOptions) (string, error) {
 }
 
 // Load a new configuration
-func Load(opts configOptions) Config {
+func Load(opts configOptions) (Config, error) {
 	var cfg Config
 	// Read the configuration file, if it exists
 	if file, err := ioutil.ReadFile(configFile()); err == nil {
 		// Read the config
 		if err := json.Unmarshal(file, &cfg); err != nil {
-			panic(err)
+			return cfg, err
 		}
 	}
 	// Prompt if needed
 	if cfg.Interface == "" {
 		iface, err := chooseInterface(opts)
 		if err != nil {
-			log.Fatalln(err)
+			return cfg, err
 		}
 		cfg.Interface = iface
 		// Write config
 		if err := write(cfg); err != nil {
-			panic(err)
+			return cfg, err
 		}
 	}
-	return cfg
+	return cfg, nil
 }
 
 // Wizard starts an interactive configuration managements
@@ -108,7 +107,7 @@ func Wizard() error {
 	if file, err := ioutil.ReadFile(configFile()); err == nil {
 		// Read the config
 		if err := json.Unmarshal(file, &cfg); err != nil {
-			panic(err)
+			return err
 		}
 	}
 	// Ask for interface
@@ -117,7 +116,7 @@ func Wizard() error {
 	}
 	iface, err := chooseInterface(opts)
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 	cfg.Interface = iface
 	// Ask for fully qualified domain name
@@ -184,7 +183,7 @@ func Wizard() error {
 	}
 	b, err := json.MarshalIndent(cfg, "", "  ")
 	if err != nil {
-		panic(err)
+		return err
 	}
 	fmt.Printf("Configuration updated:\n%s\n", string(b))
 	return nil
@@ -204,21 +203,24 @@ func write(cfg Config) error {
 
 // New returns a new configuration struct. It loads defaults, then overrides
 // values if any.
-func New(iface string, port int, path string, fqdn string, keepAlive bool, listAllInterfaces bool) Config {
+func New(iface string, port int, path string, fqdn string, keepAlive bool, listAllInterfaces bool) (Config, error) {
 	// Load saved file / defults
-	cfg := Load(configOptions{listAllInterfaces: listAllInterfaces})
+	cfg, err := Load(configOptions{listAllInterfaces: listAllInterfaces})
+	if err != nil {
+		return cfg, err
+	}
 	if iface != "" {
 		cfg.Interface = iface
 	}
 	if fqdn != "" {
 		if govalidator.IsDNSName(fqdn) == false {
-			panic("invalid value for fully-qualified domain name")
+			return cfg, errors.New("invalid value for fully-qualified domain name")
 		}
 		cfg.FQDN = fqdn
 	}
 	if port != 0 {
 		if port > 65535 {
-			panic("invalid value for port")
+			return cfg, errors.New("invalid value for port")
 		}
 		cfg.Port = port
 	}
@@ -228,5 +230,5 @@ func New(iface string, port int, path string, fqdn string, keepAlive bool, listA
 	if path != "" {
 		cfg.Path = path
 	}
-	return cfg
+	return cfg, nil
 }
