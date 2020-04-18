@@ -1,8 +1,8 @@
 # qrcp
 
-
+<p align=center>
 ![Logo](logo.svg)
-
+</p>
 
 Transfer files over Wi-Fi from your computer to a mobile device by scanning a QR code without leaving the terminal.
 
