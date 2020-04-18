@@ -183,7 +183,7 @@ func New(cfg *config.Config) (*Server, error) {
 				app.stopChannel <- true
 				return
 			}
-			transferedFiles := []string{}
+			transferredFiles := []string{}
 			progressBar := pb.New64(r.ContentLength)
 			progressBar.ShowCounters = false
 			for {
@@ -242,11 +242,11 @@ func New(cfg *config.Config) (*Server, error) {
 					}
 					progressBar.Add(n)
 				}
-				transferedFiles = append(transferedFiles, out.Name())
+				transferredFiles = append(transferredFiles, out.Name())
 			}
 			progressBar.FinishPrint("File transfer completed")
-			// Set the value of the variable to the actually transfered files
-			htmlVariables.File = strings.Join(transferedFiles, ", ")
+			// Set the value of the variable to the actually transferred files
+			htmlVariables.File = strings.Join(transferredFiles, ", ")
 			serveTemplate("done", pages.Done, w, htmlVariables)
 			if cfg.KeepAlive == false {
 				app.stopChannel <- true
