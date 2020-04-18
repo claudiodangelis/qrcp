@@ -168,7 +168,7 @@ func Wizard() error {
 	// Ask for keep alive
 	promptKeepAlive := promptui.Select{
 		Items: []string{"No", "Yes"},
-		Label: "Should the server keep alive after transfering?",
+		Label: "Should the server keep alive after transferring?",
 	}
 	if _, promptKeepAliveResultString, err := promptKeepAlive.Run(); err == nil {
 		if promptKeepAliveResultString == "Yes" {

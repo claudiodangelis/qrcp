@@ -68,8 +68,8 @@ qrcp Documents/
 ```
 
 
-### Zip a file before transfering it
-You can choose to zip a file before transfering it.
+### Zip a file before transferring it
+You can choose to zip a file before transferring it.
 
 ```sh
 qrcp --zip LongVideo.avi
@@ -170,7 +170,7 @@ qrcp --fqdn example.com -i any -p 8080 MyRemoteDocument.pdf
 
 ### Keep the server alive
 
-It can be useful to keep the server alive after transfering the file, for example, when you want to transfer the same file to multiple devices. You can use the `--keep-alive` flag for that:
+It can be useful to keep the server alive after transferring the file, for example, when you want to transfer the same file to multiple devices. You can use the `--keep-alive` flag for that:
 
 ```sh
 # The server will not shutdown automatically

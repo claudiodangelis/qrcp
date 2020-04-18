@@ -46,7 +46,7 @@ qrcp send /path/file.gif
 qrcp /path/file.gif
 # Zip file1.gif and file2.gif, then send the zip package
 qrcp /path/file1.gif /path/file2.gif
-# Zip teh content of directory, then send the zip package
+# Zip the content of directory, then send the zip package
 qrcp /path/directory
 # Send file.gif by creating a webserver on port 8080
 qrcp --port 8080 /path/file.gif
