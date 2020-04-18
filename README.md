@@ -1,6 +1,6 @@
 # qrcp
 
-<p align=center>
+<p style="text-align: center;">
 ![Logo](logo.svg)
 </p>
 
