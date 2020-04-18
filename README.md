@@ -1,42 +1,14 @@
-
 ![Logo](logo.svg)
 
-# qrcp
+# $ qrcp
 
 Transfer files over Wi-Fi from your computer to a mobile device by scanning a QR code without leaving the terminal.
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/claudiodangelis/qrcp)](https://goreportcard.com/report/github.com/claudiodangelis/qrcp)
 
-[![Buy Me A Coffee](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/claudiodangelis)
-
-
-### Desktop to mobile
-
-![screenshot](demo.gif)
-
-### Mobile to desktop
-
-![Screenshot](mobile-demo.gif)
-
-## Install
-
-
-### Installation with Go 
-
-_Note: Go 1.8 is required to run._
-
-```
-go get github.com/claudiodangelis/qrcp
-```
-
-### Installation through a package manager
-
-[AUR (Arch Linux)](https://aur.archlinux.org/packages/qrcp-git/)
-
 ## How does it work?
 
-
-`qrcp` binds a web server to the address of your Wi-Fi network interface on a random port and creates a handler for it. The default handler serves the content and exits the program when the transfer is complete.
+`qrcp` binds a web server to the address of your Wi-Fi network interface on a random port and creates a handler for it. The default handler serves the content and exits the program when the transfer is complete. When used to receive files, `qrcp` serves an upload page and handles the transfer.
 
 The tool prints a QR code that encodes the text:
 
@@ -47,79 +19,163 @@ http://{address}:{port}/{random_path}
 
 Most QR apps can detect URLs in decoded text and act accordingly (i.e. open the decoded URL with the default browser), so when the QR code is scanned the content will begin downloading by the mobile browser.
 
-## Usage
+Send files to mobile:
+
+![screenshot](demo.gif)
+
+Receive files from mobile:
+
+![Screenshot](mobile-demo.gif)
+
+# Installation
+
+## Install it with Go
+    
+_Note: it requires go 1.8_
+
+    go get github.com/claudiodangelis/qrcp
+
+## Install the binary
+
+Download the latest binary from the [Releases](https://github.com/claudiodangelis/qr-filetransfer/releases) page to `/usr/local/bin` (or another location in `$PATH`), then set the proper permissions to the binary:
+
+    chmod +x /usr/local/bin/qrcp
+    
+# Usage
 
 
-![Screenshot](screenshot.jpg)
+## Send files
 
-
-**Note**: Both the computer and device must be on the same Wi-Fi network.
-
-On the first run, `qrcp` will ask to choose which **network interface** to use to transfer the files. Note that if only one suitable network interface is found, it will be used without asking.
-
-Two transfers mode are supported: **desktop-to-mobile** and **mobile-to-desktop**
-
-
-## Desktop to Mobile
-
-Transfer a single file
-
-```
-qrcp /path/to/file.txt
-```
-
-The `send` command is an alias created for consistency with the `receive` command described later on.
-```sh
-# These two commands are equivalent
-qrcp send /path/to/file.txt
-qrcp /path/to/file.txt
-```
-
-Zip the file, then transfer it
-
-```
-qrcp --zip /path/to/file.txt
-```
-
-Transfer a full directory. Note: the **directory is zipped** by the program before being transferred
-
-```
-qrcp /path/to/directory
-```
-
-## Mobile to Desktop
-
-If you want to use it the other way, you need to use the `receive` command. By scanning the QR code you will be redirected to an "Upload" page where you can choose which file(s) you want to transfer.
-
-By default the file(s) are transferred to the current directory, you can override that by passing the `--output` flag:
+### Send a file
 
 ```sh
-# This downloads the file(s) on the current directory
+qrcp MyDocument.pdf
+```
+
+### Send multiple files at once
+
+When sending multiple files at once, `qrcp` creates a zip archive of the files or folders you want to transfer, and deletes the zip archive once the transfer is complete.
+
+```sh
+# Multiple files
+qrcp MyDocument.pdf IMG0001.jpg
+```
+
+```sh
+# A whole folder
+qrcp Documents/
+```
+
+
+### Zip a file before transfering it
+You can choose to zip a file before transfering it.
+
+```sh
+qrcp --zip LongVideo.avi
+```
+
+
+## Receive files
+
+When receiving files, `qrcp` serves an "upload page" through which you can choose files from your mobile.
+
+### Receive files to the current directory
+
+```
 qrcp receive
 ```
 
-```sh
-# This downloads the file(s) in the ~/Downloads directory
-qrcp receive --output ~/Downloads
-```
-
-If you don't want the web server to listen to a random port, you can specify one:
+### Receive files to a specific directory
 
 ```sh
-qrcp --port=8080 /path/to/my-file
+# Note: the folder must exist
+qrcp receive --output=/tmp/dir
 ```
 
 
-## Tips & Tricks
+## Options
 
-### Keep server alive
-
-If you are trying to transfer a file that the browser on the receiving end is considering harmful, you can be asked by the browser if you really want to keep the file or discard it; this condition (browser awaiting your answer) can lead to qrcp disconnection. To prevent qrcp from disconnecting, use the `--keep-alive` flag:
+`qrcp` works without any prior configuration, however, you can choose to configure to use specific values. The `config` command launches a wizard that lets you configure parameters like interface, port, fully-qualified domain name and keep alive.
 
 ```sh
-qrcp --keep-alive /path/to/my/totally/cool.apk
+qrcp config
 ```
 
+Note: if some network interfaces are not showing up, use the `--list-all-interfaces` flag to suppress the interfaces' filter.
+
+```sh
+qrcp --list-all-interfaces config 
+```
+
+
+### Port
+
+By default `qrcp` listens on a random port. Pass the `--port` (or `-p`) flag to choose a specific one:
+
+```sh
+qrcp --port 8080 MyDocument.pdf
+```
+### Network Interface
+
+`qrcp` will try to automatically find the suitable network interface to use for the transfers. If more than one suitable interface is found ,it asks you to choose one.
+
+If you want to use a specific interface, pass the `--interface` (or `-i`) flag:
+
+
+
+```sh
+# The webserver will be visible by
+# all computers on the tun0's interface network
+qrcp -i tun0 MyDocument.dpf
+```
+
+
+You can also use a special interface name, `any`, which binds the web server to `0.0.0.0`, making the web server visible by everyone on any network, even from an external network. 
+
+This is useful when you want to transfer files from your Amazon EC2, Digital Ocean Droplet, Google Cloud Platform Compute Instance or any other VPS.
+
+```sh
+qrcp -i any MyDocument.pdf
+```
+
+
+### URL
+
+`qrcp` uses two patterns for the URLs:
+
+- send: `http://{ip address}:{port}/send/{random path}`
+- receive: `http://{ip address}:{port}/receive/{random path}`
+
+A few options are available that override these patterns.
+
+
+Pass the `--path` flag to use a specific path for URLs, for example:
+
+```sh
+# The resulting URL will be
+# http://{ip address}:{port}/send/x
+qrcp --path=x MyDocument.pdf
+```
+
+Pass the `--fqdn` (or `-d`) to use a fully qualified domain name instead of the IP. This is useful in combination with `-i any` you are using it from a remote location:
+
+```sh
+# The resulting URL will be
+# http://example.com:8080/send/xYz9
+qrcp --fqdn example.com -i any -p 8080 MyRemoteDocument.pdf
+```
+
+
+
+### Keep the server alive
+
+It can be useful to keep the server alive after transfering the file, for example, when you want to transfer the same file to multiple devices. You can use the `--keep-alive` flag for that:
+
+```sh
+# The server will not shutdown automatically
+# after the first transfer
+qrcp --keep-alive MyDocument.pdf
+```
 
 ## Authors
 
