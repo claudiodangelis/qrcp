@@ -69,31 +69,27 @@ func (s Server) Wait() error {
 
 // New instance of the server
 func New(cfg *config.Config) (*Server, error) {
-	// iface string, port int, keepAlive bool
 	app := &Server{}
-	// Create the server
-	// TODO: Rename variables
+	// Get the address of the configured interface to bind the server to
 	bind, err := util.GetInterfaceAddress(cfg.Interface)
 	if err != nil {
 		return &Server{}, err
 	}
-	fmt.Println("address is", bind)
+	// Create a listener. If `port: 0`, a random one is chosen
 	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", bind, cfg.Port))
 	if err != nil {
 		log.Fatalln(err)
 	}
-	// TODO: Refactor this
+	// Set the value of computed port
 	port := listener.Addr().(*net.TCPAddr).Port
-	address := fmt.Sprintf("%s:%d", bind, port)
-	fmt.Println("netwerk", listener.Addr().Network())
+	// Set the host
+	host := fmt.Sprintf("%s:%d", bind, port)
+	// Get a random path to use
 	path := util.GetRandomURLPath()
-	// TODO: Refactor this
-	// If fqdn == "" use IP:port
-	// if bind == "0.0.0.0" use external:port
-	// else, hostname = address:port
+	// Set the hostname
 	hostname := fmt.Sprintf("%s:%d", bind, port)
+	// Use external IP when using `interface: any`, unless a FQDN is set
 	if bind == "0.0.0.0" && cfg.FQDN == "" {
-		// use external IP
 		fmt.Println("Retrieving the external IP...")
 		extIP, err := util.GetExernalIP()
 		if err != nil {
@@ -101,21 +97,19 @@ func New(cfg *config.Config) (*Server, error) {
 		}
 		hostname = fmt.Sprintf("%s:%d", extIP.String(), port)
 	}
+	// Use a fully-qualified domain name if set
 	if cfg.FQDN != "" {
 		hostname = fmt.Sprintf("%s:%d", cfg.FQDN, port)
 	}
-
+	// Set send and receive URLs
 	app.SendURL = fmt.Sprintf("http://%s/send/%s",
 		hostname, path)
 	app.ReceiveURL = fmt.Sprintf("http://%s/receive/%s",
 		hostname, path)
-
 	// Create a server
-	httpserver := &http.Server{Addr: address}
+	httpserver := &http.Server{Addr: host}
 	// Create channel to send message to stop server
 	app.stopChannel = make(chan bool)
-	// Create handlers
-	// Send handler (sends file to caller)
 	// Create cookie used to verify request is coming from first client to connect
 	cookie := http.Cookie{Name: "qrcp", Value: ""}
 	// Gracefully shutdown when an OS signal is received
@@ -125,14 +119,14 @@ func New(cfg *config.Config) (*Server, error) {
 		<-sig
 		app.stopChannel <- true
 	}()
-
 	// The handler adds and removes from the sync.WaitGroup
 	// When the group is zero all requests are completed
 	// and the server is shutdown
-	// TODO: Refactor this
 	var waitgroup sync.WaitGroup
 	waitgroup.Add(1)
 	var initCookie sync.Once
+	// Create handlers
+	// Send handler (sends file to caller)
 	http.HandleFunc("/send/"+path, func(w http.ResponseWriter, r *http.Request) {
 		if cookie.Value == "" {
 			if !strings.HasPrefix(r.Header.Get("User-Agent"), "Mozilla") {
@@ -163,21 +157,19 @@ func New(cfg *config.Config) (*Server, error) {
 			// Increment the waitgroup
 			waitgroup.Add(1)
 		}
-
+		// Remove connection from the waitfroup when done
 		defer waitgroup.Done()
 		w.Header().Set("Content-Disposition", "attachment; filename="+
 			app.payload.Filename)
 		http.ServeFile(w, r, app.payload.Path)
-
 	})
 	// Upload handler (serves the upload page)
 	http.HandleFunc("/receive/"+path, func(w http.ResponseWriter, r *http.Request) {
-		// TODO: This can be refactored
-		data := struct {
+		htmlVariables := struct {
 			Route string
 			File  string
 		}{}
-		data.Route = "/receive/" + path
+		htmlVariables.Route = "/receive/" + path
 		switch r.Method {
 		case "POST":
 			filenames := util.ReadFilenames(app.outputDir)
@@ -188,74 +180,76 @@ func New(cfg *config.Config) (*Server, error) {
 				app.stopChannel <- true
 				return
 			}
-
 			transferedFiles := []string{}
 			progressBar := pb.New64(r.ContentLength)
 			progressBar.ShowCounters = false
-
 			for {
 				part, err := reader.NextPart()
-
 				if err == io.EOF {
 					break
 				}
-				// if part.FileName() is empty, skip this iteration.
+				// iIf part.FileName() is empty, skip this iteration.
 				if part.FileName() == "" {
 					continue
 				}
-				// prepare the dst
+				// Prepare the destination
 				fileName := getFileName(part.FileName(), filenames)
 				out, err := os.Create(filepath.Join(app.outputDir, fileName))
 				if err != nil {
-					fmt.Fprintf(w, "Unable to create the file for writing: %s\n", err) //output to server
-					log.Printf("Unable to create the file for writing: %s\n", err)     //output to console
-					app.stopChannel <- true                                            // send signal to server to shutdown
+					// Output to server
+					fmt.Fprintf(w, "Unable to create the file for writing: %s\n", err)
+					// Output to console
+					log.Printf("Unable to create the file for writing: %s\n", err)
+					// Send signal to server to shutdown
+					app.stopChannel <- true
 					return
 				}
 				defer out.Close()
-
-				// add name of new file
+				// Add name of new file
 				filenames = append(filenames, fileName)
-
-				// write the content from POSTed file to the out
+				// Write the content from POSTed file to the out
 				fmt.Println("Transferring file: ", out.Name())
 				progressBar.Prefix(out.Name())
 				progressBar.Start()
 				buf := make([]byte, 1024)
 				for {
-					// read a chunk
+					// Read a chunk
 					n, err := part.Read(buf)
 					if err != nil && err != io.EOF {
-						fmt.Fprintf(w, "Unable to write file to disk: %v", err) //output to server
-						fmt.Printf("Unable to write file to disk: %v", err)     //output to console
-						app.stopChannel <- true                                 // send signal to server to shutdown
+						// Output to server
+						fmt.Fprintf(w, "Unable to write file to disk: %v", err)
+						// Output to console
+						fmt.Printf("Unable to write file to disk: %v", err)
+						// Send signal to server to shutdown
+						app.stopChannel <- true
 						return
 					}
 					if n == 0 {
 						break
 					}
-					// write a chunk
+					// Write a chunk
 					if _, err := out.Write(buf[:n]); err != nil {
-						fmt.Fprintf(w, "Unable to write file to disk: %v", err) //output to server
-						log.Printf("Unable to write file to disk: %v", err)     //output to console
-						app.stopChannel <- true                                 // send signal to server to shutdown
+						// Output to server
+						fmt.Fprintf(w, "Unable to write file to disk: %v", err)
+						// Output to console
+						log.Printf("Unable to write file to disk: %v", err)
+						// Send signal to server to shutdown
+						app.stopChannel <- true
 						return
 					}
 					progressBar.Add(n)
 				}
-
 				transferedFiles = append(transferedFiles, out.Name())
 			}
-
 			progressBar.FinishPrint("File transfer completed")
-
-			data.File = strings.Join(transferedFiles, ", ")
-			serveTemplate("done", pages.Done, w, data)
+			// Set the value of the variable to the actually transfered files
+			htmlVariables.File = strings.Join(transferedFiles, ", ")
+			serveTemplate("done", pages.Done, w, htmlVariables)
 			if cfg.KeepAlive == false {
 				app.stopChannel <- true
 			}
 		case "GET":
-			serveTemplate("upload", pages.Upload, w, data)
+			serveTemplate("upload", pages.Upload, w, htmlVariables)
 		}
 	})
 	// Wait for all wg to be done, then send shutdown signal

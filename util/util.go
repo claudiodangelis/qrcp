@@ -129,7 +129,7 @@ func ReadFilenames(dir string) []string {
 	if err != nil {
 		panic(err)
 	}
-	// create array of names of files which are stored in dir
+	// Create array of names of files which are stored in dir
 	// used later to set valid name for received files
 	filenames := make([]string, len(files))
 	for _, fi := range files {
