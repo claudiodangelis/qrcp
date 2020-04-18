@@ -85,7 +85,10 @@ func New(cfg *config.Config) (*Server, error) {
 	// Set the host
 	host := fmt.Sprintf("%s:%d", bind, port)
 	// Get a random path to use
-	path := util.GetRandomURLPath()
+	path := cfg.Path
+	if path == "" {
+		path = util.GetRandomURLPath()
+	}
 	// Set the hostname
 	hostname := fmt.Sprintf("%s:%d", bind, port)
 	// Use external IP when using `interface: any`, unless a FQDN is set

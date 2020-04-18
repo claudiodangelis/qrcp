@@ -21,6 +21,7 @@ type Config struct {
 	Interface string `json:"interface"`
 	Port      int    `json:"port"`
 	KeepAlive bool   `json:"keepAlive"`
+	Path      string `json:"path"`
 }
 
 func configFile() string {
@@ -153,6 +154,18 @@ func Wizard() error {
 			cfg.Port = int(port)
 		}
 	}
+
+	// Ask for path
+	promptPath := promptui.Prompt{
+		Label:   "Choose path, empty means random",
+		Default: cfg.Path,
+	}
+	if promptPathResultString, err := promptPath.Run(); err == nil {
+		if promptPathResultString != "" {
+			cfg.Path = promptPathResultString
+		}
+	}
+
 	// Ask for keep alive
 	promptKeepAlive := promptui.Select{
 		Items: []string{"No", "Yes"},
@@ -191,7 +204,7 @@ func write(cfg Config) error {
 
 // New returns a new configuration struct. It loads defaults, then overrides
 // values if any.
-func New(iface string, port int, fqdn string, keepAlive bool, listAllInterfaces bool) Config {
+func New(iface string, port int, path string, fqdn string, keepAlive bool, listAllInterfaces bool) Config {
 	// Load saved file / defults
 	cfg := Load(configOptions{listAllInterfaces: listAllInterfaces})
 	if iface != "" {
@@ -212,6 +225,8 @@ func New(iface string, port int, fqdn string, keepAlive bool, listAllInterfaces 
 	if keepAlive {
 		cfg.KeepAlive = true
 	}
-
+	if path != "" {
+		cfg.Path = path
+	}
 	return cfg
 }

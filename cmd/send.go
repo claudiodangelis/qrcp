@@ -16,7 +16,7 @@ func sendCmdFunc(command *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	cfg := config.New(interfaceFlag, portFlag, fqdnFlag, keepaliveFlag, listallinterfacesFlag)
+	cfg := config.New(interfaceFlag, portFlag, pathFlag, fqdnFlag, keepaliveFlag, listallinterfacesFlag)
 	srv, err := server.New(&cfg)
 	if err != nil {
 		return err
