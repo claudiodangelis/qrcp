@@ -31,12 +31,13 @@ func configFile() string {
 	return filepath.Join(currentUser.HomeDir, ".qrcp.json")
 }
 
-type chooseInterfaceOptions struct {
-	interactive bool
+type configOptions struct {
+	interactive       bool
+	listAllInterfaces bool
 }
 
-func chooseInterface(opts chooseInterfaceOptions) (string, error) {
-	interfaces, err := util.Interfaces()
+func chooseInterface(opts configOptions) (string, error) {
+	interfaces, err := util.Interfaces(opts.listAllInterfaces)
 	if err != nil {
 		return "", err
 	}
@@ -76,7 +77,7 @@ func chooseInterface(opts chooseInterfaceOptions) (string, error) {
 }
 
 // Load a new configuration
-func Load() Config {
+func Load(opts configOptions) Config {
 	var cfg Config
 	// Read the configuration file, if it exists
 	if file, err := ioutil.ReadFile(configFile()); err == nil {
@@ -87,7 +88,7 @@ func Load() Config {
 	}
 	// Prompt if needed
 	if cfg.Interface == "" {
-		iface, err := chooseInterface(chooseInterfaceOptions{})
+		iface, err := chooseInterface(opts)
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -110,7 +111,7 @@ func Wizard() error {
 		}
 	}
 	// Ask for interface
-	opts := chooseInterfaceOptions{
+	opts := configOptions{
 		interactive: true,
 	}
 	iface, err := chooseInterface(opts)
@@ -190,9 +191,9 @@ func write(cfg Config) error {
 
 // New returns a new configuration struct. It loads defaults, then overrides
 // values if any.
-func New(iface string, port int, fqdn string, keepAlive bool) Config {
+func New(iface string, port int, fqdn string, keepAlive bool, listAllInterfaces bool) Config {
 	// Load saved file / defults
-	cfg := Load()
+	cfg := Load(configOptions{listAllInterfaces: listAllInterfaces})
 	if iface != "" {
 		cfg.Interface = iface
 	}

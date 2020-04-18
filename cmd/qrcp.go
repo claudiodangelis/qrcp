@@ -11,6 +11,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&zipFlag, "zip", "z", false, "zip content before transfering")
 	rootCmd.PersistentFlags().BoolVarP(&quietFlag, "quiet", "q", false, "only print errors")
 	rootCmd.PersistentFlags().BoolVarP(&keepaliveFlag, "keep-alive", "k", false, "keep server alive after transfering")
+	rootCmd.PersistentFlags().BoolVarP(&listallinterfacesFlag, "list-all-interfaces", "l", false, "list all available interfaces when choosing the one to use")
 	rootCmd.PersistentFlags().IntVarP(&portFlag, "port", "p", 0, "port to use for the server")
 	rootCmd.PersistentFlags().StringVarP(&interfaceFlag, "interface", "i", "", "network interface to use for the server")
 	rootCmd.PersistentFlags().StringVarP(&outputFlag, "output", "o", "", "output directory for receiving files")
@@ -25,6 +26,7 @@ var outputFlag string
 var keepaliveFlag bool
 var quietFlag bool
 var fqdnFlag string
+var listallinterfacesFlag bool
 
 // The root command (`qrcp`) is like a shortcut of the `send` command
 var rootCmd = &cobra.Command{
