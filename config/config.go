@@ -10,13 +10,14 @@ import (
 	"path/filepath"
 	"strconv"
 
+	"github.com/asaskevich/govalidator"
 	"github.com/claudiodangelis/qrcp/util"
 	"github.com/manifoldco/promptui"
-	"github.com/spf13/pflag"
 )
 
 // Config of qrcp
 type Config struct {
+	FQDN      string `json:"fqdn"`
 	Interface string `json:"interface"`
 	Port      int    `json:"port"`
 	KeepAlive bool   `json:"keepAlive"`
@@ -57,6 +58,12 @@ func chooseInterface(opts chooseInterfaceOptions) (string, error) {
 		m[label] = name
 		items = append(items, label)
 	}
+	// Add the "any" interface
+	anyIP := "0.0.0.0"
+	anyName := "any"
+	anyLabel := fmt.Sprintf("%s (%s)", anyName, anyIP)
+	m[anyLabel] = anyName
+	items = append(items, anyLabel)
 	prompt := promptui.Select{
 		Items: items,
 		Label: "Choose interface",
@@ -111,6 +118,21 @@ func Wizard() error {
 		log.Fatalln(err)
 	}
 	cfg.Interface = iface
+	// Ask for fully qualified domain name
+	validateFqdn := func(input string) error {
+		if input != "" && govalidator.IsDNSName(input) == false {
+			return errors.New("invalid domain")
+		}
+		return nil
+	}
+	promptFqdn := promptui.Prompt{
+		Validate: validateFqdn,
+		Label:    "Choose fully-qualified domain name",
+		Default:  "",
+	}
+	if promptFqdnString, err := promptFqdn.Run(); err == nil {
+		cfg.FQDN = promptFqdnString
+	}
 	// Ask for port
 	validatePort := func(input string) error {
 		_, err := strconv.ParseInt(input, 10, 16)
@@ -168,17 +190,27 @@ func write(cfg Config) error {
 
 // New returns a new configuration struct. It loads defaults, then overrides
 // values if any.
-func New(flags *pflag.FlagSet) Config {
+func New(iface string, port int, fqdn string, keepAlive bool) Config {
 	// Load saved file / defults
 	cfg := Load()
-	if iface, _ := flags.GetString("interface"); iface != "" {
+	if iface != "" {
 		cfg.Interface = iface
 	}
-	if port, _ := flags.GetInt("port"); port != 0 {
+	if fqdn != "" {
+		if govalidator.IsDNSName(fqdn) == false {
+			panic("invalid value for fully-qualified domain name")
+		}
+		cfg.FQDN = fqdn
+	}
+	if port != 0 {
+		if port > 65535 {
+			panic("invalid value for port")
+		}
 		cfg.Port = port
 	}
-	if keepAlive, _ := flags.GetBool("keep-alive"); keepAlive {
+	if keepAlive {
 		cfg.KeepAlive = true
 	}
+
 	return cfg
 }

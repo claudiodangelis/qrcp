@@ -72,23 +72,43 @@ func New(cfg *config.Config) (*Server, error) {
 	// iface string, port int, keepAlive bool
 	app := &Server{}
 	// Create the server
-	address, err := util.GetInterfaceAddress(cfg.Interface)
+	// TODO: Rename variables
+	bind, err := util.GetInterfaceAddress(cfg.Interface)
 	if err != nil {
 		return &Server{}, err
 	}
-	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", address, cfg.Port))
+	fmt.Println("address is", bind)
+	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", bind, cfg.Port))
 	if err != nil {
 		log.Fatalln(err)
 	}
 	// TODO: Refactor this
-	address = fmt.Sprintf("%s:%d", address, listener.Addr().(*net.TCPAddr).Port)
-
-	randomPath := util.GetRandomURLPath()
+	port := listener.Addr().(*net.TCPAddr).Port
+	address := fmt.Sprintf("%s:%d", bind, port)
+	fmt.Println("netwerk", listener.Addr().Network())
+	path := util.GetRandomURLPath()
 	// TODO: Refactor this
+	// If fqdn == "" use IP:port
+	// if bind == "0.0.0.0" use external:port
+	// else, hostname = address:port
+	hostname := fmt.Sprintf("%s:%d", bind, port)
+	if bind == "0.0.0.0" && cfg.FQDN == "" {
+		// use external IP
+		fmt.Println("Retrieving the external IP...")
+		extIP, err := util.GetExernalIP()
+		if err != nil {
+			panic(err)
+		}
+		hostname = fmt.Sprintf("%s:%d", extIP.String(), port)
+	}
+	if cfg.FQDN != "" {
+		hostname = fmt.Sprintf("%s:%d", cfg.FQDN, port)
+	}
+
 	app.SendURL = fmt.Sprintf("http://%s/send/%s",
-		listener.Addr().String(), randomPath)
+		hostname, path)
 	app.ReceiveURL = fmt.Sprintf("http://%s/receive/%s",
-		listener.Addr().String(), randomPath)
+		hostname, path)
 
 	// Create a server
 	httpserver := &http.Server{Addr: address}
@@ -113,7 +133,7 @@ func New(cfg *config.Config) (*Server, error) {
 	var waitgroup sync.WaitGroup
 	waitgroup.Add(1)
 	var initCookie sync.Once
-	http.HandleFunc("/send/"+randomPath, func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/send/"+path, func(w http.ResponseWriter, r *http.Request) {
 		if cookie.Value == "" {
 			if !strings.HasPrefix(r.Header.Get("User-Agent"), "Mozilla") {
 				http.Error(w, "", http.StatusOK)
@@ -151,13 +171,13 @@ func New(cfg *config.Config) (*Server, error) {
 
 	})
 	// Upload handler (serves the upload page)
-	http.HandleFunc("/receive/"+randomPath, func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/receive/"+path, func(w http.ResponseWriter, r *http.Request) {
 		// TODO: This can be refactored
 		data := struct {
 			Route string
 			File  string
 		}{}
-		data.Route = "/receive/" + randomPath
+		data.Route = "/receive/" + path
 		switch r.Method {
 		case "POST":
 			filenames := util.ReadFilenames(app.outputDir)

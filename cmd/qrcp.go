@@ -14,6 +14,7 @@ func init() {
 	rootCmd.PersistentFlags().IntVarP(&portFlag, "port", "p", 0, "port to use for the server")
 	rootCmd.PersistentFlags().StringVarP(&interfaceFlag, "interface", "i", "", "network interface to use for the server")
 	rootCmd.PersistentFlags().StringVarP(&outputFlag, "output", "o", "", "output directory for receiving files")
+	rootCmd.PersistentFlags().StringVarP(&fqdnFlag, "fqdn", "d", "", "fully-qualified domain name to use for the resulting URLs")
 }
 
 // Flags
@@ -23,6 +24,7 @@ var interfaceFlag string
 var outputFlag string
 var keepaliveFlag bool
 var quietFlag bool
+var fqdnFlag string
 
 // The root command (`qrcp`) is like a shortcut of the `send` command
 var rootCmd = &cobra.Command{

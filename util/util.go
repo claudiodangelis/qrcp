@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net"
@@ -62,10 +61,12 @@ func GetSessionID() (string, error) {
 }
 
 // GetInterfaceAddress returns the address of the network interface to
-// bind the server to. The first time is run it prompts a
-// dialog to choose which network interface should be used
-// for the transfer
+// bind the server to. If the interface is "any", it will return 0.0.0.0.
+// If no interface is found with that name, an error is returned
 func GetInterfaceAddress(ifaceString string) (string, error) {
+	if ifaceString == "any" {
+		return "0.0.0.0", nil
+	}
 	ifaces, err := net.Interfaces()
 	if err != nil {
 		return "", err
@@ -84,39 +85,7 @@ func GetInterfaceAddress(ifaceString string) (string, error) {
 		}
 		return ip, nil
 	}
-
-	filteredIfaces := filterInterfaces(ifaces)
-
-	if len(filteredIfaces) == 0 {
-		return "", errors.New("no network interface available")
-	}
-	if len(filteredIfaces) == 1 {
-		candidateInterface = &filteredIfaces[0]
-		ip, err := FindIP(*candidateInterface)
-		if err != nil {
-			return "", err
-		}
-		return ip, nil
-	}
-	fmt.Println("Choose the network interface to use (type the number):")
-	for n, iface := range filteredIfaces {
-		fmt.Printf("[%d] %s\n", n, iface.Name)
-	}
-	var userInput string
-	fmt.Scanln(&userInput)
-	index, err := strconv.Atoi(userInput)
-	if err != nil {
-		return "", err
-	}
-	if index+1 > len(filteredIfaces) {
-		return "", errors.New("Wrong number")
-	}
-	candidateInterface = &filteredIfaces[index]
-	ip, err := FindIP(*candidateInterface)
-	if err != nil {
-		return "", err
-	}
-	return ip, nil
+	return "", errors.New("unable to find interface")
 }
 
 // FindIP returns the IP address of the passed interface, and an error

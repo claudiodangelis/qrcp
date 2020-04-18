@@ -11,7 +11,7 @@ import (
 func receiveCmdFunc(command *cobra.Command, args []string) error {
 	log := logger.New(quietFlag)
 	// Load configuration
-	cfg := config.New(command.Flags())
+	cfg := config.New(interfaceFlag, portFlag, fqdnFlag, keepaliveFlag)
 	// Create the server
 	srv, err := server.New(&cfg)
 	if err != nil {

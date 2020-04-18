@@ -3,6 +3,8 @@ package util
 import (
 	"net"
 	"regexp"
+
+	externalip "github.com/glendc/go-external-ip"
 )
 
 // Interfaces returns a `name:ip` map of the suitable interfaces found
@@ -27,4 +29,16 @@ func Interfaces() (map[string]string, error) {
 		names[iface.Name] = ip
 	}
 	return names, nil
+}
+
+// GetExernalIP of this host
+func GetExernalIP() (net.IP, error) {
+	consensus := externalip.DefaultConsensus(nil, nil)
+	// Get your IP,
+	// which is never <nil> when err is <nil>.
+	ip, err := consensus.ExternalIP()
+	if err != nil {
+		return nil, err
+	}
+	return ip, nil
 }
