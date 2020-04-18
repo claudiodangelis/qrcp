@@ -2,7 +2,7 @@ Contributions to this project are super welcome, so here's my recommendations:
 
 - Make sure that the no one is already working on what you are going to fix/implement
 
-    We use the [someone is working on this](https://github.com/claudiodangelis/qr-filetransfer/issues?q=is%3Aissue+is%3Aopen+label%3A%22someone+is+working+on+this%22) label to mark issues that are being taken care of by someone, so please have a look before starting coding
+    We use the [someone is working on this](https://github.com/claudiodangelis/qrcp/issues?q=is%3Aissue+is%3Aopen+label%3A%22someone+is+working+on+this%22) label to mark issues that are being taken care of by someone, so please have a look before starting coding
 
 - If you want to take on an open issue, please announce it in the thread
 

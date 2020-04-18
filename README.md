@@ -1,40 +1,15 @@
-# qr-filetransfer
-
-
 ![Logo](logo.svg)
 
+# $ qrcp
 
 Transfer files over Wi-Fi from your computer to a mobile device by scanning a QR code without leaving the terminal.
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/claudiodangelis/qr-filetransfer)](https://goreportcard.com/report/github.com/claudiodangelis/qr-filetransfer)
-
-[![Buy Me A Coffee](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/claudiodangelis)
-
-
-### Desktop to mobile
-
-![screenshot](demo.gif)
-
-### Mobile to desktop
-
-![Screenshot](mobile-demo.gif)
-
-## Install
-
-Go 1.8 is required to run.
-
-```
-go get github.com/claudiodangelis/qr-filetransfer
-```
-
-### Installation through a package manager
-
-[AUR (Arch Linux)](https://aur.archlinux.org/packages/qr-filetransfer-git/)
+[![Go Report Card](https://goreportcard.com/badge/github.com/claudiodangelis/qrcp)](https://goreportcard.com/report/github.com/claudiodangelis/qrcp)
 
 ## How does it work?
+![Screenshot](screenshot.png)
 
-
-`qr-filetransfer` binds a web server to the address of your Wi-Fi network interface on a random port and creates a handler for it. The default handler serves the content and exits the program when the transfer is complete.
+`qrcp` binds a web server to the address of your Wi-Fi network interface on a random port and creates a handler for it. The default handler serves the content and exits the program when the transfer is complete. When used to receive files, `qrcp` serves an upload page and handles the transfer.
 
 The tool prints a QR code that encodes the text:
 
@@ -45,100 +20,170 @@ http://{address}:{port}/{random_path}
 
 Most QR apps can detect URLs in decoded text and act accordingly (i.e. open the decoded URL with the default browser), so when the QR code is scanned the content will begin downloading by the mobile browser.
 
-## Usage
+Send files to mobile:
+
+![screenshot](demo.gif)
+
+Receive files from mobile:
+
+![Screenshot](mobile-demo.gif)
+
+# Installation
+
+## Install it with Go
+    
+_Note: it requires go 1.8_
+
+    go get github.com/claudiodangelis/qrcp
+
+## Install the binary
+
+Download the latest binary from the [Releases](https://github.com/claudiodangelis/qr-filetransfer/releases) page to `/usr/local/bin` (or another location in `$PATH`), then set the proper permissions to the binary:
+
+    chmod +x /usr/local/bin/qrcp
+    
+# Usage
 
 
-![Screenshot](screenshot.jpg)
+## Send files
 
-
-**Note**: Both the computer and device must be on the same Wi-Fi network.
-
-On the first run, `qr-filetransfer` will ask to choose which **network interface** to use to transfer the files. Choose the network interface connected to your Wi-Fi:
-
-```
-$ qr-filetransfer /tmp/file
-Choose the network interface to use (type the number):
-[0] enp3s0
-[1] wlp0s20u10
-```
-
-_Note: On Linux it usually starts with `wl`._
-
-
-The chosen network will be saved and no more setup is necessary, unless the `-force` argument is passed, or the `.qr-filetransfer.json` file the program stores in the home directory of the current user is deleted.
-
-
-
----
-
-Two transfers mode are supported: **desktop-to-mobile** and **mobile-to-desktop**
-
-
-## Desktop to Mobile
-
-Transfer a single file
-
-```
-qr-filetransfer /path/to/file.txt
-```
-
-Zip the file, then transfer it
-
-```
-qr-filetransfer -zip /path/to/file.txt
-```
-
-Transfer a full directory. Note: the **directory is zipped** by the program before being transferred
-
-```
-qr-filetransfer /path/to/directory
-```
-
-## Mobile to Desktop
-
-If you want to use it the other way, you need to pass the `-receive` flag. 
-
-The first argument is the directory you want to transfer mobile files to.
-
-```
-qr-filetransfer -receive ~/Downloads
-```
-
-Specify the port to use for the web server
-
-```
-qr-filetransfer -port=8080 /path/to/my-file
-```
-
-**Note:** if the `-port` argument is passed, the value is stored and used for all future transfers. Use `-force` to reset the stored port value.
-
-## Tips & Tricks
-
-### Keep server alive
-
-If you are trying to transfer a file that the browser on the receiving end is considering harmful, you can be asked by the browser if you really want to keep the file or discard it; this condition (browser awaiting your answer) can lead to qr-filetransfer disconnection. To prevent qr-filetransfer from disconnecting, use the `-keep-alive` flag:
+### Send a file
 
 ```sh
-qr-filetransfer -keep-alive /path/to/my/totally/cool.apk
+qrcp MyDocument.pdf
 ```
 
-## Arguments
+### Send multiple files at once
 
-- `-debug` increases verbosity
-- `-quiet` ignores non critical output
-- `-force` ignores saved configuration
-- `-zip` zips the content before transferring it
-- `-port` sets port to bind the server to
-- `-receive` enables transfers from mobile to desktop
-- `-keep-alive` keeps the server alive after completing the transfer
+When sending multiple files at once, `qrcp` creates a zip archive of the files or folders you want to transfer, and deletes the zip archive once the transfer is complete.
 
+```sh
+# Multiple files
+qrcp MyDocument.pdf IMG0001.jpg
+```
+
+```sh
+# A whole folder
+qrcp Documents/
+```
+
+
+### Zip a file before transfering it
+You can choose to zip a file before transfering it.
+
+```sh
+qrcp --zip LongVideo.avi
+```
+
+
+## Receive files
+
+When receiving files, `qrcp` serves an "upload page" through which you can choose files from your mobile.
+
+### Receive files to the current directory
+
+```
+qrcp receive
+```
+
+### Receive files to a specific directory
+
+```sh
+# Note: the folder must exist
+qrcp receive --output=/tmp/dir
+```
+
+
+## Options
+
+`qrcp` works without any prior configuration, however, you can choose to configure to use specific values. The `config` command launches a wizard that lets you configure parameters like interface, port, fully-qualified domain name and keep alive.
+
+```sh
+qrcp config
+```
+
+Note: if some network interfaces are not showing up, use the `--list-all-interfaces` flag to suppress the interfaces' filter.
+
+```sh
+qrcp --list-all-interfaces config 
+```
+
+
+### Port
+
+By default `qrcp` listens on a random port. Pass the `--port` (or `-p`) flag to choose a specific one:
+
+```sh
+qrcp --port 8080 MyDocument.pdf
+```
+### Network Interface
+
+`qrcp` will try to automatically find the suitable network interface to use for the transfers. If more than one suitable interface is found ,it asks you to choose one.
+
+If you want to use a specific interface, pass the `--interface` (or `-i`) flag:
+
+
+
+```sh
+# The webserver will be visible by
+# all computers on the tun0's interface network
+qrcp -i tun0 MyDocument.dpf
+```
+
+
+You can also use a special interface name, `any`, which binds the web server to `0.0.0.0`, making the web server visible by everyone on any network, even from an external network. 
+
+This is useful when you want to transfer files from your Amazon EC2, Digital Ocean Droplet, Google Cloud Platform Compute Instance or any other VPS.
+
+```sh
+qrcp -i any MyDocument.pdf
+```
+
+
+### URL
+
+`qrcp` uses two patterns for the URLs:
+
+- send: `http://{ip address}:{port}/send/{random path}`
+- receive: `http://{ip address}:{port}/receive/{random path}`
+
+A few options are available that override these patterns.
+
+
+Pass the `--path` flag to use a specific path for URLs, for example:
+
+```sh
+# The resulting URL will be
+# http://{ip address}:{port}/send/x
+qrcp --path=x MyDocument.pdf
+```
+
+Pass the `--fqdn` (or `-d`) to use a fully qualified domain name instead of the IP. This is useful in combination with `-i any` you are using it from a remote location:
+
+```sh
+# The resulting URL will be
+# http://example.com:8080/send/xYz9
+qrcp --fqdn example.com -i any -p 8080 MyRemoteDocument.pdf
+```
+
+
+
+### Keep the server alive
+
+It can be useful to keep the server alive after transfering the file, for example, when you want to transfer the same file to multiple devices. You can use the `--keep-alive` flag for that:
+
+```sh
+# The server will not shutdown automatically
+# after the first transfer
+qrcp --keep-alive MyDocument.pdf
+```
 
 ## Authors
 
-**qr-filetransfer** started from an idea of [Claudio d'Angelis](claudiodangelis@gmail.com) ([@daw985](https://twitter.com/daw985) on Twitter), the current maintainer, and it's [developed by the community](https://github.com/claudiodangelis/qr-filetransfer/graphs/contributors).
+**qrcp**, originally called **qr-filetransfer**, started from an idea of [Claudio d'Angelis](claudiodangelis@gmail.com) ([@daw985](https://twitter.com/daw985) on Twitter), the current maintainer, and it's [developed by the community](https://github.com/claudiodangelis/qrcp/graphs/contributors).
 
 
-[Join us!](https://github.com/claudiodangelis/qr-filetransfer/fork)
+[Join us!](https://github.com/claudiodangelis/qrcp/fork)
 
 ## Logo Credits
 

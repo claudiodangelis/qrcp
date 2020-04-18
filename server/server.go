@@ -2,8 +2,8 @@ package server
 
 import (
 	"context"
-	"flag"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"net/http"
@@ -13,85 +13,124 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/claudiodangelis/qr-filetransfer/config"
-	"github.com/claudiodangelis/qr-filetransfer/content"
-	l "github.com/claudiodangelis/qr-filetransfer/log"
-	"github.com/claudiodangelis/qr-filetransfer/util"
+	"github.com/claudiodangelis/qrcp/config"
+	"github.com/claudiodangelis/qrcp/pages"
+	"github.com/claudiodangelis/qrcp/payload"
+	"github.com/claudiodangelis/qrcp/util"
+	"gopkg.in/cheggaaa/pb.v1"
 )
 
-// New returns http server, tcp listner, address of server, route, and channel used for graceful shutdown
-func New(cfg config.Config) (srv *http.Server, listener net.Listener, generatedAddress, route string, stop chan bool, wg *sync.WaitGroup) {
-	// Get address
-	address, err := util.GetAddress(&cfg)
+// Server is the server
+type Server struct {
+	// SendURL is the URL used to send the file
+	SendURL string
+	// ReceiveURL is the URL used to Receive the file
+	ReceiveURL  string
+	instance    *http.Server
+	payload     payload.Payload
+	outputDir   string
+	stopChannel chan bool
+	// expectParallelRequests is set to true when qrcp sends files, in order
+	// to support downloading of parallel chunks
+	expectParallelRequests bool
+}
+
+// ReceiveTo sets the output directory
+func (s *Server) ReceiveTo(dir string) error {
+	output, err := filepath.Abs(dir)
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
-	listener, err = net.Listen("tcp", fmt.Sprintf("%s:%d", address, cfg.Port))
+	// Check if the output dir exists
+	if dir, _ := os.Stat(output); !dir.IsDir() {
+		return fmt.Errorf("%s is not a valid directory", output)
+	}
+	s.outputDir = output
+	return nil
+}
+
+// Send adds a handler for sending the file
+func (s *Server) Send(p payload.Payload) {
+	s.payload = p
+	s.expectParallelRequests = true
+}
+
+// Wait for transfer to be completed, it waits forever if kept awlive
+func (s Server) Wait() error {
+	<-s.stopChannel
+	if err := s.instance.Shutdown(context.Background()); err != nil {
+		log.Println(err)
+	}
+	if s.payload.DeleteAfterTransfer {
+		s.payload.Delete()
+	}
+	return nil
+}
+
+// New instance of the server
+func New(cfg *config.Config) (*Server, error) {
+	app := &Server{}
+	// Get the address of the configured interface to bind the server to
+	bind, err := util.GetInterfaceAddress(cfg.Interface)
 	if err != nil {
-		log.Fatalln(err)
+		return &Server{}, err
 	}
-	address = fmt.Sprintf("%s:%d", address, listener.Addr().(*net.TCPAddr).Port)
-
-	randomPath := util.GetRandomURLPath()
-
-	generatedAddress = fmt.Sprintf("http://%s/%s", listener.Addr().String(), randomPath)
-
-	// Create a server
-	srv = &http.Server{Addr: address}
-
-	// Define a default handler for the requests
-	route = fmt.Sprintf("/%s", randomPath)
-	// Create channel to send message to stop server
-	stop = make(chan bool)
-
-	// Wait for stop and then shutdown the server,
-	go func() {
-		<-stop
-		if err := srv.Shutdown(context.Background()); err != nil {
-			log.Println(err)
+	// Create a listener. If `port: 0`, a random one is chosen
+	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", bind, cfg.Port))
+	if err != nil {
+		return nil, err
+	}
+	// Set the value of computed port
+	port := listener.Addr().(*net.TCPAddr).Port
+	// Set the host
+	host := fmt.Sprintf("%s:%d", bind, port)
+	// Get a random path to use
+	path := cfg.Path
+	if path == "" {
+		path = util.GetRandomURLPath()
+	}
+	// Set the hostname
+	hostname := fmt.Sprintf("%s:%d", bind, port)
+	// Use external IP when using `interface: any`, unless a FQDN is set
+	if bind == "0.0.0.0" && cfg.FQDN == "" {
+		fmt.Println("Retrieving the external IP...")
+		extIP, err := util.GetExernalIP()
+		if err != nil {
+			panic(err)
 		}
-	}()
-
+		hostname = fmt.Sprintf("%s:%d", extIP.String(), port)
+	}
+	// Use a fully-qualified domain name if set
+	if cfg.FQDN != "" {
+		hostname = fmt.Sprintf("%s:%d", cfg.FQDN, port)
+	}
+	// Set send and receive URLs
+	app.SendURL = fmt.Sprintf("http://%s/send/%s",
+		hostname, path)
+	app.ReceiveURL = fmt.Sprintf("http://%s/receive/%s",
+		hostname, path)
+	// Create a server
+	httpserver := &http.Server{Addr: host}
+	// Create channel to send message to stop server
+	app.stopChannel = make(chan bool)
+	// Create cookie used to verify request is coming from first client to connect
+	cookie := http.Cookie{Name: "qrcp", Value: ""}
 	// Gracefully shutdown when an OS signal is received
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt)
 	go func() {
 		<-sig
-		stop <- true
+		app.stopChannel <- true
 	}()
-
 	// The handler adds and removes from the sync.WaitGroup
 	// When the group is zero all requests are completed
 	// and the server is shutdown
 	var waitgroup sync.WaitGroup
-	wg = &waitgroup // little hack to return wg as pointer
-	(*wg).Add(1)
-	go func() {
-		(*wg).Wait()
-		if flag.Lookup("keep-alive").Value.(flag.Getter).Get().(bool) == false {
-			stop <- true
-		}
-	}()
-	return
-}
-
-// Serve serves files
-func Serve(generatedAddress, route string, content content.Content, wg *sync.WaitGroup, stop chan bool) {
-	logger := l.New()
-	logger.Info("Scan the following QR to start the download.")
-	logger.Info("Make sure that your smartphone is connected to the same WiFi network as this computer.")
-	logger.Info("Size of transfer:", util.HumanReadableSizeOf(content.Path))
-	logger.Info("Your generated address is", generatedAddress)
-
-	// Create cookie used to verify request is coming from first client to connect
-	cookie := http.Cookie{Name: "qr-filetransfer", Value: ""}
-
+	waitgroup.Add(1)
 	var initCookie sync.Once
-
-	http.HandleFunc(route, func(w http.ResponseWriter, r *http.Request) {
-		// If the cookie's value is empty this is the first connection
-		// and the initialize the cookie.
-		// Wrapped in a sync.Once to avoid potential race conditions
+	// Create handlers
+	// Send handler (sends file to caller)
+	http.HandleFunc("/send/"+path, func(w http.ResponseWriter, r *http.Request) {
 		if cookie.Value == "" {
 			if !strings.HasPrefix(r.Header.Get("User-Agent"), "Mozilla") {
 				http.Error(w, "", http.StatusOK)
@@ -101,7 +140,8 @@ func Serve(generatedAddress, route string, content content.Content, wg *sync.Wai
 				value, err := util.GetSessionID()
 				if err != nil {
 					log.Println("Unable to generate session ID", err)
-					stop <- true
+					app.stopChannel <- true
+					return
 				}
 				cookie.Value = value
 				http.SetCookie(w, &cookie)
@@ -118,31 +158,117 @@ func Serve(generatedAddress, route string, content content.Content, wg *sync.Wai
 			// If the cookie exits and matches
 			// this is an aadditional request.
 			// Increment the waitgroup
-			wg.Add(1)
+			waitgroup.Add(1)
 		}
-
-		defer wg.Done()
-		w.Header().Set("Content-Disposition",
-			"attachment; filename="+content.Name())
-		http.ServeFile(w, r, content.Path)
+		// Remove connection from the waitfroup when done
+		defer waitgroup.Done()
+		w.Header().Set("Content-Disposition", "attachment; filename="+
+			app.payload.Filename)
+		http.ServeFile(w, r, app.payload.Path)
 	})
-}
-
-//getFileName generates a file name based on the existing files in the directory
-// if name isn't taken leave it unchanged
-// else change name to format "name(number).ext"
-func getFileName(newFilename string, fileNamesInTargetDir []string) string {
-	fileExt := filepath.Ext(newFilename)
-	fileName := strings.TrimSuffix(newFilename, fileExt)
-	number := 1
-	i := 0
-	for i < len(fileNamesInTargetDir) {
-		if newFilename == fileNamesInTargetDir[i] {
-			newFilename = fmt.Sprintf("%s(%v)%s", fileName, number, fileExt)
-			number++
-			i = 0 // start search again
+	// Upload handler (serves the upload page)
+	http.HandleFunc("/receive/"+path, func(w http.ResponseWriter, r *http.Request) {
+		htmlVariables := struct {
+			Route string
+			File  string
+		}{}
+		htmlVariables.Route = "/receive/" + path
+		switch r.Method {
+		case "POST":
+			filenames := util.ReadFilenames(app.outputDir)
+			reader, err := r.MultipartReader()
+			if err != nil {
+				fmt.Fprintf(w, "Upload error: %v\n", err)
+				log.Printf("Upload error: %v\n", err)
+				app.stopChannel <- true
+				return
+			}
+			transferedFiles := []string{}
+			progressBar := pb.New64(r.ContentLength)
+			progressBar.ShowCounters = false
+			for {
+				part, err := reader.NextPart()
+				if err == io.EOF {
+					break
+				}
+				// iIf part.FileName() is empty, skip this iteration.
+				if part.FileName() == "" {
+					continue
+				}
+				// Prepare the destination
+				fileName := getFileName(part.FileName(), filenames)
+				out, err := os.Create(filepath.Join(app.outputDir, fileName))
+				if err != nil {
+					// Output to server
+					fmt.Fprintf(w, "Unable to create the file for writing: %s\n", err)
+					// Output to console
+					log.Printf("Unable to create the file for writing: %s\n", err)
+					// Send signal to server to shutdown
+					app.stopChannel <- true
+					return
+				}
+				defer out.Close()
+				// Add name of new file
+				filenames = append(filenames, fileName)
+				// Write the content from POSTed file to the out
+				fmt.Println("Transferring file: ", out.Name())
+				progressBar.Prefix(out.Name())
+				progressBar.Start()
+				buf := make([]byte, 1024)
+				for {
+					// Read a chunk
+					n, err := part.Read(buf)
+					if err != nil && err != io.EOF {
+						// Output to server
+						fmt.Fprintf(w, "Unable to write file to disk: %v", err)
+						// Output to console
+						fmt.Printf("Unable to write file to disk: %v", err)
+						// Send signal to server to shutdown
+						app.stopChannel <- true
+						return
+					}
+					if n == 0 {
+						break
+					}
+					// Write a chunk
+					if _, err := out.Write(buf[:n]); err != nil {
+						// Output to server
+						fmt.Fprintf(w, "Unable to write file to disk: %v", err)
+						// Output to console
+						log.Printf("Unable to write file to disk: %v", err)
+						// Send signal to server to shutdown
+						app.stopChannel <- true
+						return
+					}
+					progressBar.Add(n)
+				}
+				transferedFiles = append(transferedFiles, out.Name())
+			}
+			progressBar.FinishPrint("File transfer completed")
+			// Set the value of the variable to the actually transfered files
+			htmlVariables.File = strings.Join(transferedFiles, ", ")
+			serveTemplate("done", pages.Done, w, htmlVariables)
+			if cfg.KeepAlive == false {
+				app.stopChannel <- true
+			}
+		case "GET":
+			serveTemplate("upload", pages.Upload, w, htmlVariables)
 		}
-		i++
-	}
-	return newFilename
+	})
+	// Wait for all wg to be done, then send shutdown signal
+	go func() {
+		waitgroup.Wait()
+		if cfg.KeepAlive || !app.expectParallelRequests {
+			return
+		}
+		app.stopChannel <- true
+	}()
+	// Receive handler (receives file from caller)
+	go func() {
+		if err := (httpserver.Serve(tcpKeepAliveListener{listener.(*net.TCPListener)})); err != http.ErrServerClosed {
+			log.Fatalln(err)
+		}
+	}()
+	app.instance = httpserver
+	return app, nil
 }
