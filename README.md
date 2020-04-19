@@ -6,6 +6,8 @@ Transfer files over Wi-Fi from your computer to a mobile device by scanning a QR
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/claudiodangelis/qrcp)](https://goreportcard.com/report/github.com/claudiodangelis/qrcp)
 
+You can support development by donating with  [![Buy Me A Coffee](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/claudiodangelis)
+
 ## How does it work?
 ![Screenshot](screenshot.png)
 
