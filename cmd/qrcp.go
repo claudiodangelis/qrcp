@@ -16,8 +16,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&pathFlag, "path", "", "path to use. Defaults to a random string")
 	rootCmd.PersistentFlags().StringVarP(&interfaceFlag, "interface", "i", "", "network interface to use for the server")
 	rootCmd.PersistentFlags().StringVarP(&fqdnFlag, "fqdn", "d", "", "fully-qualified domain name to use for the resulting URLs")
-	// Send command flags
-	sendCmd.PersistentFlags().BoolVarP(&zipFlag, "zip", "z", false, "zip content before transferring")
+	rootCmd.PersistentFlags().BoolVarP(&zipFlag, "zip", "z", false, "zip content before transferring")
 	// Receive command flags
 	receiveCmd.PersistentFlags().StringVarP(&outputFlag, "output", "o", "", "output directory for receiving files")
 }

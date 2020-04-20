@@ -27,15 +27,22 @@ func ZipFiles(files []string) (string, error) {
 		return "", err
 	}
 	zip.Create(tmpfile.Name() + ".zip")
-	for _, file := range files {
-		f, err := os.Stat(file)
+	for _, filename := range files {
+		fileinfo, err := os.Stat(filename)
 		if err != nil {
 			return "", err
 		}
-		if f.IsDir() {
-			zip.AddAll(file, true)
+		if fileinfo.IsDir() {
+			zip.AddAll(filename, true)
 		} else {
-			zip.AddFile(file)
+			file, err := os.Open(filename)
+			if err != nil {
+				return "", err
+			}
+			defer file.Close()
+			if err := zip.Add(filename, file, fileinfo); err != nil {
+				return "", err
+			}
 		}
 	}
 	if err := zip.Close(); err != nil {
