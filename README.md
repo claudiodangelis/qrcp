@@ -38,7 +38,17 @@ Receive files from mobile:
     
 _Note: it requires go 1.8_
 
-    go get github.com/claudiodangelis/qrcp
+- Download it
+
+    `go get github.com/claudiodangelis/qrcp`
+
+- Copy the executable file to `/usr/local/bin`
+
+    `cp ~/go/bin/qrcp /usr/local/bin`
+
+- Grant execute permission
+
+    `chmod +x /usr/local/bin/qrcp`
 
 ## Install the binary
 
