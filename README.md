@@ -40,6 +40,15 @@ _Note: it requires go 1.8_
 
     go get github.com/claudiodangelis/qrcp
 
+## Install it with a package manager
+
+### ![Logo](https://www.archlinux.org/static/favicon.29302f683ff8.ico) ArchLinux
+
+Packages available on AUR:
+-  [qrcp-bin](https://aur.archlinux.org/packages/qrcp-bin)
+-  [qrcp](https://aur.archlinux.org/packages/qrcp-bin)
+
+
 ## Install the binary
 
 Download the latest binary from the [Releases](https://github.com/claudiodangelis/qr-filetransfer/releases) page to `/usr/local/bin` (or another location in `$PATH`), then set the proper permissions to the binary:
