@@ -40,6 +40,15 @@ _Note: it requires go 1.8_
 
     go get github.com/claudiodangelis/qrcp
 
+## Install it with a package manager
+
+### ![Logo](https://www.archlinux.org/static/favicon.29302f683ff8.ico) ArchLinux
+
+Packages available on AUR:
+-  [qrcp-bin](https://aur.archlinux.org/packages/qrcp-bin)
+-  [qrcp](https://aur.archlinux.org/packages/qrcp-bin)
+
+
 ## Install the binary
 
 Download the latest binary from the [Releases](https://github.com/claudiodangelis/qr-filetransfer/releases) page to `/usr/local/bin` (or another location in `$PATH`), then set the proper permissions to the binary:
@@ -208,7 +217,8 @@ Check out the rules to claim one: [rules of openlogos](https://github.com/arasat
 - [share-file-qr](https://github.com/pwalch/share-file-qr) - Python re-implementation of this project
 - [share-files](https://github.com/antoaravinth/share-files) _(Uncredited)_  - Yet another Node.js clone of this project
 - [ezshare](https://github.com/mifi/ezshare) - Another Node.js two way file sharing tool supporting folders and multiple files
-
+- [local_file_share](https://github.com/woshimanong1990/local_file_share)  - _"share local file to other people, OR smartphone download files which is in pc"_
+- [qrcp](https://github.com/pearl2201/qrcp) - a C++ clone of `qrcp` with a GUI
 ## License
 
 MIT. See [LICENSE](LICENSE).
