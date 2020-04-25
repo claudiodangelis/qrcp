@@ -217,7 +217,8 @@ Check out the rules to claim one: [rules of openlogos](https://github.com/arasat
 - [share-file-qr](https://github.com/pwalch/share-file-qr) - Python re-implementation of this project
 - [share-files](https://github.com/antoaravinth/share-files) _(Uncredited)_  - Yet another Node.js clone of this project
 - [ezshare](https://github.com/mifi/ezshare) - Another Node.js two way file sharing tool supporting folders and multiple files
-
+- [local_file_share](https://github.com/woshimanong1990/local_file_share)  - _"share local file to other people, OR smartphone download files which is in pc"_
+- [qrcp](https://github.com/pearl2201/qrcp) - a C++ clone of `qrcp` with a GUI
 ## License
 
 MIT. See [LICENSE](LICENSE).
