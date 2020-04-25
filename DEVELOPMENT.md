@@ -18,6 +18,7 @@ QRCP_TAG=0.5.1
 git tag -a $QRCP_TAG -m "$QRCP_TAG Release"
 # Push branch
 git push origin $QRCP_TAG
+git push origin master
 # Run the actual release script
 goreleaser
 ```
