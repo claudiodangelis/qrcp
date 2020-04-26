@@ -59,7 +59,7 @@ sudo chmod +x /usr/local/bin/qrcp
 
 Packages available on AUR:
 -  [qrcp-bin](https://aur.archlinux.org/packages/qrcp-bin)
--  [qrcp](https://aur.archlinux.org/packages/qrcp-bin)
+-  [qrcp](https://aur.archlinux.org/packages/qrcp)
 
 #### Deb packages (Ubuntu, Debian, etc)
 
