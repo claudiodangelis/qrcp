@@ -2,7 +2,7 @@
 
 ## Versioning
 
-`qrcp` uses [semver](https://semver.org).
+`qrcp` uses [semver](https://semver.org) for releases.
 
 Version number is defined in `cmd/version.go`.
 
