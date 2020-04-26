@@ -2,23 +2,6 @@
 
 ## Versioning
 
-`qrcp` uses [semver](https://semver.org).
+`qrcp` uses [semver](https://semver.org) for releases.
 
-Version number is defined in `cmd/version.go`.
-
-## Releases
-
-`qrcp` uses [goreleases](https://goreleaser.com/) to build the binaries for Linux, Mac and Windows and push them to Github.
-
-
-```sh
-# Define tag
-QRCP_TAG=0.5.1
-# Add tag
-git tag -a $QRCP_TAG -m "$QRCP_TAG Release"
-# Push branch
-git push origin $QRCP_TAG
-git push origin master
-# Run the actual release script
-goreleaser
-```
+Version number and information is defined in `version/version.go` and overridden by the releaser script.
