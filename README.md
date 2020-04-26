@@ -34,29 +34,67 @@ Receive files from mobile:
 
 # Installation
 
-## Install it with Go
+## Install the latest development version with Go
     
 _Note: it requires go 1.8_
 
     go get github.com/claudiodangelis/qrcp
 
-## Install it with a package manager
+## Linux
 
-### ![Logo](https://www.archlinux.org/static/favicon.29302f683ff8.ico) ArchLinux
+Download the latest Linux .tar.gz archive from the Releases page, extract it, move the binary to the proper directory, then set execution permissions.
+
+```sh
+# Extract the archive
+tar xf qrcp_0.5.0_linux_x86_64.tar.gz
+# Copy the binary
+sudo mv qrcp /usr/local/bin
+# Set execution permissions
+sudo chmod +x /usr/local/bin/qrcp
+```
+
+### Using a package manager
+
+#### ![Logo](https://www.archlinux.org/static/favicon.29302f683ff8.ico) ArchLinux
 
 Packages available on AUR:
 -  [qrcp-bin](https://aur.archlinux.org/packages/qrcp-bin)
 -  [qrcp](https://aur.archlinux.org/packages/qrcp-bin)
 
+#### Deb packages (Ubuntu, Debian, etc)
 
-## Install the binary
+Download the latest .deb package from the Releases page, then run `dpkg`.
 
-Download the latest binary from the [Releases](https://github.com/claudiodangelis/qr-filetransfer/releases) page to `/usr/local/bin` (or another location in `$PATH`), then set the proper permissions to the binary:
+```sh
+sudo dpkg -i qrcp_0.5.0_linux_x86_64.deb
+```
 
-    chmod +x /usr/local/bin/qrcp
+#### RPM packages (CentOS, Fedora, etc)
+
+Download the latest .rpm package from the Releases page, then run `rpm`.
+
+```sh
+sudo rpm -i qrcp_0.5.0_linux_x86_64.rpm
+```
+
+## Windows
+
+Download the latest Windows .tar.gz archive from the Releases page and extract the EXE file.
+
+## MacOS
+
+Download the latest macOS .tar.gz archive from the Releases page, extract it, move the binary to the proper directory, then set execution permissions.
+
+```sh
+# Extract the archive
+tar xf qrcp_0.5.0_macOS_x86_64.tar.gz
+# Copy the binary
+sudo mv qrcp /usr/local/bin
+# Set execution permissions
+sudo chmod +x /usr/local/bin/qrcp
+```
     
 # Usage
-
 
 ## Send files
 
@@ -198,11 +236,13 @@ qrcp --keep-alive MyDocument.pdf
 
 [Join us!](https://github.com/claudiodangelis/qrcp/fork)
 
-## Logo Credits
+## Credits
 
 Logo is provided by [@arasatasaygin](https://github.com/arasatasaygin) as part of the [openlogos](https://github.com/arasatasaygin/openlogos) initiative, a collection of free logos for open source projects.
 
 Check out the rules to claim one: [rules of openlogos](https://github.com/arasatasaygin/openlogos#rules).
+
+Releases are handled with [goreleaser](https://goreleaser.com).
 
 ## Clones and Similar Projects
 
