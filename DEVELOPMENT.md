@@ -8,17 +8,19 @@ Version number is defined in `cmd/version.go`.
 
 ## Releases
 
-`qrcp` uses [goreleases](https://goreleaser.com/) to build the binaries for Linux, Mac and Windows and push them to Github.
+We are using [goreleases](https://goreleaser.com/), [nfpm](https://goreleaser.com/nfpm/) and [Github Actions](https://github.com/features/actions) to build, package and release `qrcp`.
 
+The relevant files are:
 
-```sh
-# Define tag
-QRCP_TAG=0.5.1
-# Add tag
-git tag -a $QRCP_TAG -m "$QRCP_TAG Release"
-# Push branch
-git push origin $QRCP_TAG
-git push origin master
-# Run the actual release script
-goreleaser
-```
+- .goreleases.yml
+- .github/workflows/main.yml
+
+The release action is triggered when a tag is pushed to the master branch.
+
+## Development workflow
+
+1. Open a PR
+2. Let someone review it
+3. Squash commits and merge to master
+4. When ready to release, add a tag
+5. Wait for Github Action to process the release

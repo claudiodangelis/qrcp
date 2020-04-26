@@ -1,16 +1,21 @@
-# This is an example goreleaser.yaml file with some sane defaults.
-# Make sure to check the documentation at http://goreleaser.com
 before:
   hooks:
-    # You may remove this if you don't use go modules.
     - go mod download
 builds:
-- env:
+- ldflags:
+  - -s -w -X github.com/claudiodangelis/test-repo-please-ignore-me/version.version={{.Version}} -X github.com/claudiodangelis/test-repo-please-ignore-me/version.date={{.Date}}
+  env:
   - CGO_ENABLED=0
+  goos:
+  - linux
+  - darwin
+  - windows
+  ignore:
+  - goos: darwin
+    goarch: 386
 archives:
 - replacements:
-    darwin: Darwin
-    linux: Linux
+    darwin: macOS
     windows: Windows
     386: i386
     amd64: x86_64
@@ -24,3 +29,17 @@ changelog:
     exclude:
     - '^docs:'
     - '^test:'
+nfpms:
+  - replacements:
+      darwin: macOS
+      windows: Windows
+      386: i386
+      amd64: x86_64
+    homepage: https://claudiodangelis.com/qrcp
+    maintainer: Claudio d'Angelis <claudiodangelis@gmail.com>
+    description: Transfer files over wifi from your computer to your mobile device by scanning a QR code without leaving the terminal.
+    license: MIT
+    formats:
+      - deb
+      - rpm
+    
