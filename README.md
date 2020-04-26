@@ -63,18 +63,22 @@ Packages available on AUR:
 
 #### Deb packages (Ubuntu, Debian, etc)
 
-Download the latest .deb package from the Releases page, then run `dpkg`.
+Download the latest .deb package from the Releases page, then run `dpkg`:
 
 ```sh
 sudo dpkg -i qrcp_0.5.0_linux_x86_64.deb
+# Confirm it's working:
+qrcp version
 ```
 
 #### RPM packages (CentOS, Fedora, etc)
 
-Download the latest .rpm package from the Releases page, then run `rpm`.
+Download the latest .rpm package from the Releases page, then run `rpm`:
 
 ```sh
 sudo rpm -i qrcp_0.5.0_linux_x86_64.rpm
+# Confirm it's working:
+qrcp --help
 ```
 
 ## Windows
@@ -92,6 +96,8 @@ tar xf qrcp_0.5.0_macOS_x86_64.tar.gz
 sudo mv qrcp /usr/local/bin
 # Set execution permissions
 sudo chmod +x /usr/local/bin/qrcp
+# Confirm it's working:
+qrcp --help
 ```
     
 # Usage
