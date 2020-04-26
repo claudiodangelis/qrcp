@@ -1,0 +1,91 @@
+_qrcp_config_option() {
+    COMPREPLY=($(compgen -W '--help --list-all-interfaces' -- "$1"))
+}
+
+_qrcp_help_option() {
+    COMPREPLY=($(compgen -W '--help' -- "$1"))
+}
+
+_qrcp_help_argument() {
+    COMPREPLY=($(compgen -W "config help receive send" -- "$1"))
+}
+
+_qrcp_receive_option() {
+    COMPREPLY=($(compgen -W '--help --fqdn --interface --keep-alive --path --port --quiet --zip' -- "$1"))
+}
+
+_qrcp_send_option() {
+    COMPREPLY=($(compgen -W '--help --fqdn --interface --keep-alive --path --port --quiet --zip' -- "$1"))
+}
+
+_qrcp_send_argument() {
+    _filedir
+}
+
+_qrcp_config() {
+    local cur=${COMP_WORDS[COMP_CWORD]} prev=${COMP_WORDS[COMP_CWORD-1]}
+    if [[ "$cur" = -* ]]; then
+        _qrcp_config_option "$cur"
+    fi
+}
+
+_qrcp_help() {
+    local cur=${COMP_WORDS[COMP_CWORD]} prev=${COMP_WORDS[COMP_CWORD-1]}
+    if [[ "$cur" = -* ]]; then
+        _qrcp_help_option "$cur"
+    else
+        _qrcp_help_argument "$cur"
+    fi
+}
+
+_qrcp_receive() {
+    local cur=${COMP_WORDS[COMP_CWORD]} prev=${COMP_WORDS[COMP_CWORD-1]}
+    if [[ "$cur" = -* ]]; then
+        _qrcp_receive_option "$cur"
+    fi
+}
+
+_qrcp_send() {
+    local cur=${COMP_WORDS[COMP_CWORD]} prev=${COMP_WORDS[COMP_CWORD-1]}
+    if [[ "$cur" = -* ]]; then
+        _qrcp_send_option "$cur"
+    else
+        _qrcp_send_argument "$cur"
+    fi
+}
+
+_qrcp_command() {
+    COMPREPLY=($(compgen -W 'config help receive send' -- "$1"))
+}
+
+_qrcp_option() {
+    _qrcp_send_option "$@"
+}
+
+_qrcp() {
+    if [[ $COMP_CWORD -gt 1 ]]; then
+        case "${COMP_WORDS[1]}" in
+            config)
+                _qrcp_config
+            ;;
+            help)
+                _qrcp_help
+            ;;
+            receive)
+                _qrcp_receive
+            ;;
+            send)
+                _qrcp_send
+            ;;
+        esac
+    else
+        local cur=${COMP_WORDS[COMP_CWORD]}
+        if [[ "$cur" = -* ]]; then
+            _qrcp_option "$cur"
+        else
+            _qrcp_command "$cur"
+        fi
+    fi
+}
+
+complete -o filenames -o bashdefault -F _qrcp qrcp
