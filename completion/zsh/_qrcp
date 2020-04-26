@@ -1,0 +1,85 @@
+#compdef qrcp
+
+_qrcp_config() {
+    _arguments \
+        {-h,--help}'[Show help for the config command]' \
+        {-l,--list-all-interfaces}'[List all available interfaces when choosing the one to use]'
+}
+
+_qrcp_help_argument() {
+    local -a commands
+    commands=(config help receive send)
+    _describe command commands
+}
+
+_qrcp_help() {
+    _arguments \
+        {-h,--help}'[Show help for the help command]' \
+        '*::qrcp command:_qrcp_help_argument'
+}
+
+_qrcp_receive() {
+    _arguments \
+        {-h,--help}'[Show help for the send command]' \
+        {-d,--fqdn}'[Fully-qualified domain name to use for the resulting URLs]' \
+        {-i,--interface}'[Network interface to use for the server]' \
+        {-k,--keep-alive}'[Keep server alive after transferring]' \
+        '--path[Path to use. Defaults to a random string]' \
+        {-p,--port}'[Port to use for the server]' \
+        {-q,--quiet}'[Only print errors]' \
+        {-z,--zip}'[Zip content before transferring]'
+}
+
+_qrcp_send_argument() {
+     _files
+}
+
+_qrcp_send() {
+    _arguments \
+        {-h,--help}'[Show help for the send command]' \
+        {-d,--fqdn}'[Fully-qualified domain name to use for the resulting URLs]' \
+        {-i,--interface}'[Network interface to use for the server]' \
+        {-k,--keep-alive}'[Keep server alive after transferring]' \
+        '--path[Path to use. Defaults to a random string]' \
+        {-p,--port}'[Port to use for the server]' \
+        {-q,--quiet}'[Only print errors]' \
+        {-z,--zip}'[Zip content before transferring]' \
+        '*::qrcp file:_qrcp_send_argument'
+}
+
+_qrcp_command() {
+    local -a _qrcp_cmds
+    _qrcp_cmds=(
+        'config:Configure qrcp'
+        'help:Help about any command'
+        'receive:Receive one or more files'
+        'send:Send a file(s) or directories from this host'
+    )
+
+    if ((CURRENT == 1)); then
+        _describe -t commands 'qrcp commands' _qrcp_cmds
+    else
+        local curcontext="$curcontext"
+        cmd="${${_qrcp_cmds[(r)$words[1]:*]%%:*}}"
+        if (($#cmd)); then
+            if (( $+functions[_qrcp_$cmd] )); then
+                _qrcp_$cmd
+            else
+                _message "no options for $cmd"
+            fi
+        else
+            _message "no more options"
+        fi
+    fi
+}
+
+_arguments \
+    {-h,--help}'[Show help text]' \
+    {-d,--fqdn}'[Fully-qualified domain name to use for the resulting URLs]' \
+    {-i,--interface}'[Network interface to use for the server]' \
+    {-k,--keep-alive}'[Keep server alive after transferring]' \
+    '--path[Path to use. Defaults to a random string]' \
+    {-p,--port}'[Port to use for the server]' \
+    {-q,--quiet}'[Only print errors]' \
+    {-z,--zip}'[Zip content before transferring]' \
+    '*::qrcp commands:_qrcp_command'
