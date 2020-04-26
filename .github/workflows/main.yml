@@ -2,7 +2,7 @@ name: CI
 on:
   push:
     tags:
-    - master
+    - '*'
 jobs:
   build:
     runs-on: ubuntu-latest
