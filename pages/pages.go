@@ -181,19 +181,83 @@ var Upload = `
             </svg>
         </div>
         <div class="row">
-            <form action="{{.Route}}" method="post" enctype="multipart/form-data">
+            <form id="upload-form">
+                <h3>Send files or text</h3>
                 <div class="form-group">
                     <label for="files">
                         Files to transfer
                     </label>
-                    <input class="form-control-file" type="file" name="files" id="files" multiple>
+                    <input class="form-control-file" type="file" id="files" name="files" multiple>
+                </div>
+                <div class="form-group form-check">
+                    <input type="checkbox" class="form-check-input" id="check-send-text">
+                    <label class="form-check-label" for="check-send-text">Show text options</label>
+                </div>
+                <div id="send-text-form" style="display: none">
+                    <div class="form-group">
+                        <label for="plaintext-title">
+                            Title
+                        </label>
+                        <input class="form-control" id="plaintext-title">   
+                    </div>
+                    <div class="form-group">
+                        <label for="plaintext-text">
+                            Text
+                        </label>
+                        <textarea class="form-control" id="plaintext-text"></textarea>
+                    </div>
                 </div>
                 <div class="form-group">
-                    <input class="btn btn-primary form-control form-control-lg" type="submit" name="submit" value="Transfer">
+                    <input class="btn btn-primary form-control form-control-lg" type="submit" 
+                        id="submit" name="submit" value="Transfer">
                 </div>
             </form>
         </div>
     </div>
+    <script>
+        var textCheckbox = document.getElementById('check-send-text')
+        var textForm = document.getElementById('send-text-form')
+
+        textCheckbox.onclick = function(e) {
+            if (this.checked) {
+                textForm.style.display = 'block'
+            } else {
+                textForm.style.display = 'none'
+            }
+        }
+    </script>
+    <script>
+        var uploadForm = document.getElementById('upload-form')
+
+        uploadForm.addEventListener('submit', function(e) {
+            e.preventDefault()
+
+            var xhr = new XMLHttpRequest()
+            // Put the request response HTML ('Done' page) on the window 
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    document.write(xhr.response)
+                }
+            }
+
+            var formData = new FormData(uploadForm)
+            var titleInput = document.getElementById('plaintext-title')
+            var textInput = document.getElementById('plaintext-text')
+            var textCheckbox = document.getElementById('check-send-text')
+
+            if ((titleInput.value || textInput.value) && textCheckbox.checked) {
+                var currentDate = new Date().toJSON().slice(0,19).replace(/[-T]/g,'_')
+                // If the user didn't specify a file name, use 'qrcp-text-file-${currentDate}'
+                var filename = titleInput.value || ("qrcp-text-file-" + currentDate)
+                var blob = new Blob([textInput.value + '\n'], { type: "text/plain" })
+                // Append the text file to the form data with '.txt' extension
+                formData.append("textFile", blob, filename + ".txt")
+            }
+
+            xhr.open("POST", "{{.Route}}")
+            xhr.send(formData)
+        })
+    </script>
 </body>
 </html>
 `
