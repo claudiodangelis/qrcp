@@ -182,7 +182,7 @@ var Upload = `
         </div>
         <div class="row">
             <form id="upload-form">
-                <h3>Send files</h3>
+                <h3>Send files or text</h3>
                 <div class="form-group">
                     <label for="files">
                         Files to transfer
@@ -191,10 +191,9 @@ var Upload = `
                 </div>
                 <div class="form-group form-check">
                     <input type="checkbox" class="form-check-input" id="check-send-text">
-                    <label class="form-check-label" for="check-send-text">Send text</label>
+                    <label class="form-check-label" for="check-send-text">Show text options</label>
                 </div>
                 <div id="send-text-form" style="display: none">
-                    <h3>Send text</h3>
                     <div class="form-group">
                         <label for="plaintext-title">
                             Title
