@@ -11,11 +11,26 @@ import (
 )
 
 func sendCmdFunc(command *cobra.Command, args []string) error {
+
 	log := logger.New(quietFlag)
-	payload, err := payload.FromArgs(args, zipFlag)
-	if err != nil {
-		return err
+
+	payloads := make([]payload.Payload, 0)
+	if seqFlag {
+		for _, a := range args {
+			p, err := payload.FromArgs([]string{a}, zipFlag)
+			if err != nil {
+				return err
+			}
+			payloads = append(payloads, p)
+		}
+	} else {
+		p, err := payload.FromArgs(args, zipFlag)
+		if err != nil {
+			return err
+		}
+		payloads = append(payloads, p)
 	}
+
 	cfg, err := config.New(interfaceFlag, portFlag, pathFlag, fqdnFlag, keepaliveFlag, listallinterfacesFlag)
 	if err != nil {
 		return err
@@ -24,13 +39,15 @@ func sendCmdFunc(command *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	// Sets the payload
-	srv.Send(payload)
-	log.Print("Scan the following URL with a QR reader to start the file transfer:")
-	log.Print(srv.SendURL)
-	qr.RenderString(srv.SendURL)
-	if err := srv.Wait(); err != nil {
-		return err
+	for _, payload := range payloads {
+		// Sets the payload
+		srv.Send(payload)
+		log.Print("Scan the following URL with a QR reader to start the file transfer:")
+		log.Print(srv.SendURL)
+		qr.RenderString(srv.SendURL)
+		if err := srv.Wait(); err != nil {
+			return err
+		}
 	}
 	return nil
 }

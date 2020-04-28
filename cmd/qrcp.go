@@ -18,6 +18,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&interfaceFlag, "interface", "i", "", "network interface to use for the server")
 	rootCmd.PersistentFlags().StringVarP(&fqdnFlag, "fqdn", "d", "", "fully-qualified domain name to use for the resulting URLs")
 	rootCmd.PersistentFlags().BoolVarP(&zipFlag, "zip", "z", false, "zip content before transferring")
+	rootCmd.PersistentFlags().BoolVarP(&seqFlag, "sequential", "s", false, "sequentially transfer multiple files")
 	// Receive command flags
 	receiveCmd.PersistentFlags().StringVarP(&outputFlag, "output", "o", "", "output directory for receiving files")
 }
@@ -32,6 +33,7 @@ var quietFlag bool
 var fqdnFlag string
 var pathFlag string
 var listallinterfacesFlag bool
+var seqFlag bool
 
 // The root command (`qrcp`) is like a shortcut of the `send` command
 var rootCmd = &cobra.Command{
