@@ -1,6 +1,8 @@
 package qr
 
 import (
+	"fmt"
+
 	"github.com/skip2/go-qrcode"
 )
 
@@ -10,5 +12,5 @@ func RenderString(s string) {
 	if err != nil {
 		panic(err)
 	}
-	print(q.ToSmallString(false))
+	fmt.Println(q.ToSmallString(false))
 }
