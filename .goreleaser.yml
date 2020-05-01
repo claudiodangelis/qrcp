@@ -2,9 +2,7 @@ before:
   hooks:
     - go mod download
 builds:
-- ldflags:
-  - -s -w -X github.com/claudiodangelis/test-repo-please-ignore-me/version.version={{.Version}} -X github.com/claudiodangelis/test-repo-please-ignore-me/version.date={{.Date}}
-  env:
+- env:
   - CGO_ENABLED=0
   goos:
   - linux
