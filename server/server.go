@@ -42,7 +42,7 @@ func (s *Server) ReceiveTo(dir string) error {
 		return err
 	}
 	// Check if the output dir exists
-	if dir, _ := os.Stat(output); !dir.IsDir() {
+	if dir, _ := os.Stat(output); dir == nil || !dir.IsDir() {
 		return fmt.Errorf("%s is not a valid directory", output)
 	}
 	s.outputDir = output

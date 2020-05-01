@@ -21,7 +21,9 @@ func receiveCmdFunc(command *cobra.Command, args []string) error {
 		return err
 	}
 	// Sets the output directory
-	srv.ReceiveTo(outputFlag)
+	if err := srv.ReceiveTo(outputFlag); err != nil {
+		return err
+	}
 	// Prints the URL to scan to screen
 	log.Print("Scan the following URL with a QR reader to start the file transfer:")
 	log.Print(srv.ReceiveURL)
