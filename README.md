@@ -175,7 +175,7 @@ qrcp --port 8080 MyDocument.pdf
 ```
 ### Network Interface
 
-`qrcp` will try to automatically find the suitable network interface to use for the transfers. If more than one suitable interface is found ,it asks you to choose one.
+`qrcp` will try to automatically find the suitable network interface to use for the transfers. If more than one suitable interface is found, it asks you to choose one.
 
 If you want to use a specific interface, pass the `--interface` (or `-i`) flag:
 
