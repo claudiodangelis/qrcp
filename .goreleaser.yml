@@ -8,6 +8,13 @@ builds:
   - linux
   - darwin
   - windows
+  goarch:
+  - 386
+  - amd64
+  - arm
+  - arm64
+  goarm:
+  - 7
   ignore:
   - goos: darwin
     goarch: 386
@@ -40,4 +47,3 @@ nfpms:
     formats:
       - deb
       - rpm
-    
