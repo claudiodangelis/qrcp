@@ -2,6 +2,8 @@ before:
   hooks:
     - go mod download
 builds:
+- ldflags:
+  - -s -w -X github.com/claudiodangelis/qrcp/version.version={{.Version}} -X github.com/claudiodangelis/qrcp/version.date={{.Date}}
 - env:
   - CGO_ENABLED=0
   goos:
