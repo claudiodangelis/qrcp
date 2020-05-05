@@ -4,12 +4,19 @@ before:
 builds:
 - ldflags:
   - -s -w -X github.com/claudiodangelis/qrcp/version.version={{.Version}} -X github.com/claudiodangelis/qrcp/version.date={{.Date}}
-  env:
+- env:
   - CGO_ENABLED=0
   goos:
   - linux
   - darwin
   - windows
+  goarch:
+  - 386
+  - amd64
+  - arm
+  - arm64
+  goarm:
+  - 7
   ignore:
   - goos: darwin
     goarch: 386
@@ -42,4 +49,3 @@ nfpms:
     formats:
       - deb
       - rpm
-    
