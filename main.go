@@ -1,16 +1,13 @@
 package main
 
 import (
-	"log"
+	"os"
 
 	"github.com/claudiodangelis/qrcp/cmd"
 )
 
 func main() {
 	if err := cmd.Execute(); err != nil {
-		if err.Error() == "^C" {
-			return
-		}
-		log.Fatalln(err)
+		os.Exit(1)
 	}
 }
