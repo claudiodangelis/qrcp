@@ -35,14 +35,17 @@ var listallinterfacesFlag bool
 
 // The root command (`qrcp`) is like a shortcut of the `send` command
 var rootCmd = &cobra.Command{
-	Use:  "qrcp",
-	Args: cobra.MinimumNArgs(1),
-	RunE: sendCmdFunc,
+	Use:           "qrcp",
+	Args:          cobra.MinimumNArgs(1),
+	RunE:          sendCmdFunc,
+	SilenceErrors: true,
+	SilenceUsage:  true,
 }
 
 // Execute the root command
 func Execute() error {
 	if err := rootCmd.Execute(); err != nil {
+		rootCmd.PrintErrf("Error: %v\nRun `qrcp help` for help.\n", err)
 		return err
 	}
 	return nil
