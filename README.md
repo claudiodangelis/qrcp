@@ -85,6 +85,8 @@ qrcp --help
 
 Download the latest Windows .tar.gz archive from the Releases page and extract the EXE file.
 
+### Scoop 
+
 If you use [Scoop](https://scoop.sh/) for package management on Windows, you can install qrcp with the following one-liner:
 
 ```
