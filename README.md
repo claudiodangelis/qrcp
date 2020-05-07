@@ -93,6 +93,14 @@ qrcp --help
 
 Download the latest Windows .tar.gz archive from the [Releases page](https://github.com/claudiodangelis/qrcp/releases) and extract the EXE file.
 
+### Scoop 
+
+If you use [Scoop](https://scoop.sh/) for package management on Windows, you can install qrcp with the following one-liner:
+
+```
+scoop install qrcp
+```
+
 ## MacOS
 
 Download the latest macOS .tar.gz archive from the [Releases page](https://github.com/claudiodangelis/qrcp/releases), extract it, move the binary to the proper directory, then set execution permissions.
