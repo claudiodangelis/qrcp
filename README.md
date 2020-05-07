@@ -42,7 +42,7 @@ _Note: it requires go 1.8_
 
 ## Linux
 
-Download the latest Linux .tar.gz archive from the Releases page, extract it, move the binary to the proper directory, then set execution permissions.
+Download the latest Linux .tar.gz archive from the [Releases](https://github.com/claudiodangelis/qrcp/releases) page, extract it, move the binary to the proper directory, then set execution permissions.
 
 ```sh
 # Extract the archive
@@ -53,9 +53,17 @@ sudo mv qrcp /usr/local/bin
 sudo chmod +x /usr/local/bin/qrcp
 ```
 
+### Raspberry Pi
+
+The following ARM releases are available in the [Releases](https://github.com/claudiodangelis/qrcp/releases) page:
+
+- `armv7`
+- `arm64`
+
+
 ### Using a package manager
 
-#### ![Logo](https://www.archlinux.org/static/favicon.29302f683ff8.ico) ArchLinux
+#### ArchLinux
 
 Packages available on AUR:
 -  [qrcp-bin](https://aur.archlinux.org/packages/qrcp-bin)
@@ -63,7 +71,7 @@ Packages available on AUR:
 
 #### Deb packages (Ubuntu, Debian, etc)
 
-Download the latest .deb package from the Releases page, then run `dpkg`:
+Download the latest .deb package from the [Releases page](https://github.com/claudiodangelis/qrcp/releases), then run `dpkg`:
 
 ```sh
 sudo dpkg -i qrcp_0.5.0_linux_x86_64.deb
@@ -73,7 +81,7 @@ qrcp version
 
 #### RPM packages (CentOS, Fedora, etc)
 
-Download the latest .rpm package from the Releases page, then run `rpm`:
+Download the latest .rpm package from the [Releases page](https://github.com/claudiodangelis/qrcp/releases), then run `rpm`:
 
 ```sh
 sudo rpm -i qrcp_0.5.0_linux_x86_64.rpm
@@ -83,11 +91,19 @@ qrcp --help
 
 ## Windows
 
-Download the latest Windows .tar.gz archive from the Releases page and extract the EXE file.
+Download the latest Windows .tar.gz archive from the [Releases page](https://github.com/claudiodangelis/qrcp/releases) and extract the EXE file.
+
+### Scoop 
+
+If you use [Scoop](https://scoop.sh/) for package management on Windows, you can install qrcp with the following one-liner:
+
+```
+scoop install qrcp
+```
 
 ## MacOS
 
-Download the latest macOS .tar.gz archive from the Releases page, extract it, move the binary to the proper directory, then set execution permissions.
+Download the latest macOS .tar.gz archive from the [Releases page](https://github.com/claudiodangelis/qrcp/releases), extract it, move the binary to the proper directory, then set execution permissions.
 
 ```sh
 # Extract the archive
@@ -175,7 +191,7 @@ qrcp --port 8080 MyDocument.pdf
 ```
 ### Network Interface
 
-`qrcp` will try to automatically find the suitable network interface to use for the transfers. If more than one suitable interface is found ,it asks you to choose one.
+`qrcp` will try to automatically find the suitable network interface to use for the transfers. If more than one suitable interface is found, it asks you to choose one.
 
 If you want to use a specific interface, pass the `--interface` (or `-i`) flag:
 
@@ -264,7 +280,7 @@ Releases are handled with [goreleaser](https://goreleaser.com).
 - [share-files](https://github.com/antoaravinth/share-files) _(Uncredited)_  - Yet another Node.js clone of this project
 - [ezshare](https://github.com/mifi/ezshare) - Another Node.js two way file sharing tool supporting folders and multiple files
 - [local_file_share](https://github.com/woshimanong1990/local_file_share)  - _"share local file to other people, OR smartphone download files which is in pc"_
-- [qrcp](https://github.com/pearl2201/qrcp) - a C++ clone of `qrcp` with a GUI
+- [qrcp](https://github.com/pearl2201/qrcp) - a desktop app clone of `qrcp`, writing with C# and .NET Core, work for Windows.
 ## License
 
 MIT. See [LICENSE](LICENSE).
