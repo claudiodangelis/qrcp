@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"os/user"
+	"path/filepath"
+
 	"github.com/spf13/cobra"
 )
 
@@ -10,6 +13,7 @@ func init() {
 	rootCmd.AddCommand(configCmd)
 	rootCmd.AddCommand(versionCmd)
 	// Global command flags
+	rootCmd.PersistentFlags().StringVarP(&configFileFlag, "config-file", "c", defaultConfigPath(), "config file location")
 	rootCmd.PersistentFlags().BoolVarP(&quietFlag, "quiet", "q", false, "only print errors")
 	rootCmd.PersistentFlags().BoolVarP(&keepaliveFlag, "keep-alive", "k", false, "keep server alive after transferring")
 	rootCmd.PersistentFlags().BoolVarP(&listallinterfacesFlag, "list-all-interfaces", "l", false, "list all available interfaces when choosing the one to use")
@@ -22,7 +26,16 @@ func init() {
 	receiveCmd.PersistentFlags().StringVarP(&outputFlag, "output", "o", "", "output directory for receiving files")
 }
 
+func defaultConfigPath() string {
+	currentUser, err := user.Current()
+	if err != nil {
+		panic(err)
+	}
+	return filepath.Join(currentUser.HomeDir, ".qrcp.json")
+}
+
 // Flags
+var configFileFlag string
 var zipFlag bool
 var portFlag int
 var interfaceFlag string

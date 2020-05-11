@@ -5,8 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"os/user"
-	"path/filepath"
 	"strconv"
 
 	"github.com/asaskevich/govalidator"
@@ -21,14 +19,6 @@ type Config struct {
 	Port      int    `json:"port"`
 	KeepAlive bool   `json:"keepAlive"`
 	Path      string `json:"path"`
-}
-
-func configFile() string {
-	currentUser, err := user.Current()
-	if err != nil {
-		panic(err)
-	}
-	return filepath.Join(currentUser.HomeDir, ".qrcp.json")
 }
 
 type configOptions struct {
@@ -77,10 +67,10 @@ func chooseInterface(opts configOptions) (string, error) {
 }
 
 // Load a new configuration
-func Load(opts configOptions) (Config, error) {
+func Load(filePath string, opts configOptions) (Config, error) {
 	var cfg Config
 	// Read the configuration file, if it exists
-	if file, err := ioutil.ReadFile(configFile()); err == nil {
+	if file, err := ioutil.ReadFile(filePath); err == nil {
 		// Read the config
 		if err := json.Unmarshal(file, &cfg); err != nil {
 			return cfg, err
@@ -94,7 +84,7 @@ func Load(opts configOptions) (Config, error) {
 		}
 		cfg.Interface = iface
 		// Write config
-		if err := write(cfg); err != nil {
+		if err := write(filePath, cfg); err != nil {
 			return cfg, err
 		}
 	}
@@ -102,9 +92,9 @@ func Load(opts configOptions) (Config, error) {
 }
 
 // Wizard starts an interactive configuration managements
-func Wizard() error {
+func Wizard(filePath string) error {
 	var cfg Config
-	if file, err := ioutil.ReadFile(configFile()); err == nil {
+	if file, err := ioutil.ReadFile(filePath); err == nil {
 		// Read the config
 		if err := json.Unmarshal(file, &cfg); err != nil {
 			return err
@@ -178,7 +168,7 @@ func Wizard() error {
 		}
 	}
 	// Write it down
-	if err := write(cfg); err != nil {
+	if err := write(filePath, cfg); err != nil {
 		return err
 	}
 	b, err := json.MarshalIndent(cfg, "", "  ")
@@ -190,12 +180,12 @@ func Wizard() error {
 }
 
 // write the configuration file to disk
-func write(cfg Config) error {
+func write(filePath string, cfg Config) error {
 	j, err := json.MarshalIndent(cfg, "", "    ")
 	if err != nil {
 		return err
 	}
-	if err := ioutil.WriteFile(configFile(), j, 0644); err != nil {
+	if err := ioutil.WriteFile(filePath, j, 0644); err != nil {
 		return err
 	}
 	return nil
@@ -203,9 +193,9 @@ func write(cfg Config) error {
 
 // New returns a new configuration struct. It loads defaults, then overrides
 // values if any.
-func New(iface string, port int, path string, fqdn string, keepAlive bool, listAllInterfaces bool) (Config, error) {
+func New(filePath string, iface string, port int, path string, fqdn string, keepAlive bool, listAllInterfaces bool) (Config, error) {
 	// Load saved file / defults
-	cfg, err := Load(configOptions{listAllInterfaces: listAllInterfaces})
+	cfg, err := Load(filePath, configOptions{listAllInterfaces: listAllInterfaces})
 	if err != nil {
 		return cfg, err
 	}
