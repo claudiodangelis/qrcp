@@ -246,8 +246,7 @@ func New(cfg *config.Config) (*Server, error) {
 				if part == nil {
 					msg := fmt.Sprint("part is nil")
 					log.Print(msg)
-					app.stopChannel <- true
-					return
+					continue
 				}
 				// If part.FileName() is empty, skip this iteration.
 				if part.FileName() == "" {
