@@ -11,7 +11,15 @@ import (
 func receiveCmdFunc(command *cobra.Command, args []string) error {
 	log := logger.New(quietFlag)
 	// Load configuration
-	cfg, err := config.New(interfaceFlag, portFlag, pathFlag, fqdnFlag, keepaliveFlag, listallinterfacesFlag)
+	configOptions := config.Options{
+		Interface:         interfaceFlag,
+		Port:              portFlag,
+		Path:              pathFlag,
+		FQDN:              fqdnFlag,
+		KeepAlive:         keepaliveFlag,
+		ListAllInterfaces: listallinterfacesFlag,
+	}
+	cfg, err := config.New(configFlag, configOptions)
 	if err != nil {
 		return err
 	}

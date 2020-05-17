@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"os/user"
 	"path/filepath"
 	"strconv"
@@ -23,21 +24,21 @@ type Config struct {
 	Path      string `json:"path"`
 }
 
-func configFile() string {
-	currentUser, err := user.Current()
-	if err != nil {
-		panic(err)
-	}
-	return filepath.Join(currentUser.HomeDir, ".qrcp.json")
+var configFile string
+
+// Options of the qrcp configuration
+type Options struct {
+	Interface         string
+	Port              int
+	Path              string
+	FQDN              string
+	KeepAlive         bool
+	Interactive       bool
+	ListAllInterfaces bool
 }
 
-type configOptions struct {
-	interactive       bool
-	listAllInterfaces bool
-}
-
-func chooseInterface(opts configOptions) (string, error) {
-	interfaces, err := util.Interfaces(opts.listAllInterfaces)
+func chooseInterface(opts Options) (string, error) {
+	interfaces, err := util.Interfaces(opts.ListAllInterfaces)
 	if err != nil {
 		return "", err
 	}
@@ -45,7 +46,7 @@ func chooseInterface(opts configOptions) (string, error) {
 		return "", errors.New("no interfaces found")
 	}
 
-	if len(interfaces) == 1 && opts.interactive == false {
+	if len(interfaces) == 1 && opts.Interactive == false {
 		for name := range interfaces {
 			fmt.Printf("only one interface found: %s, using this one\n", name)
 			return name, nil
@@ -77,10 +78,10 @@ func chooseInterface(opts configOptions) (string, error) {
 }
 
 // Load a new configuration
-func Load(opts configOptions) (Config, error) {
+func Load(opts Options) (Config, error) {
 	var cfg Config
 	// Read the configuration file, if it exists
-	if file, err := ioutil.ReadFile(configFile()); err == nil {
+	if file, err := ioutil.ReadFile(configFile); err == nil {
 		// Read the config
 		if err := json.Unmarshal(file, &cfg); err != nil {
 			return cfg, err
@@ -102,17 +103,21 @@ func Load(opts configOptions) (Config, error) {
 }
 
 // Wizard starts an interactive configuration managements
-func Wizard() error {
+func Wizard(path string, listAllInterfaces bool) error {
+	if err := setConfigFile(path); err != nil {
+		return err
+	}
 	var cfg Config
-	if file, err := ioutil.ReadFile(configFile()); err == nil {
+	if file, err := ioutil.ReadFile(configFile); err == nil {
 		// Read the config
 		if err := json.Unmarshal(file, &cfg); err != nil {
 			return err
 		}
 	}
 	// Ask for interface
-	opts := configOptions{
-		interactive: true,
+	opts := Options{
+		Interactive:       true,
+		ListAllInterfaces: listAllInterfaces,
 	}
 	iface, err := chooseInterface(opts)
 	if err != nil {
@@ -195,40 +200,70 @@ func write(cfg Config) error {
 	if err != nil {
 		return err
 	}
-	if err := ioutil.WriteFile(configFile(), j, 0644); err != nil {
+	if err := ioutil.WriteFile(configFile, j, 0644); err != nil {
 		return err
 	}
 	return nil
 }
 
+func setConfigFile(path string) error {
+	if path == "" {
+		// Use default
+		currentUser, err := user.Current()
+		if err != nil {
+			return err
+		}
+		configFile = filepath.Join(currentUser.HomeDir, ".qrcp.json")
+		return nil
+	}
+	absolutepath, err := filepath.Abs(path)
+	if err != nil {
+		return err
+	}
+	fileinfo, err := os.Stat(absolutepath)
+	if err != nil && !os.IsNotExist(err) {
+		return err
+	}
+	if fileinfo != nil && fileinfo.IsDir() {
+		return fmt.Errorf("%s is not a file", absolutepath)
+	}
+	configFile = absolutepath
+	return nil
+}
+
 // New returns a new configuration struct. It loads defaults, then overrides
 // values if any.
-func New(iface string, port int, path string, fqdn string, keepAlive bool, listAllInterfaces bool) (Config, error) {
-	// Load saved file / defults
-	cfg, err := Load(configOptions{listAllInterfaces: listAllInterfaces})
+func New(path string, opts Options) (Config, error) {
+	var cfg Config
+	// Set configFile
+	if err := setConfigFile(path); err != nil {
+		return cfg, err
+	}
+	// Load saved file / defaults
+	cfg, err := Load(opts)
 	if err != nil {
 		return cfg, err
 	}
-	if iface != "" {
-		cfg.Interface = iface
+	if opts.Interface != "" {
+		cfg.Interface = opts.Interface
 	}
-	if fqdn != "" {
-		if govalidator.IsDNSName(fqdn) == false {
+	if opts.FQDN != "" {
+		if govalidator.IsDNSName(opts.FQDN) == false {
 			return cfg, errors.New("invalid value for fully-qualified domain name")
 		}
-		cfg.FQDN = fqdn
+		cfg.FQDN = opts.FQDN
 	}
-	if port != 0 {
-		if port > 65535 {
+	if opts.Port != 0 {
+		if opts.Port > 65535 {
 			return cfg, errors.New("invalid value for port")
 		}
-		cfg.Port = port
+		cfg.Port = opts.Port
 	}
-	if keepAlive {
+	if opts.KeepAlive {
 		cfg.KeepAlive = true
 	}
-	if path != "" {
-		cfg.Path = path
+	if opts.Path != "" {
+		cfg.Path = opts.Path
 	}
 	return cfg, nil
 }
