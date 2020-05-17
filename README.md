@@ -182,6 +182,14 @@ qrcp --list-all-interfaces config
 ```
 
 
+### Configuration File
+
+The default configuration file is stored in $HOME/qrcp.json, however, you can specify the location of the config file by passing the `--config` flag:
+
+```sh
+qrcp --config /tmp/qrcp.json MyDocument.pdf
+```
+
 ### Port
 
 By default `qrcp` listens on a random port. Pass the `--port` (or `-p`) flag to choose a specific one:
