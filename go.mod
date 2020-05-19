@@ -11,5 +11,6 @@ require (
 	github.com/mattn/go-runewidth v0.0.9 // indirect
 	github.com/mdp/qrterminal v1.0.1
 	github.com/spf13/cobra v1.0.0
+	golang.org/x/mod v0.3.0
 	gopkg.in/cheggaaa/pb.v1 v1.0.28
 )

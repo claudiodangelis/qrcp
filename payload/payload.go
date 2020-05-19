@@ -1,6 +1,7 @@
 package payload
 
 import (
+	"log"
 	"os"
 	"path/filepath"
 
@@ -19,37 +20,36 @@ func (p Payload) Delete() error {
 	return os.RemoveAll(p.Path)
 }
 
-// FromArgs returns a payload from args
-func FromArgs(args []string, zipFlag bool) (Payload, error) {
-	shouldzip := len(args) > 1 || zipFlag
-	var files []string
-	// Check if content exists
-	for _, arg := range args {
-		file, err := os.Stat(arg)
+func dirInArgs(args []string) bool {
+	for _, a := range args {
+		f, err := os.Open(a)
 		if err != nil {
-			return Payload{}, err
+			log.Fatalf("%v", err)
 		}
-		// If at least one argument is dir, the content will be zipped
-		if file.IsDir() {
-			shouldzip = true
+		s, err := f.Stat()
+		if err != nil {
+			log.Fatalf("%v", err)
 		}
-		files = append(files, arg)
+		if s.IsDir() {
+			return true
+		}
 	}
-	// Prepare the content
-	// TODO: Research cleaner code
-	var content string
-	if shouldzip {
-		zip, err := util.ZipFiles(files)
+	return false
+}
+
+// FromArgs returns payloads from args
+func FromArgs(args []string, zipFlag bool, delFlag bool) ([]Payload, error) {
+	payloads := make([]Payload, 0)
+	if dirInArgs(args) || zipFlag {
+		archive, err := util.ZipFiles(args)
 		if err != nil {
-			return Payload{}, err
+			return []Payload{}, err
 		}
-		content = zip
+		payloads = append(payloads, Payload{Path: archive, Filename: filepath.Base(archive), DeleteAfterTransfer: delFlag})
 	} else {
-		content = args[0]
+		for _, f := range args {
+			payloads = append(payloads, Payload{Path: f, Filename: filepath.Base(f), DeleteAfterTransfer: delFlag})
+		}
 	}
-	return Payload{
-		Path:                content,
-		Filename:            filepath.Base(content),
-		DeleteAfterTransfer: shouldzip,
-	}, nil
+	return payloads, nil
 }

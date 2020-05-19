@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"github.com/claudiodangelis/qrcp/config"
 	"github.com/claudiodangelis/qrcp/logger"
 	"github.com/claudiodangelis/qrcp/payload"
@@ -14,23 +13,10 @@ func sendCmdFunc(command *cobra.Command, args []string) error {
 
 	log := logger.New(quietFlag)
 
-	payloads := make([]payload.Payload, 0)
-	if seqFlag {
-		for _, a := range args {
-			p, err := payload.FromArgs([]string{a}, zipFlag)
-			if err != nil {
-				return err
-			}
-			payloads = append(payloads, p)
-		}
-	} else {
-		p, err := payload.FromArgs(args, zipFlag)
-		if err != nil {
-			return err
-		}
-		payloads = append(payloads, p)
+	payloads, err := payload.FromArgs(args, zipFlag, delFlag)
+	if err != nil {
+		return err
 	}
-
 	cfg, err := config.New(interfaceFlag, portFlag, pathFlag, fqdnFlag, keepaliveFlag, listallinterfacesFlag)
 	if err != nil {
 		return err
@@ -41,7 +27,6 @@ func sendCmdFunc(command *cobra.Command, args []string) error {
 			return err
 		}
 		// Sets the payload
-		fmt.Printf("%#v", payload)
 		srv.Send(payload)
 		log.Print("Scan the following URL with a QR reader to start the file transfer:")
 		log.Print(srv.SendURL)
