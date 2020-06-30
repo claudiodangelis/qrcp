@@ -13,7 +13,7 @@ import (
 func sendCmdFunc(command *cobra.Command, args []string) error {
 	payload, err := payload.FromArgs(args, zipFlag)
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
 	}
 	// Load configuration
 	configOptions := config.Options{
