@@ -11,7 +11,6 @@ import (
 )
 
 func sendCmdFunc(command *cobra.Command, args []string) error {
-	// log := logger.New(quietFlag)
 	payload, err := payload.FromArgs(args, zipFlag)
 	if err != nil {
 		log.Fatal(err)
