@@ -11,7 +11,15 @@ import (
 func receiveCmdFunc(command *cobra.Command, args []string) error {
 	log := logger.New(quietFlag)
 	// Load configuration
-	cfg, err := config.New(interfaceFlag, portFlag, pathFlag, fqdnFlag, keepaliveFlag, listallinterfacesFlag)
+	configOptions := config.Options{
+		Interface:         interfaceFlag,
+		Port:              portFlag,
+		Path:              pathFlag,
+		FQDN:              fqdnFlag,
+		KeepAlive:         keepaliveFlag,
+		ListAllInterfaces: listallinterfacesFlag,
+	}
+	cfg, err := config.New(configFlag, configOptions)
 	if err != nil {
 		return err
 	}
@@ -21,7 +29,9 @@ func receiveCmdFunc(command *cobra.Command, args []string) error {
 		return err
 	}
 	// Sets the output directory
-	srv.ReceiveTo(outputFlag)
+	if err := srv.ReceiveTo(outputFlag); err != nil {
+		return err
+	}
 	// Prints the URL to scan to screen
 	log.Print("Scan the following URL with a QR reader to start the file transfer:")
 	log.Print(srv.ReceiveURL)

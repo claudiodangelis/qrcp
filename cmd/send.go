@@ -17,7 +17,16 @@ func sendCmdFunc(command *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	cfg, err := config.New(interfaceFlag, portFlag, pathFlag, fqdnFlag, keepaliveFlag, listallinterfacesFlag)
+	// Load configuration
+	configOptions := config.Options{
+		Interface:         interfaceFlag,
+		Port:              portFlag,
+		Path:              pathFlag,
+		FQDN:              fqdnFlag,
+		KeepAlive:         keepaliveFlag,
+		ListAllInterfaces: listallinterfacesFlag,
+	}
+	cfg, err := config.New(configFlag, configOptions)
 	if err != nil {
 		return err
 	}

@@ -19,6 +19,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&fqdnFlag, "fqdn", "d", "", "fully-qualified domain name to use for the resulting URLs")
 	rootCmd.PersistentFlags().BoolVarP(&zipFlag, "zip", "z", false, "zip content before transferring")
 	rootCmd.PersistentFlags().BoolVarP(&delFlag, "del", "D", false, "delete content after sending")
+	rootCmd.PersistentFlags().StringVarP(&configFlag, "config", "c", "", "path to the config file, defaults to $HOME/.qrcp")
 	// Receive command flags
 	receiveCmd.PersistentFlags().StringVarP(&outputFlag, "output", "o", "", "output directory for receiving files")
 }
@@ -34,17 +35,21 @@ var fqdnFlag string
 var pathFlag string
 var listallinterfacesFlag bool
 var delFlag bool
+var configFlag string
 
 // The root command (`qrcp`) is like a shortcut of the `send` command
 var rootCmd = &cobra.Command{
-	Use:  "qrcp",
-	Args: cobra.MinimumNArgs(1),
-	RunE: sendCmdFunc,
+	Use:           "qrcp",
+	Args:          cobra.MinimumNArgs(1),
+	RunE:          sendCmdFunc,
+	SilenceErrors: true,
+	SilenceUsage:  true,
 }
 
 // Execute the root command
 func Execute() error {
 	if err := rootCmd.Execute(); err != nil {
+		rootCmd.PrintErrf("Error: %v\nRun `qrcp help` for help.\n", err)
 		return err
 	}
 	return nil
