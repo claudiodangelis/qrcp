@@ -141,7 +141,7 @@ func Wizard(path string, listAllInterfaces bool) error {
 	}
 	// Ask for port
 	validatePort := func(input string) error {
-		_, err := strconv.ParseInt(input, 10, 16)
+		_, err := strconv.ParseUint(input, 10, 16)
 		if err != nil {
 			return errors.New("Invalid number")
 		}
@@ -154,7 +154,7 @@ func Wizard(path string, listAllInterfaces bool) error {
 		Default:  fmt.Sprintf("%d", cfg.Port),
 	}
 	if promptPortResultString, err := promptPort.Run(); err == nil {
-		if port, err := strconv.ParseInt(promptPortResultString, 10, 16); err == nil {
+		if port, err := strconv.ParseUint(promptPortResultString, 10, 16); err == nil {
 			cfg.Port = int(port)
 		}
 	}
