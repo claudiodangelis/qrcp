@@ -247,7 +247,13 @@ Pass the `--fqdn` (or `-d`) to use a fully qualified domain name instead of the 
 qrcp --fqdn example.com -i any -p 8080 MyRemoteDocument.pdf
 ```
 
+### Open in browser
 
+If you need a QR to be printed outside your terminal, you can pass the `--browser` flag. With this flag, `qrcp` will still print the QR code to the terminal, but it will also open a new window of your default browser to show the QR code.
+
+```
+qrcp --browser MyDocument.pdf
+```
 
 ### Keep the server alive
 
