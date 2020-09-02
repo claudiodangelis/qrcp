@@ -3,13 +3,17 @@ package server
 import (
 	"context"
 	"fmt"
+	"github.com/claudiodangelis/qrcp/qr"
+	"image/jpeg"
 	"io"
 	"log"
 	"net"
 	"net/http"
 	"os"
+	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 
@@ -22,6 +26,7 @@ import (
 
 // Server is the server
 type Server struct {
+	BaseURL string
 	// SendURL is the URL used to send the file
 	SendURL string
 	// ReceiveURL is the URL used to Receive the file
@@ -57,6 +62,17 @@ func (s *Server) ReceiveTo(dir string) error {
 func (s *Server) Send(p payload.Payload) {
 	s.payload = p
 	s.expectParallelRequests = true
+}
+
+// DisplayQR creates a handler for serving the QR code in the browser
+func (s *Server) DisplayQR(url string) {
+	const PATH = "/qr"
+	qrImg := qr.RenderImage(url)
+	http.HandleFunc(PATH, func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "image/jpeg")
+		jpeg.Encode(w, qrImg, nil)
+	})
+	openBrowser(s.BaseURL + PATH)
 }
 
 // Wait for transfer to be completed, it waits forever if kept awlive
@@ -108,11 +124,12 @@ func New(cfg *config.Config) (*Server, error) {
 	if cfg.FQDN != "" {
 		hostname = fmt.Sprintf("%s:%d", cfg.FQDN, port)
 	}
-	// Set send and receive URLs
-	app.SendURL = fmt.Sprintf("http://%s/send/%s",
-		hostname, path)
-	app.ReceiveURL = fmt.Sprintf("http://%s/receive/%s",
-		hostname, path)
+	// Set URLs
+	app.BaseURL = fmt.Sprintf("http://%s", hostname)
+	app.SendURL = fmt.Sprintf("%s/send/%s",
+		app.BaseURL, path)
+	app.ReceiveURL = fmt.Sprintf("%s/receive/%s",
+		app.BaseURL, path)
 	// Create a server
 	httpserver := &http.Server{Addr: host}
 	// Create channel to send message to stop server
@@ -275,4 +292,22 @@ func New(cfg *config.Config) (*Server, error) {
 	}()
 	app.instance = httpserver
 	return app, nil
+}
+
+// openBrowser navigates to a url using the default system browser
+func openBrowser(url string) {
+	var err error
+	switch runtime.GOOS {
+	case "linux":
+		err = exec.Command("xdg-open", url).Start()
+	case "windows":
+		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
+	case "darwin":
+		err = exec.Command("open", url).Start()
+	default:
+		err = fmt.Errorf("Failed to open browser on platform: %s", runtime.GOOS)
+	}
+	if err != nil {
+		log.Fatal(err)
+	}
 }

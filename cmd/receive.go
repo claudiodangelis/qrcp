@@ -37,6 +37,9 @@ func receiveCmdFunc(command *cobra.Command, args []string) error {
 	log.Print(srv.ReceiveURL)
 	// Renders the QR
 	qr.RenderString(srv.ReceiveURL)
+	if browserFlag {
+		srv.DisplayQR(srv.ReceiveURL)
+	}
 	if err := srv.Wait(); err != nil {
 		return err
 	}
