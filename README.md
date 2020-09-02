@@ -265,6 +265,43 @@ It can be useful to keep the server alive after transferring the file, for examp
 qrcp --keep-alive MyDocument.pdf
 ```
 
+## Shell completion scripts
+
+`qrcp` comes with a built-in `completion` command that generates shell completion scripts.
+
+### Bash:
+
+    $ source <(qrcp completion bash)
+
+To load completions for each session, execute once:
+
+Linux:
+
+    $ qrcp completion bash > /etc/bash_completion.d/qrcp
+
+MacOS:
+    $ qrcp completion bash > /usr/local/etc/bash_completion.d/qrcp
+
+Zsh:
+
+If shell completion is not already enabled in your environment you will need to enable it.  You can execute the following once:
+
+    $ echo "autoload -U compinit; compinit" >> ~/.zshrc
+
+To load completions for each session, execute once:
+
+    $ qrcp completion zsh > "${fpath[1]}/_qrcp"
+
+You will need to start a new shell for this setup to take effect.
+
+Fish:
+
+    $ qrcp completion fish | source
+
+To load completions for each session, execute once:
+
+    $ qrcp completion fish > ~/.config/fish/completions/qrcp.fish
+
 ## Authors
 
 **qrcp**, originally called **qr-filetransfer**, started from an idea of [Claudio d'Angelis](claudiodangelis@gmail.com) ([@daw985](https://twitter.com/daw985) on Twitter), the current maintainer, and it's [developed by the community](https://github.com/claudiodangelis/qrcp/graphs/contributors).
