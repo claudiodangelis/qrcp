@@ -180,7 +180,7 @@ func New(cfg *config.Config) (*Server, error) {
 				waitgroup.Add(1)
 			}
 		}
-		// Remove connection from the waitfroup when done
+		// Remove connection from the waitgroup when done
 		defer waitgroup.Done()
 		w.Header().Set("Content-Disposition", "attachment; filename="+
 			app.payload.Filename)
