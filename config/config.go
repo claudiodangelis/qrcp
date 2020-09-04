@@ -22,6 +22,7 @@ type Config struct {
 	Port      int    `json:"port"`
 	KeepAlive bool   `json:"keepAlive"`
 	Path      string `json:"path"`
+	Secure    bool   `json:"secure"`
 }
 
 var configFile string
