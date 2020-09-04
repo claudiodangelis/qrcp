@@ -279,10 +279,13 @@ Linux:
 
     $ qrcp completion bash > /etc/bash_completion.d/qrcp
 
+_Note: if you don't want to install completion scripts system-wide, refer to [Bash Completion FAQ](https://github.com/scop/bash-completion/blob/master/README.md)_.
+
 MacOS:
+
     $ qrcp completion bash > /usr/local/etc/bash_completion.d/qrcp
 
-Zsh:
+### Zsh:
 
 If shell completion is not already enabled in your environment you will need to enable it.  You can execute the following once:
 
@@ -294,7 +297,7 @@ To load completions for each session, execute once:
 
 You will need to start a new shell for this setup to take effect.
 
-Fish:
+### Fish:
 
     $ qrcp completion fish | source
 
