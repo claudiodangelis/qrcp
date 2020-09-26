@@ -20,6 +20,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&zipFlag, "zip", "z", false, "zip content before transferring")
 	rootCmd.PersistentFlags().StringVarP(&configFlag, "config", "c", "", "path to the config file, defaults to $HOME/.qrcp")
 	rootCmd.PersistentFlags().BoolVarP(&browserFlag, "browser", "b", false, "display the QR code in a browser window")
+	rootCmd.PersistentFlags().BoolVarP(&secureFlag, "secure", "s", false, "use https connection")
 	// Receive command flags
 	receiveCmd.PersistentFlags().StringVarP(&outputFlag, "output", "o", "", "output directory for receiving files")
 }
@@ -36,6 +37,7 @@ var pathFlag string
 var listallinterfacesFlag bool
 var configFlag string
 var browserFlag bool
+var secureFlag bool
 
 // The root command (`qrcp`) is like a shortcut of the `send` command
 var rootCmd = &cobra.Command{

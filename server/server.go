@@ -2,8 +2,8 @@ package server
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
-	"github.com/claudiodangelis/qrcp/qr"
 	"image/jpeg"
 	"io"
 	"log"
@@ -16,6 +16,8 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+
+	"github.com/claudiodangelis/qrcp/qr"
 
 	"github.com/claudiodangelis/qrcp/config"
 	"github.com/claudiodangelis/qrcp/pages"
@@ -126,12 +128,29 @@ func New(cfg *config.Config) (*Server, error) {
 	}
 	// Set URLs
 	app.BaseURL = fmt.Sprintf("http://%s", hostname)
+	if cfg.Secure {
+		app.BaseURL = fmt.Sprintf("https://%s", hostname)
+	}
 	app.SendURL = fmt.Sprintf("%s/send/%s",
 		app.BaseURL, path)
 	app.ReceiveURL = fmt.Sprintf("%s/receive/%s",
 		app.BaseURL, path)
 	// Create a server
-	httpserver := &http.Server{Addr: host}
+	httpserver := &http.Server{
+		Addr: host,
+		TLSConfig: &tls.Config{
+			MinVersion:               tls.VersionTLS12,
+			CurvePreferences:         []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256},
+			PreferServerCipherSuites: true,
+			CipherSuites: []uint16{
+				tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+				tls.TLS_RSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_RSA_WITH_AES_256_CBC_SHA,
+			},
+		},
+		TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler), 0),
+	}
 	// Create channel to send message to stop server
 	app.stopChannel = make(chan bool)
 	// Create cookie used to verify request is coming from first client to connect
@@ -286,8 +305,18 @@ func New(cfg *config.Config) (*Server, error) {
 	}()
 	// Receive handler (receives file from caller)
 	go func() {
-		if err := (httpserver.Serve(tcpKeepAliveListener{listener.(*net.TCPListener)})); err != http.ErrServerClosed {
-			log.Fatalln(err)
+		// Check if TLS or not
+		netListener := tcpKeepAliveListener{listener.(*net.TCPListener)}
+		if cfg.Secure {
+			// TLS
+			if err := httpserver.ServeTLS(netListener, cfg.TLSCert, cfg.TLSKey); err != http.ErrServerClosed {
+				log.Fatalln(err)
+			}
+		} else {
+			// No TLD
+			if err := httpserver.Serve(netListener); err != http.ErrServerClosed {
+				log.Fatalln(err)
+			}
 		}
 	}()
 	app.instance = httpserver

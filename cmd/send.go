@@ -24,6 +24,7 @@ func sendCmdFunc(command *cobra.Command, args []string) error {
 		FQDN:              fqdnFlag,
 		KeepAlive:         keepaliveFlag,
 		ListAllInterfaces: listallinterfacesFlag,
+		Secure:            secureFlag,
 	}
 	cfg, err := config.New(configFlag, configOptions)
 	if err != nil {

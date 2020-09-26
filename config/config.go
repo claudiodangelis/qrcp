@@ -23,6 +23,8 @@ type Config struct {
 	KeepAlive bool   `json:"keepAlive"`
 	Path      string `json:"path"`
 	Secure    bool   `json:"secure"`
+	TLSKey    string `json:"tls-key"`
+	TLSCert   string `json:"tls-cert"`
 }
 
 var configFile string
@@ -36,6 +38,7 @@ type Options struct {
 	KeepAlive         bool
 	Interactive       bool
 	ListAllInterfaces bool
+	Secure            bool
 }
 
 func chooseInterface(opts Options) (string, error) {
@@ -266,5 +269,9 @@ func New(path string, opts Options) (Config, error) {
 	if opts.Path != "" {
 		cfg.Path = opts.Path
 	}
+	cfg.Secure = opts.Secure
+	cfg.TLSCert = ""
+	cfg.TLSKey = ""
+	fmt.Println(cfg.Secure)
 	return cfg, nil
 }
