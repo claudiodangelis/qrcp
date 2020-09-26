@@ -127,10 +127,11 @@ func New(cfg *config.Config) (*Server, error) {
 		hostname = fmt.Sprintf("%s:%d", cfg.FQDN, port)
 	}
 	// Set URLs
-	app.BaseURL = fmt.Sprintf("http://%s", hostname)
+	protocol := "http"
 	if cfg.Secure {
-		app.BaseURL = fmt.Sprintf("https://%s", hostname)
+		protocol = "https"
 	}
+	app.BaseURL = fmt.Sprintf("%s://%s", protocol, hostname)
 	app.SendURL = fmt.Sprintf("%s/send/%s",
 		app.BaseURL, path)
 	app.ReceiveURL = fmt.Sprintf("%s/receive/%s",

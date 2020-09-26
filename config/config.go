@@ -9,6 +9,7 @@ import (
 	"os/user"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/claudiodangelis/qrcp/util"
@@ -185,6 +186,65 @@ func Wizard(path string, listAllInterfaces bool) error {
 		} else {
 			cfg.KeepAlive = false
 		}
+
+	}
+	// TLS
+	promptSecure := promptui.Select{
+		Items: []string{"No", "Yes"},
+		Label: "Should files be securely transferred with HTTPS?",
+	}
+	if _, promptSecureResultString, err := promptSecure.Run(); err == nil {
+		if promptSecureResultString == "Yes" {
+			cfg.Secure = true
+		} else {
+			cfg.Secure = false
+		}
+	}
+	pathIsReadable := func(input string) error {
+		if input == "" {
+			return nil
+		}
+		usr, _ := user.Current()
+		dir := usr.HomeDir
+		if input == "~" {
+			// In case of "~", which won't be caught by the "else if"
+			input = dir
+		} else if strings.HasPrefix(input, "~/") {
+			// Use strings.HasPrefix so we don't match paths like
+			// "/something/~/something/"
+			input = filepath.Join(dir, input[2:])
+		}
+		path, err := filepath.Abs(input)
+		if err != nil {
+			return err
+		}
+		fmt.Println(path)
+		fileinfo, err := os.Stat(path)
+		if err != nil {
+			return err
+		}
+		if fileinfo.Mode().IsDir() {
+			return fmt.Errorf(fmt.Sprintf("%s is a directory", input))
+		}
+		return nil
+	}
+	// TLS Cert
+	promptTLSCert := promptui.Prompt{
+		Label:    "Choose TLS certificate path. Empty if not using HTTPS.",
+		Default:  cfg.TLSCert,
+		Validate: pathIsReadable,
+	}
+	if promptTLSCertString, err := promptTLSCert.Run(); err == nil {
+		cfg.TLSCert = promptTLSCertString
+	}
+	// TLS key
+	promptTLSKey := promptui.Prompt{
+		Label:    "Choose TLS certificate key. Empty if not using HTTPS.",
+		Default:  cfg.TLSKey,
+		Validate: pathIsReadable,
+	}
+	if promptTLSKeyString, err := promptTLSKey.Run(); err == nil {
+		cfg.TLSKey = promptTLSKeyString
 	}
 	// Write it down
 	if err := write(cfg); err != nil {
