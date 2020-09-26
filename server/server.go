@@ -304,19 +304,15 @@ func New(cfg *config.Config) (*Server, error) {
 		}
 		app.stopChannel <- true
 	}()
-	// Receive handler (receives file from caller)
 	go func() {
-		// Check if TLS or not
 		netListener := tcpKeepAliveListener{listener.(*net.TCPListener)}
 		if cfg.Secure {
-			// TLS
 			if err := httpserver.ServeTLS(netListener, cfg.TLSCert, cfg.TLSKey); err != http.ErrServerClosed {
-				log.Fatalln(err)
+				log.Fatalln("error starting the server:", err)
 			}
 		} else {
-			// No TLD
 			if err := httpserver.Serve(netListener); err != http.ErrServerClosed {
-				log.Fatalln(err)
+				log.Fatalln("error starting the server", err)
 			}
 		}
 	}()
@@ -335,7 +331,7 @@ func openBrowser(url string) {
 	case "darwin":
 		err = exec.Command("open", url).Start()
 	default:
-		err = fmt.Errorf("Failed to open browser on platform: %s", runtime.GOOS)
+		err = fmt.Errorf("failed to open browser on platform: %s", runtime.GOOS)
 	}
 	if err != nil {
 		log.Fatal(err)

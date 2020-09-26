@@ -9,7 +9,6 @@ import (
 	"os/user"
 	"path/filepath"
 	"strconv"
-	"strings"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/claudiodangelis/qrcp/util"
@@ -206,17 +205,7 @@ func Wizard(path string, listAllInterfaces bool) error {
 		if input == "" {
 			return nil
 		}
-		usr, _ := user.Current()
-		dir := usr.HomeDir
-		if input == "~" {
-			// In case of "~", which won't be caught by the "else if"
-			input = dir
-		} else if strings.HasPrefix(input, "~/") {
-			// Use strings.HasPrefix so we don't match paths like
-			// "/something/~/something/"
-			input = filepath.Join(dir, input[2:])
-		}
-		path, err := filepath.Abs(input)
+		path, err := filepath.Abs(util.Expand(input))
 		if err != nil {
 			return err
 		}
@@ -237,7 +226,7 @@ func Wizard(path string, listAllInterfaces bool) error {
 		Validate: pathIsReadable,
 	}
 	if promptTLSCertString, err := promptTLSCert.Run(); err == nil {
-		cfg.TLSCert = promptTLSCertString
+		cfg.TLSCert = util.Expand(promptTLSCertString)
 	}
 	// TLS key
 	promptTLSKey := promptui.Prompt{
@@ -246,7 +235,7 @@ func Wizard(path string, listAllInterfaces bool) error {
 		Validate: pathIsReadable,
 	}
 	if promptTLSKeyString, err := promptTLSKey.Run(); err == nil {
-		cfg.TLSKey = promptTLSKeyString
+		cfg.TLSKey = util.Expand(promptTLSKeyString)
 	}
 	// Write it down
 	if err := write(cfg); err != nil {
@@ -331,9 +320,14 @@ func New(path string, opts Options) (Config, error) {
 	if opts.Path != "" {
 		cfg.Path = opts.Path
 	}
-	cfg.Secure = opts.Secure
-	cfg.TLSCert = opts.TLSCert
-	cfg.TLSKey = opts.TLSKey
-	fmt.Println(cfg.Secure)
+	if opts.Secure {
+		cfg.Secure = true
+	}
+	if opts.TLSCert != "" {
+		cfg.TLSCert = opts.TLSCert
+	}
+	if opts.TLSKey != "" {
+		cfg.TLSKey = opts.TLSKey
+	}
 	return cfg, nil
 }
