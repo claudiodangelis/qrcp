@@ -40,6 +40,8 @@ type Options struct {
 	Interactive       bool
 	ListAllInterfaces bool
 	Secure            bool
+	TLSCert           string
+	TLSKey            string
 }
 
 func chooseInterface(opts Options) (string, error) {
@@ -330,8 +332,8 @@ func New(path string, opts Options) (Config, error) {
 		cfg.Path = opts.Path
 	}
 	cfg.Secure = opts.Secure
-	cfg.TLSCert = ""
-	cfg.TLSKey = ""
+	cfg.TLSCert = opts.TLSCert
+	cfg.TLSKey = opts.TLSKey
 	fmt.Println(cfg.Secure)
 	return cfg, nil
 }

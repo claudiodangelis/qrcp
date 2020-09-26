@@ -25,6 +25,8 @@ func sendCmdFunc(command *cobra.Command, args []string) error {
 		KeepAlive:         keepaliveFlag,
 		ListAllInterfaces: listallinterfacesFlag,
 		Secure:            secureFlag,
+		TLSCert:           tlscertFlag,
+		TLSKey:            tlskeyFlag,
 	}
 	cfg, err := config.New(configFlag, configOptions)
 	if err != nil {
