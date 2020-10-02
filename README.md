@@ -247,6 +247,19 @@ Pass the `--fqdn` (or `-d`) to use a fully qualified domain name instead of the 
 qrcp --fqdn example.com -i any -p 8080 MyRemoteDocument.pdf
 ```
 
+### HTTPS
+
+**qrcp** supports secure file transfers with HTTPS. To enable secure transfers you need a TLS certificate and the associated key.
+
+You can choose the path to the TLS certificate and keys from the `qrcp config` wizard, or, if you want, you can pass the `--tls-cert` and `--tls-key`:
+
+```sh
+qrcp --tls-cert /path/to/cert.pem --tls-key /path/to/cert.key MyDocument
+```
+
+A `--secure` flag is available too, you can use it to override the default value.
+
+
 ### Open in browser
 
 If you need a QR to be printed outside your terminal, you can pass the `--browser` flag. With this flag, `qrcp` will still print the QR code to the terminal, but it will also open a new window of your default browser to show the QR code.
