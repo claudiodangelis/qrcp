@@ -3,7 +3,6 @@ package server
 import (
 	"context"
 	"fmt"
-	"github.com/claudiodangelis/qrcp/qr"
 	"image/jpeg"
 	"io"
 	"log"
@@ -16,6 +15,8 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+
+	"github.com/claudiodangelis/qrcp/qr"
 
 	"github.com/claudiodangelis/qrcp/config"
 	"github.com/claudiodangelis/qrcp/pages"
@@ -152,36 +153,34 @@ func New(cfg *config.Config) (*Server, error) {
 	// Create handlers
 	// Send handler (sends file to caller)
 	http.HandleFunc("/send/"+path, func(w http.ResponseWriter, r *http.Request) {
-		if cookie.Value == "" {
-			if !strings.HasPrefix(r.Header.Get("User-Agent"), "Mozilla") {
-				http.Error(w, "", http.StatusOK)
-				return
-			}
-			initCookie.Do(func() {
-				value, err := util.GetSessionID()
-				if err != nil {
-					log.Println("Unable to generate session ID", err)
-					app.stopChannel <- true
+		if strings.HasPrefix(r.Header.Get("User-Agent"), "Mozilla") {
+			if cookie.Value == "" {
+				initCookie.Do(func() {
+					value, err := util.GetSessionID()
+					if err != nil {
+						log.Println("Unable to generate session ID", err)
+						app.stopChannel <- true
+						return
+					}
+					cookie.Value = value
+					http.SetCookie(w, &cookie)
+				})
+			} else {
+				// Check for the expected cookie and value
+				// If it is missing or doesn't match
+				// return a 404 status
+				rcookie, err := r.Cookie(cookie.Name)
+				if err != nil || rcookie.Value != cookie.Value {
+					http.Error(w, "", http.StatusNotFound)
 					return
 				}
-				cookie.Value = value
-				http.SetCookie(w, &cookie)
-			})
-		} else {
-			// Check for the expected cookie and value
-			// If it is missing or doesn't match
-			// return a 404 status
-			rcookie, err := r.Cookie(cookie.Name)
-			if err != nil || rcookie.Value != cookie.Value {
-				http.Error(w, "", http.StatusNotFound)
-				return
+				// If the cookie exits and matches
+				// this is an aadditional request.
+				// Increment the waitgroup
+				waitgroup.Add(1)
 			}
-			// If the cookie exits and matches
-			// this is an aadditional request.
-			// Increment the waitgroup
-			waitgroup.Add(1)
 		}
-		// Remove connection from the waitfroup when done
+		// Remove connection from the waitgroup when done
 		defer waitgroup.Done()
 		w.Header().Set("Content-Disposition", "attachment; filename="+
 			app.payload.Filename)
