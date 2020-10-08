@@ -22,6 +22,9 @@ type Config struct {
 	Port      int    `json:"port"`
 	KeepAlive bool   `json:"keepAlive"`
 	Path      string `json:"path"`
+	Secure    bool   `json:"secure"`
+	TLSKey    string `json:"tls-key"`
+	TLSCert   string `json:"tls-cert"`
 }
 
 var configFile string
@@ -35,6 +38,9 @@ type Options struct {
 	KeepAlive         bool
 	Interactive       bool
 	ListAllInterfaces bool
+	Secure            bool
+	TLSCert           string
+	TLSKey            string
 }
 
 func chooseInterface(opts Options) (string, error) {
@@ -181,6 +187,55 @@ func Wizard(path string, listAllInterfaces bool) error {
 		} else {
 			cfg.KeepAlive = false
 		}
+
+	}
+	// TLS
+	promptSecure := promptui.Select{
+		Items: []string{"No", "Yes"},
+		Label: "Should files be securely transferred with HTTPS?",
+	}
+	if _, promptSecureResultString, err := promptSecure.Run(); err == nil {
+		if promptSecureResultString == "Yes" {
+			cfg.Secure = true
+		} else {
+			cfg.Secure = false
+		}
+	}
+	pathIsReadable := func(input string) error {
+		if input == "" {
+			return nil
+		}
+		path, err := filepath.Abs(util.Expand(input))
+		if err != nil {
+			return err
+		}
+		fmt.Println(path)
+		fileinfo, err := os.Stat(path)
+		if err != nil {
+			return err
+		}
+		if fileinfo.Mode().IsDir() {
+			return fmt.Errorf(fmt.Sprintf("%s is a directory", input))
+		}
+		return nil
+	}
+	// TLS Cert
+	promptTLSCert := promptui.Prompt{
+		Label:    "Choose TLS certificate path. Empty if not using HTTPS.",
+		Default:  cfg.TLSCert,
+		Validate: pathIsReadable,
+	}
+	if promptTLSCertString, err := promptTLSCert.Run(); err == nil {
+		cfg.TLSCert = util.Expand(promptTLSCertString)
+	}
+	// TLS key
+	promptTLSKey := promptui.Prompt{
+		Label:    "Choose TLS certificate key. Empty if not using HTTPS.",
+		Default:  cfg.TLSKey,
+		Validate: pathIsReadable,
+	}
+	if promptTLSKeyString, err := promptTLSKey.Run(); err == nil {
+		cfg.TLSKey = util.Expand(promptTLSKeyString)
 	}
 	// Write it down
 	if err := write(cfg); err != nil {
@@ -264,6 +319,15 @@ func New(path string, opts Options) (Config, error) {
 	}
 	if opts.Path != "" {
 		cfg.Path = opts.Path
+	}
+	if opts.Secure {
+		cfg.Secure = true
+	}
+	if opts.TLSCert != "" {
+		cfg.TLSCert = opts.TLSCert
+	}
+	if opts.TLSKey != "" {
+		cfg.TLSKey = opts.TLSKey
 	}
 	return cfg, nil
 }

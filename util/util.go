@@ -8,12 +8,31 @@ import (
 	"io/ioutil"
 	"net"
 	"os"
+	"os/user"
+	"path/filepath"
 	"regexp"
+	"runtime"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/jhoonb/archivex"
 )
+
+// Expand tilde in paths
+func Expand(input string) string {
+	if runtime.GOOS == "windows" {
+		return input
+	}
+	usr, _ := user.Current()
+	dir := usr.HomeDir
+	if input == "~" {
+		input = dir
+	} else if strings.HasPrefix(input, "~/") {
+		input = filepath.Join(dir, input[2:])
+	}
+	return input
+}
 
 // ZipFiles and return the resulting zip's filename
 func ZipFiles(files []string) (string, error) {
