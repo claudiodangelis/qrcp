@@ -9,7 +9,6 @@ func init() {
 	rootCmd.AddCommand(receiveCmd)
 	rootCmd.AddCommand(configCmd)
 	rootCmd.AddCommand(versionCmd)
-	rootCmd.AddCommand(completionCmd)
 	// Global command flags
 	rootCmd.PersistentFlags().BoolVarP(&quietFlag, "quiet", "q", false, "only print errors")
 	rootCmd.PersistentFlags().BoolVarP(&keepaliveFlag, "keep-alive", "k", false, "keep server alive after transferring")
