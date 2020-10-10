@@ -46,7 +46,7 @@ Download the latest Linux .tar.gz archive from the [Releases](https://github.com
 
 ```sh
 # Extract the archive
-tar xf qrcp_*.tar.gz
+tar xf qrcp*
 # Copy the binary
 sudo mv qrcp /usr/local/bin
 # Set execution permissions
