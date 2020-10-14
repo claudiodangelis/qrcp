@@ -11,7 +11,7 @@ You can support development by donating with  [![Buy Me A Coffee](https://www.bu
 Join the **Telegram channel** [qrcp_dev](https://t.me/qrcp_dev) for news about the development.
 
 ## How does it work?
-![Screenshot](screenshot.png)
+![Screenshot](docs/screenshot.png)
 
 `qrcp` binds a web server to the address of your Wi-Fi network interface on a random port and creates a handler for it. The default handler serves the content and exits the program when the transfer is complete. When used to receive files, `qrcp` serves an upload page and handles the transfer.
 
@@ -26,11 +26,11 @@ Most QR apps can detect URLs in decoded text and act accordingly (i.e. open the 
 
 Send files to mobile:
 
-![screenshot](demo.gif)
+![screenshot](docs/demo.gif)
 
 Receive files from mobile:
 
-![Screenshot](mobile-demo.gif)
+![Screenshot](docs/mobile-demo.gif)
 
 # Installation
 
