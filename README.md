@@ -32,6 +32,10 @@ Receive files from mobile:
 
 ![Screenshot](docs/mobile-demo.gif)
 
+## Tutorials
+
+- [Secure transfers with mkcert](https://claudiodangelis.com/qrcp/tutorials/secure-transfers-with-mkcert)
+
 # Installation
 
 ## Install the latest development version with Go
@@ -317,6 +321,7 @@ You will need to start a new shell for this setup to take effect.
 To load completions for each session, execute once:
 
     $ qrcp completion fish > ~/.config/fish/completions/qrcp.fish
+
 
 ## Authors
 
