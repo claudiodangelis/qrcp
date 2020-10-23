@@ -263,6 +263,7 @@ qrcp --tls-cert /path/to/cert.pem --tls-key /path/to/cert.key MyDocument
 
 A `--secure` flag is available too, you can use it to override the default value.
 
+### Default output directory
 
 ### Open in browser
 
