@@ -3,6 +3,7 @@ module github.com/claudiodangelis/qrcp
 go 1.14
 
 require (
+	github.com/adrg/xdg v0.3.2
 	github.com/asaskevich/govalidator v0.0.0-20200108200545-475eaeb16496
 	github.com/fatih/color v1.9.0 // indirect
 	github.com/glendc/go-external-ip v0.0.0-20170425150139-139229dcdddd

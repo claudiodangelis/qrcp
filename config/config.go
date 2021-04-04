@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"os/user"
 	"path/filepath"
 	"strconv"
 
+	"github.com/adrg/xdg"
 	"github.com/asaskevich/govalidator"
 	"github.com/claudiodangelis/qrcp/util"
 	"github.com/manifoldco/promptui"
@@ -261,14 +261,28 @@ func write(cfg Config) error {
 	return nil
 }
 
+func pathExists(path string) bool {
+    _, err := os.Stat(path)
+    return !os.IsNotExist(err)
+}
+
 func setConfigFile(path string) error {
+	// If not explicitly set then use the default
 	if path == "" {
-		// Use default
-		currentUser, err := user.Current()
-		if err != nil {
-			return err
+		// First try legacy location
+		var legacyPath = filepath.Join(xdg.Home, ".qrcp.json")
+		if pathExists(legacyPath) {
+			configFile = legacyPath
+			return nil
 		}
-		configFile = filepath.Join(currentUser.HomeDir, ".qrcp.json")
+
+		// Else use modern location, first ensuring that the directory
+		// exists
+		var modernDir = filepath.Join(xdg.ConfigHome, "qrcp")
+		if !pathExists(modernDir) {
+			os.Mkdir(modernDir, 0744)
+		}
+		configFile = filepath.Join(modernDir, "config.json")
 		return nil
 	}
 	absolutepath, err := filepath.Abs(path)
