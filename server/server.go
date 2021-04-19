@@ -18,6 +18,7 @@ import (
 	"sync"
 
 	"github.com/claudiodangelis/qrcp/qr"
+	"github.com/eiannone/keyboard"
 
 	"github.com/claudiodangelis/qrcp/config"
 	"github.com/claudiodangelis/qrcp/pages"
@@ -89,8 +90,14 @@ func (s Server) Wait() error {
 	return nil
 }
 
+// Shutdown the server
+func (s Server) Shutdown() {
+	s.stopChannel <- true
+}
+
 // New instance of the server
 func New(cfg *config.Config) (*Server, error) {
+
 	app := &Server{}
 	// Get the address of the configured interface to bind the server to
 	bind, err := util.GetInterfaceAddress(cfg.Interface)
@@ -156,12 +163,26 @@ func New(cfg *config.Config) (*Server, error) {
 	app.stopChannel = make(chan bool)
 	// Create cookie used to verify request is coming from first client to connect
 	cookie := http.Cookie{Name: "qrcp", Value: ""}
-	// Gracefully shutdown when an OS signal is received
+	// Gracefully shutdown when an OS signal is received or when "q" is pressed
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt)
 	go func() {
 		<-sig
 		app.stopChannel <- true
+	}()
+	if err := keyboard.Open(); err != nil {
+		panic(err)
+	}
+	defer func() {
+		keyboard.Close()
+	}()
+	go func() {
+		for {
+			char, _, _ := keyboard.GetKey()
+			if string(char) == "q" {
+				app.stopChannel <- true
+			}
+		}
 	}()
 	// The handler adds and removes from the sync.WaitGroup
 	// When the group is zero all requests are completed

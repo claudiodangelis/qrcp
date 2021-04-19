@@ -38,7 +38,7 @@ func sendCmdFunc(command *cobra.Command, args []string) error {
 	}
 	// Sets the payload
 	srv.Send(payload)
-	log.Print("Scan the following URL with a QR reader to start the file transfer:")
+	log.Print("Scan the following URL with a QR reader to start the file transfer, press CTRL+C or q to exit:")
 	log.Print(srv.SendURL)
 	qr.RenderString(srv.SendURL)
 	if browserFlag {
