@@ -4,6 +4,7 @@ go 1.14
 
 require (
 	github.com/asaskevich/govalidator v0.0.0-20200108200545-475eaeb16496
+	github.com/eiannone/keyboard v0.0.0-20200508000154-caf4b762e807
 	github.com/fatih/color v1.9.0 // indirect
 	github.com/glendc/go-external-ip v0.0.0-20170425150139-139229dcdddd
 	github.com/jhoonb/archivex v0.0.0-20180718040744-0488e4ce1681

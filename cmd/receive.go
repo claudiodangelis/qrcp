@@ -36,7 +36,7 @@ func receiveCmdFunc(command *cobra.Command, args []string) error {
 		return err
 	}
 	// Prints the URL to scan to screen
-	log.Print("Scan the following URL with a QR reader to start the file transfer:")
+	log.Print("Scan the following URL with a QR reader to start the file transfer, press CTRL+C or q to exit:")
 	log.Print(srv.ReceiveURL)
 	// Renders the QR
 	qr.RenderString(srv.ReceiveURL)
