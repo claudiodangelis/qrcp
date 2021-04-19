@@ -25,6 +25,7 @@ type Config struct {
 	Secure    bool   `json:"secure"`
 	TLSKey    string `json:"tls-key"`
 	TLSCert   string `json:"tls-cert"`
+	Output    string `json:"output"`
 }
 
 var configFile string
@@ -41,6 +42,7 @@ type Options struct {
 	Secure            bool
 	TLSCert           string
 	TLSKey            string
+	Output            string
 }
 
 func chooseInterface(opts Options) (string, error) {
@@ -162,6 +164,34 @@ func Wizard(path string, listAllInterfaces bool) error {
 	if promptPortResultString, err := promptPort.Run(); err == nil {
 		if port, err := strconv.ParseUint(promptPortResultString, 10, 16); err == nil {
 			cfg.Port = int(port)
+		}
+	}
+	validateIsDir := func(input string) error {
+		if input == "" {
+			return nil
+		}
+		path, err := filepath.Abs(input)
+		if err != nil {
+			return err
+		}
+		f, err := os.Stat(path)
+		if err != nil {
+			return err
+		}
+		if !f.IsDir() {
+			return errors.New("path is not a directory")
+		}
+		return nil
+	}
+	promptOutput := promptui.Prompt{
+		Label:    "Choose default output directory for received files, empty does not set a default",
+		Default:  cfg.Output,
+		Validate: validateIsDir,
+	}
+
+	if promptOutputResultString, err := promptOutput.Run(); err == nil {
+		if promptOutputResultString != "" {
+			cfg.Output = promptOutputResultString
 		}
 	}
 
@@ -328,6 +358,9 @@ func New(path string, opts Options) (Config, error) {
 	}
 	if opts.TLSKey != "" {
 		cfg.TLSKey = opts.TLSKey
+	}
+	if opts.Output != "" {
+		cfg.Output = opts.Output
 	}
 	return cfg, nil
 }

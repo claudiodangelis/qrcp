@@ -22,6 +22,7 @@ func receiveCmdFunc(command *cobra.Command, args []string) error {
 		Secure:            secureFlag,
 		TLSCert:           tlscertFlag,
 		TLSKey:            tlskeyFlag,
+		Output:            outputFlag,
 	}
 	cfg, err := config.New(configFlag, configOptions)
 	if err != nil {
@@ -33,7 +34,7 @@ func receiveCmdFunc(command *cobra.Command, args []string) error {
 		return err
 	}
 	// Sets the output directory
-	if err := srv.ReceiveTo(outputFlag); err != nil {
+	if err := srv.ReceiveTo(cfg.Output); err != nil {
 		return err
 	}
 	// Prints the URL to scan to screen
@@ -68,7 +69,7 @@ var receiveCmd = &cobra.Command{
 	Use:     "receive",
 	Aliases: []string{"r"},
 	Short:   "Receive one or more files",
-	Long:    "Receive one or more files. If not specified with the --output flag, the current working directory will be used as a destination.",
+	Long:    "Receive one or more files. The destination directory can be set with the config wizard, or by passing the --output flag. If none of the above are set, the current working directory will be used as a destination directory.",
 	Example: `# Receive files in the current directory
 qrcp receive
 # Receive files in a specific directory
