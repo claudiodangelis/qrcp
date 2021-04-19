@@ -53,8 +53,8 @@ func receiveCmdFunc(command *cobra.Command, args []string) error {
 	}()
 	go func() {
 		for {
-			char, _, _ := keyboard.GetKey()
-			if string(char) == "q" {
+			char, key, _ := keyboard.GetKey()
+			if string(char) == "q" || key == keyboard.KeyCtrlC {
 				srv.Shutdown()
 			}
 		}
