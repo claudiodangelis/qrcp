@@ -191,7 +191,8 @@ func Wizard(path string, listAllInterfaces bool) error {
 
 	if promptOutputResultString, err := promptOutput.Run(); err == nil {
 		if promptOutputResultString != "" {
-			cfg.Output = promptOutputResultString
+			p, _ := filepath.Abs(promptOutputResultString)
+			cfg.Output = p
 		}
 	}
 
