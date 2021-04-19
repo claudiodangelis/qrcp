@@ -5,6 +5,7 @@ import (
 	"github.com/claudiodangelis/qrcp/logger"
 	"github.com/claudiodangelis/qrcp/qr"
 	"github.com/claudiodangelis/qrcp/server"
+	"github.com/eiannone/keyboard"
 	"github.com/spf13/cobra"
 )
 
@@ -36,13 +37,27 @@ func receiveCmdFunc(command *cobra.Command, args []string) error {
 		return err
 	}
 	// Prints the URL to scan to screen
-	log.Print("Scan the following URL with a QR reader to start the file transfer, press CTRL+C or q to exit:")
+	log.Print(`Scan the following URL with a QR reader to start the file transfer, press CTRL+C or "q" to exit:`)
 	log.Print(srv.ReceiveURL)
 	// Renders the QR
 	qr.RenderString(srv.ReceiveURL)
 	if browserFlag {
 		srv.DisplayQR(srv.ReceiveURL)
 	}
+	if err := keyboard.Open(); err != nil {
+		panic(err)
+	}
+	defer func() {
+		keyboard.Close()
+	}()
+	go func() {
+		for {
+			char, _, _ := keyboard.GetKey()
+			if string(char) == "q" {
+				srv.Shutdown()
+			}
+		}
+	}()
 	if err := srv.Wait(); err != nil {
 		return err
 	}

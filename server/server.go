@@ -18,7 +18,6 @@ import (
 	"sync"
 
 	"github.com/claudiodangelis/qrcp/qr"
-	"github.com/eiannone/keyboard"
 
 	"github.com/claudiodangelis/qrcp/config"
 	"github.com/claudiodangelis/qrcp/pages"
@@ -169,20 +168,6 @@ func New(cfg *config.Config) (*Server, error) {
 	go func() {
 		<-sig
 		app.stopChannel <- true
-	}()
-	if err := keyboard.Open(); err != nil {
-		panic(err)
-	}
-	defer func() {
-		keyboard.Close()
-	}()
-	go func() {
-		for {
-			char, _, _ := keyboard.GetKey()
-			if string(char) == "q" {
-				app.stopChannel <- true
-			}
-		}
 	}()
 	// The handler adds and removes from the sync.WaitGroup
 	// When the group is zero all requests are completed
