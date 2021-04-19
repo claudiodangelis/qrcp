@@ -5,6 +5,7 @@ import (
 	"github.com/claudiodangelis/qrcp/logger"
 	"github.com/claudiodangelis/qrcp/payload"
 	"github.com/claudiodangelis/qrcp/qr"
+	"github.com/eiannone/keyboard"
 
 	"github.com/claudiodangelis/qrcp/server"
 	"github.com/spf13/cobra"
@@ -38,13 +39,26 @@ func sendCmdFunc(command *cobra.Command, args []string) error {
 	}
 	// Sets the payload
 	srv.Send(payload)
-	log.Print("Scan the following URL with a QR reader to start the file transfer, press CTRL+C or q to exit:")
+	log.Print(`Scan the following URL with a QR reader to start the file transfer, press CTRL+C or "q" to exit:`)
 	log.Print(srv.SendURL)
 	qr.RenderString(srv.SendURL)
 	if browserFlag {
 		srv.DisplayQR(srv.SendURL)
 	}
-
+	if err := keyboard.Open(); err != nil {
+		panic(err)
+	}
+	defer func() {
+		keyboard.Close()
+	}()
+	go func() {
+		for {
+			char, _, _ := keyboard.GetKey()
+			if string(char) == "q" {
+				srv.Shutdown()
+			}
+		}
+	}()
 	if err := srv.Wait(); err != nil {
 		return err
 	}
