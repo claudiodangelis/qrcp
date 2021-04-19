@@ -19,7 +19,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&interfaceFlag, "interface", "i", "", "network interface to use for the server")
 	rootCmd.PersistentFlags().StringVarP(&fqdnFlag, "fqdn", "d", "", "fully-qualified domain name to use for the resulting URLs")
 	rootCmd.PersistentFlags().BoolVarP(&zipFlag, "zip", "z", false, "zip content before transferring")
-	rootCmd.PersistentFlags().StringVarP(&configFlag, "config", "c", "", "path to the config file, defaults to $HOME/.qrcp")
+	rootCmd.PersistentFlags().StringVarP(&configFlag, "config", "c", "", "path to the config file, defaults to $XDG_CONFIG_HOME/qrcp/config.json")
 	rootCmd.PersistentFlags().BoolVarP(&browserFlag, "browser", "b", false, "display the QR code in a browser window")
 	rootCmd.PersistentFlags().BoolVarP(&secureFlag, "secure", "s", false, "use https connection")
 	rootCmd.PersistentFlags().StringVar(&tlscertFlag, "tls-cert", "", "path to TLS certificate to use with HTTPS")

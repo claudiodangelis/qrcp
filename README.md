@@ -188,7 +188,7 @@ qrcp --list-all-interfaces config
 
 ### Configuration File
 
-The default configuration file is stored in $HOME/.qrcp.json, however, you can specify the location of the config file by passing the `--config` flag:
+The default configuration file is stored in $XDG_CONFIG_HOME/qrcp/config.json, however, you can specify the location of the config file by passing the `--config` flag:
 
 ```sh
 qrcp --config /tmp/qrcp.json MyDocument.pdf
