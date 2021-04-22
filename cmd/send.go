@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/claudiodangelis/qrcp/config"
 	"github.com/claudiodangelis/qrcp/logger"
 	"github.com/claudiodangelis/qrcp/payload"
@@ -45,20 +47,21 @@ func sendCmdFunc(command *cobra.Command, args []string) error {
 	if browserFlag {
 		srv.DisplayQR(srv.SendURL)
 	}
-	if err := keyboard.Open(); err != nil {
-		panic(err)
-	}
-	defer func() {
-		keyboard.Close()
-	}()
-	go func() {
-		for {
-			char, key, _ := keyboard.GetKey()
-			if string(char) == "q" || key == keyboard.KeyCtrlC {
-				srv.Shutdown()
+	if err := keyboard.Open(); err == nil {
+		defer func() {
+			keyboard.Close()
+		}()
+		go func() {
+			for {
+				char, key, _ := keyboard.GetKey()
+				if string(char) == "q" || key == keyboard.KeyCtrlC {
+					srv.Shutdown()
+				}
 			}
-		}
-	}()
+		}()
+	} else {
+		log.Print(fmt.Sprintf("Warning: keyboard not detected: %v", err))
+	}
 	if err := srv.Wait(); err != nil {
 		return err
 	}
