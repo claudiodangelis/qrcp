@@ -132,7 +132,7 @@ func FindIP(iface net.Interface) (string, error) {
 			}
 			// Use IPv6 only if an IPv4 hasn't been found yet.
 			// This is eventually overwritten with an IPv4, if found (see above)
-			if ip != "" {
+			if ip == "" {
 				ip = "[" + ipnet.IP.String() + "]"
 			}
 		}
