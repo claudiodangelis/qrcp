@@ -116,6 +116,7 @@ func GetInterfaceAddress(ifaceString string) (string, error) {
 
 // FindIP returns the IP address of the passed interface, and an error
 func FindIP(iface net.Interface) (string, error) {
+	var ip string
 	addrs, err := iface.Addrs()
 	if err != nil {
 		return "", err
@@ -126,12 +127,20 @@ func FindIP(iface net.Interface) (string, error) {
 				continue
 			}
 			if ipnet.IP.To4() != nil {
-				return ipnet.IP.String(), nil
+				ip = ipnet.IP.String()
+				continue
 			}
-			return "[" + ipnet.IP.String() + "]", nil
+			// Use IPv6 only if an IPv4 hasn't been found yet.
+			// This is eventually overwritten with an IPv4, if found (see above)
+			if ip != "" {
+				ip = "[" + ipnet.IP.String() + "]"
+			}
 		}
 	}
-	return "", errors.New("Unable to find an IP for this interface")
+	if ip == "" {
+		return "", errors.New("Unable to find an IP for this interface")
+	}
+	return ip, nil
 }
 
 func filterInterfaces(ifaces []net.Interface) []net.Interface {
