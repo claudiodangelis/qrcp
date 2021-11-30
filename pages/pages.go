@@ -138,7 +138,8 @@ var Upload = `
             </svg>
         </div>
         <div class="row">
-            <form id="upload-form">
+            <form id="upload-form" onsubmit="submit.value = 'Transferring file, please wait.';
+                submit.disabled = true; return true;">
                 <h3>Send files or text</h3>
                 <div class="form-group">
                     <label for="files">
