@@ -358,6 +358,18 @@ func New(path string, opts Options) (Config, error) {
 			return cfg, errors.New("invalid value for port")
 		}
 		cfg.Port = opts.Port
+	} else {
+		val, ok := os.LookupEnv("QRCP_PORT")
+		if ok {
+			envPort, err := strconv.Atoi(val)
+			if err != nil {
+				return cfg, errors.New("could not parse port from environment variable")
+			}
+			if envPort > 65535 {
+				return cfg, errors.New("invalid value for port")
+			}
+			cfg.Port = envPort
+		}
 	}
 	if opts.KeepAlive {
 		cfg.KeepAlive = true
