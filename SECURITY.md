@@ -10,4 +10,4 @@
 
 ## Reporting a Vulnerability
 
-If you have founda security issue, please immediately contact the main maintainer of the project at claudiodangelis@gmail.com.
+If you have found a security issue, please immediately contact the main maintainer of the project at claudiodangelis@gmail.com.
