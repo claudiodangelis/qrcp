@@ -47,13 +47,21 @@ $ qrcp completion fish > ~/.config/fish/completions/qrcp.fish
 	Run: func(cmd *cobra.Command, args []string) {
 		switch args[0] {
 		case "bash":
-			cmd.Root().GenBashCompletion(os.Stdout)
+			if err := cmd.Root().GenBashCompletion(os.Stdout); err != nil {
+				panic(err)
+			}
 		case "zsh":
-			cmd.Root().GenZshCompletion(os.Stdout)
+			if err := cmd.Root().GenZshCompletion(os.Stdout); err != nil {
+				panic(err)
+			}
 		case "fish":
-			cmd.Root().GenFishCompletion(os.Stdout, true)
+			if err := cmd.Root().GenFishCompletion(os.Stdout, true); err != nil {
+				panic(err)
+			}
 		case "powershell":
-			cmd.Root().GenPowerShellCompletion(os.Stdout)
+			if err := cmd.Root().GenPowerShellCompletion(os.Stdout); err != nil {
+				panic(err)
+			}
 		}
 	},
 }
