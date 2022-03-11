@@ -54,7 +54,7 @@ func chooseInterface(opts Options) (string, error) {
 		return "", errors.New("no interfaces found")
 	}
 
-	if len(interfaces) == 1 && opts.Interactive == false {
+	if len(interfaces) == 1 && !opts.Interactive {
 		for name := range interfaces {
 			fmt.Printf("only one interface found: %s, using this one\n", name)
 			return name, nil
@@ -134,7 +134,7 @@ func Wizard(path string, listAllInterfaces bool) error {
 	cfg.Interface = iface
 	// Ask for fully qualified domain name
 	validateFqdn := func(input string) error {
-		if input != "" && govalidator.IsDNSName(input) == false {
+		if input != "" && !govalidator.IsDNSName(input) {
 			return errors.New("invalid domain")
 		}
 		return nil
@@ -151,7 +151,7 @@ func Wizard(path string, listAllInterfaces bool) error {
 	validatePort := func(input string) error {
 		_, err := strconv.ParseUint(input, 10, 16)
 		if err != nil {
-			return errors.New("Invalid number")
+			return errors.New("invalid number")
 		}
 		return nil
 	}
@@ -311,7 +311,9 @@ func setConfigFile(path string) error {
 		// exists
 		var configDir = filepath.Join(xdg.ConfigHome, "qrcp")
 		if !pathExists(configDir) {
-			os.Mkdir(configDir, 0744)
+			if err := os.Mkdir(configDir, 0744); err != nil {
+				panic(err)
+			}
 		}
 		configFile = filepath.Join(configDir, "config.json")
 		return nil
@@ -348,7 +350,7 @@ func New(path string, opts Options) (Config, error) {
 		cfg.Interface = opts.Interface
 	}
 	if opts.FQDN != "" {
-		if govalidator.IsDNSName(opts.FQDN) == false {
+		if !govalidator.IsDNSName(opts.FQDN) {
 			return cfg, errors.New("invalid value for fully-qualified domain name")
 		}
 		cfg.FQDN = opts.FQDN

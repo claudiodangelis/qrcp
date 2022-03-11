@@ -72,7 +72,9 @@ func (s *Server) DisplayQR(url string) {
 	qrImg := qr.RenderImage(url)
 	http.HandleFunc(PATH, func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "image/jpeg")
-		jpeg.Encode(w, qrImg, nil)
+		if err := jpeg.Encode(w, qrImg, nil); err != nil {
+			panic(err)
+		}
 	})
 	openBrowser(s.BaseURL + PATH)
 }
@@ -84,7 +86,9 @@ func (s Server) Wait() error {
 		log.Println(err)
 	}
 	if s.payload.DeleteAfterTransfer {
-		s.payload.Delete()
+		if err := s.payload.Delete(); err != nil {
+			panic(err)
+		}
 	}
 	return nil
 }
@@ -156,7 +160,7 @@ func New(cfg *config.Config) (*Server, error) {
 				tls.TLS_RSA_WITH_AES_256_CBC_SHA,
 			},
 		},
-		TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler), 0),
+		TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler)),
 	}
 	// Create channel to send message to stop server
 	app.stopChannel = make(chan bool)
@@ -293,7 +297,7 @@ func New(cfg *config.Config) (*Server, error) {
 			// Set the value of the variable to the actually transferred files
 			htmlVariables.File = strings.Join(transferredFiles, ", ")
 			serveTemplate("done", pages.Done, w, htmlVariables)
-			if cfg.KeepAlive == false {
+			if !cfg.KeepAlive {
 				app.stopChannel <- true
 			}
 		case "GET":

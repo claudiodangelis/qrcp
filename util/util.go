@@ -10,7 +10,6 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
-	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
@@ -45,14 +44,18 @@ func ZipFiles(files []string) (string, error) {
 	if err := os.Rename(tmpfile.Name(), tmpfile.Name()+".zip"); err != nil {
 		return "", err
 	}
-	zip.Create(tmpfile.Name() + ".zip")
+	if err := zip.Create(tmpfile.Name() + ".zip"); err != nil {
+		return "", err
+	}
 	for _, filename := range files {
 		fileinfo, err := os.Stat(filename)
 		if err != nil {
 			return "", err
 		}
 		if fileinfo.IsDir() {
-			zip.AddAll(filename, true)
+			if err := zip.AddAll(filename, true); err != nil {
+				return "", err
+			}
 		} else {
 			file, err := os.Open(filename)
 			if err != nil {
@@ -138,24 +141,9 @@ func FindIP(iface net.Interface) (string, error) {
 		}
 	}
 	if ip == "" {
-		return "", errors.New("Unable to find an IP for this interface")
+		return "", errors.New("unable to find an IP for this interface")
 	}
 	return ip, nil
-}
-
-func filterInterfaces(ifaces []net.Interface) []net.Interface {
-	filtered := []net.Interface{}
-	var re = regexp.MustCompile(`^(veth|br\-|docker|lo|EHC|XHC|bridge|gif|stf|p2p|awdl|utun|tun|tap)`)
-	for _, iface := range ifaces {
-		if re.MatchString(iface.Name) {
-			continue
-		}
-		if iface.Flags&net.FlagUp == 0 {
-			continue
-		}
-		filtered = append(filtered, iface)
-	}
-	return filtered
 }
 
 // ReadFilenames from dir

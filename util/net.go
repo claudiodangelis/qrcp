@@ -16,7 +16,7 @@ func Interfaces(listAll bool) (map[string]string, error) {
 	}
 	var re = regexp.MustCompile(`^(veth|br\-|docker|lo|EHC|XHC|bridge|gif|stf|p2p|awdl|utun|tun|tap)`)
 	for _, iface := range ifaces {
-		if listAll == false && re.MatchString(iface.Name) {
+		if !listAll && re.MatchString(iface.Name) {
 			continue
 		}
 		if iface.Flags&net.FlagUp == 0 {
