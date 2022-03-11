@@ -354,22 +354,16 @@ func New(path string, opts Options) (Config, error) {
 		cfg.FQDN = opts.FQDN
 	}
 	if opts.Port != 0 {
-		if opts.Port > 65535 {
-			return cfg, errors.New("invalid value for port")
-		}
 		cfg.Port = opts.Port
-	} else {
-		val, ok := os.LookupEnv("QRCP_PORT")
-		if ok {
-			envPort, err := strconv.Atoi(val)
-			if err != nil {
-				return cfg, errors.New("could not parse port from environment variable")
-			}
-			if envPort > 65535 {
-				return cfg, errors.New("invalid value for port")
-			}
-			cfg.Port = envPort
+	} else if portVal, ok := os.LookupEnv("QRCP_PORT"); ok {
+		port, err := strconv.Atoi(portVal)
+		if err != nil {
+			return cfg, errors.New("could not parse port from environment variable QRCP_PORT")
 		}
+		cfg.Port = port
+	}
+	if cfg.Port != 0 && !govalidator.IsPort(fmt.Sprintf("%d", cfg.Port)) {
+		return cfg, fmt.Errorf("%d is not a valid port", cfg.Port)
 	}
 	if opts.KeepAlive {
 		cfg.KeepAlive = true
