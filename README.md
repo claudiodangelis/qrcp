@@ -39,7 +39,7 @@ Receive files from mobile:
 # Installation
 
 ## Install the latest development version with Go
-    
+
 _Note: it requires go 1.8_
 
     go get github.com/claudiodangelis/qrcp
@@ -97,7 +97,7 @@ qrcp --help
 
 Download the latest Windows .tar.gz archive from the [Releases page](https://github.com/claudiodangelis/qrcp/releases) and extract the EXE file.
 
-### Scoop 
+### Scoop
 
 If you use [Scoop](https://scoop.sh/) for package management on Windows, you can install qrcp with the following one-liner:
 
@@ -127,7 +127,7 @@ If you use [Homebrew](https://brew.sh) for package management on macOS, you can 
 ```
 brew install qrcp
 ```
-    
+
 # Usage
 
 ## Send files
@@ -190,7 +190,7 @@ qrcp config
 Note: if some network interfaces are not showing up, use the `--list-all-interfaces` flag to suppress the interfaces' filter.
 
 ```sh
-qrcp --list-all-interfaces config 
+qrcp --list-all-interfaces config
 ```
 
 
@@ -204,11 +204,19 @@ qrcp --config /tmp/qrcp.json MyDocument.pdf
 
 ### Port
 
-By default `qrcp` listens on a random port. Pass the `--port` (or `-p`) flag to choose a specific one:
+By default `qrcp` listens on a random port. Set the `QRCP_PORT` environment variable or pass the `--port` (or `-p`) flag to choose a specific one:
+
+```sh
+export QRCP_PORT=8080
+qrcp MyDocument
+```
+
+Or:
 
 ```sh
 qrcp --port 8080 MyDocument.pdf
 ```
+
 ### Network Interface
 
 `qrcp` will try to automatically find the suitable network interface to use for the transfers. If more than one suitable interface is found, it asks you to choose one.
@@ -224,7 +232,7 @@ qrcp -i tun0 MyDocument.dpf
 ```
 
 
-You can also use a special interface name, `any`, which binds the web server to `0.0.0.0`, making the web server visible by everyone on any network, even from an external network. 
+You can also use a special interface name, `any`, which binds the web server to `0.0.0.0`, making the web server visible by everyone on any network, even from an external network.
 
 This is useful when you want to transfer files from your Amazon EC2, Digital Ocean Droplet, Google Cloud Platform Compute Instance or any other VPS.
 
