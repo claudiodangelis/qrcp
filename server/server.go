@@ -214,7 +214,9 @@ func New(cfg *config.Config) (*Server, error) {
 			}
 		}
 		// Remove connection from the waitgroup when done
-		defer waitgroup.Done()
+		if !cfg.KeepAlive {
+			defer waitgroup.Done()
+		}
 		w.Header().Set("Content-Disposition", "attachment; filename="+
 			app.payload.Filename)
 		http.ServeFile(w, r, app.payload.Path)
