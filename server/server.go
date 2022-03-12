@@ -197,10 +197,14 @@ func New(cfg *config.Config) (*Server, error) {
 			} else {
 				// Check for the expected cookie and value
 				// If it is missing or doesn't match
-				// return a 404 status
+				// return a 400 status
 				rcookie, err := r.Cookie(cookie.Name)
-				if err != nil || rcookie.Value != cookie.Value {
-					http.Error(w, "", http.StatusNotFound)
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusBadRequest)
+					return
+				}
+				if rcookie.Value != cookie.Value {
+					http.Error(w, "mismatching cookie", http.StatusBadRequest)
 					return
 				}
 				// If the cookie exits and matches
