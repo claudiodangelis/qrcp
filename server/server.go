@@ -182,7 +182,8 @@ func New(cfg *config.Config) (*Server, error) {
 	// Create handlers
 	// Send handler (sends file to caller)
 	http.HandleFunc("/send/"+path, func(w http.ResponseWriter, r *http.Request) {
-		if strings.HasPrefix(r.Header.Get("User-Agent"), "Mozilla") {
+		if !cfg.KeepAlive && strings.HasPrefix(r.Header.Get("User-Agent"), "Mozilla") {
+			fmt.Println("new req...")
 			if cookie.Value == "" {
 				initCookie.Do(func() {
 					value, err := util.GetSessionID()
@@ -212,9 +213,7 @@ func New(cfg *config.Config) (*Server, error) {
 				// Increment the waitgroup
 				waitgroup.Add(1)
 			}
-		}
-		// Remove connection from the waitgroup when done
-		if !cfg.KeepAlive {
+			// Remove connection from the waitgroup when done
 			defer waitgroup.Done()
 		}
 		w.Header().Set("Content-Disposition", "attachment; filename="+
