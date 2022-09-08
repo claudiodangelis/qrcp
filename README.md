@@ -104,6 +104,13 @@ If you use [Scoop](https://scoop.sh/) for package management on Windows, you can
 ```
 scoop install qrcp
 ```
+### Chocolatey
+
+If you use [Chocolatey](https://community.chocolatey.org/packages/qrcp) for package management on Windows, you can install qrcp with the following one-liner:
+
+```
+choco install qrcp
+```
 
 ## MacOS
 
