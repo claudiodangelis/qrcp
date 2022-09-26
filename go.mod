@@ -14,5 +14,6 @@ require (
 	github.com/mattn/go-runewidth v0.0.9 // indirect
 	github.com/skip2/go-qrcode v0.0.0-20191027152451-9434209cb086
 	github.com/spf13/cobra v1.0.0
+	github.com/spf13/viper v1.4.0
 	gopkg.in/cheggaaa/pb.v1 v1.0.28
 )
