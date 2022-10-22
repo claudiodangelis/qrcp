@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -124,5 +123,4 @@ func TestNew(t *testing.T) {
 			}
 		})
 	}
-	fmt.Println(os.Environ())
 }
