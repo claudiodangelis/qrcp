@@ -186,9 +186,37 @@ qrcp receive --output=/tmp/dir
 ```
 
 
-## Options
+## Configuration
 
-`qrcp` works without any prior configuration, however, you can choose to configure to use specific values. The `config` command launches a wizard that lets you configure parameters like interface, port, fully-qualified domain name and keep alive.
+`qrcp` works without any prior configuration, however, you can choose to configure to use specific values.
+
+To configure `qrcp` you can create a configuration file inside `$XDG_CONFIG_HOME/qrcp`.
+
+> Note: On Linux, the `$XDG_CONFIG_HOME` is `.config` under user home directory.
+> So, for example, on Linux the configuration file will be `$HOME/.config/qrcp/config.yaml`.
+
+| Key         | Type    | Notes                                                                                                                                                                                  |
+|-------------|---------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `interface` | String  | This value is automatically discovered during the first launch of `qrcp`, you can set it to override the default. You can use the `any` interface to bind the web server to `0.0.0.0`. |
+| `port`      | Integer | When this value is not set, `qrcp` will pick a random port at any launch.                                                                                                              |
+| `path` | String | When this value is not set, `qrcp` will add a random string at the end of URL. |
+| `output` | String | Default directory to receive files to. If empty, the current working directory is used. |
+| `fqdn` | String | When this value is set, `qrcp` will use it to replace the IP address in the generated URL.  |
+| `keepAlive` | Bool | Controls whether `qrcp` should quit after transferring the file. Defaults to `false`. |
+| `secure` | Bool | Controls whether `qrcp` should use HTTPS instead of HTTP. Defaults to `false` |
+| `tlsCert` | String | Path to the TLS certificate. It's only used when `secure: true`. |
+| `tlsKey` | String | Path to the TLS key. It's only used when `secure: true`. |
+
+
+All the configuration parameters can be controlled via environment variables prefixed with `QRCP_`, for example:
+- `$QRCP_INTERFACE`
+- `$QRCP_PORT`
+- `$QRCP_KEEPALIVE`
+- _etc_
+
+### Config Wizard
+
+The `config` command launches a wizard that lets you configure parameters like interface, port, fully-qualified domain name and keep alive.
 
 ```sh
 qrcp config
@@ -203,10 +231,10 @@ qrcp --list-all-interfaces config
 
 ### Configuration File
 
-The default configuration file is stored in $XDG_CONFIG_HOME/qrcp/config.json, however, you can specify the location of the config file by passing the `--config` flag:
+The default configuration file is stored in $XDG_CONFIG_HOME/qrcp/config.yaml, however, you can specify the location of the config file by passing the `--config` flag:
 
 ```sh
-qrcp --config /tmp/qrcp.json MyDocument.pdf
+qrcp --config /tmp/qrcp.yaml MyDocument.pdf
 ```
 
 ### Port
