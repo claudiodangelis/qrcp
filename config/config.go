@@ -1,137 +1,168 @@
 package config
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/adrg/xdg"
 	"github.com/asaskevich/govalidator"
+	"github.com/claudiodangelis/qrcp/application"
 	"github.com/claudiodangelis/qrcp/util"
 	"github.com/manifoldco/promptui"
+	"github.com/spf13/viper"
 )
 
-// Config of qrcp
 type Config struct {
-	FQDN      string `json:"fqdn"`
-	Interface string `json:"interface"`
-	Port      int    `json:"port"`
-	KeepAlive bool   `json:"keepAlive"`
-	Path      string `json:"path"`
-	Secure    bool   `json:"secure"`
-	TLSKey    string `json:"tls-key"`
-	TLSCert   string `json:"tls-cert"`
-	Output    string `json:"output"`
+	Interface string
+	Port      int
+	KeepAlive bool
+	Path      string
+	Secure    bool
+	TlsKey    string
+	TlsCert   string
+	FQDN      string
+	Output    string
 }
 
-var configFile string
+var interactive bool = false
 
-// Options of the qrcp configuration
-type Options struct {
-	Interface         string
-	Port              int
-	Path              string
-	FQDN              string
-	KeepAlive         bool
-	Interactive       bool
-	ListAllInterfaces bool
-	Secure            bool
-	TLSCert           string
-	TLSKey            string
-	Output            string
-}
+func New(app application.App) Config {
+	v := getViperInstance(app)
+	var err error
+	cfg := Config{}
 
-func chooseInterface(opts Options) (string, error) {
-	interfaces, err := util.Interfaces(opts.ListAllInterfaces)
-	if err != nil {
-		return "", err
-	}
-	if len(interfaces) == 0 {
-		return "", errors.New("no interfaces found")
-	}
-
-	if len(interfaces) == 1 && !opts.Interactive {
-		for name := range interfaces {
-			fmt.Printf("only one interface found: %s, using this one\n", name)
-			return name, nil
+	_, err = os.Stat(v.ConfigFileUsed())
+	if os.IsNotExist(err) {
+		if err := os.MkdirAll(filepath.Dir(v.ConfigFileUsed()), os.ModeDir); err != nil {
+			panic(err)
 		}
-	}
-	// Map for pretty printing
-	m := make(map[string]string)
-	items := []string{}
-	for name, ip := range interfaces {
-		label := fmt.Sprintf("%s (%s)", name, ip)
-		m[label] = name
-		items = append(items, label)
-	}
-	// Add the "any" interface
-	anyIP := "0.0.0.0"
-	anyName := "any"
-	anyLabel := fmt.Sprintf("%s (%s)", anyName, anyIP)
-	m[anyLabel] = anyName
-	items = append(items, anyLabel)
-	prompt := promptui.Select{
-		Items: items,
-		Label: "Choose interface",
-	}
-	_, result, err := prompt.Run()
-	if err != nil {
-		return "", err
-	}
-	return m[result], nil
-}
-
-// Load a new configuration
-func Load(opts Options) (Config, error) {
-	var cfg Config
-	// Read the configuration file, if it exists
-	if file, err := ioutil.ReadFile(configFile); err == nil {
-		// Read the config
-		if err := json.Unmarshal(file, &cfg); err != nil {
-			return cfg, err
-		}
-	}
-	// Prompt if needed
-	if cfg.Interface == "" {
-		iface, err := chooseInterface(opts)
+		file, err := os.Create(v.ConfigFileUsed())
 		if err != nil {
-			return cfg, err
+			panic(err)
 		}
-		cfg.Interface = iface
-		// Write config
-		if err := write(cfg); err != nil {
-			return cfg, err
+		defer file.Close()
+	}
+	if err := v.ReadInConfig(); err != nil {
+		panic(fmt.Errorf("fatal error config file: %s", err))
+	}
+	// Load file
+	cfg.Interface = v.GetString("interface")
+	cfg.Port = v.GetInt("port")
+	cfg.KeepAlive = v.GetBool("keepAlive")
+	cfg.Path = v.GetString("path")
+	cfg.Secure = v.GetBool("secure")
+	cfg.TlsKey = v.GetString("tlsKey")
+	cfg.TlsCert = v.GetString("tlsCert")
+	cfg.FQDN = v.GetString("fqdn")
+	cfg.Output = v.GetString("output")
+
+	// Override
+	if app.Flags.Interface != "" {
+		cfg.Interface = app.Flags.Interface
+	}
+	if app.Flags.Port != 0 {
+		cfg.Port = app.Flags.Port
+	}
+
+	if app.Flags.KeepAlive {
+		cfg.KeepAlive = true
+	}
+
+	if app.Flags.Path != "" {
+		cfg.Path = app.Flags.Path
+	}
+
+	if app.Flags.Secure {
+		cfg.Secure = true
+	}
+
+	if app.Flags.TlsKey != "" {
+		cfg.TlsKey = app.Flags.TlsKey
+	}
+
+	if app.Flags.TlsCert != "" {
+		cfg.TlsCert = app.Flags.TlsCert
+	}
+
+	if app.Flags.FQDN != "" {
+		cfg.FQDN = app.Flags.FQDN
+	}
+
+	if app.Flags.Output != "" {
+		cfg.Output = app.Flags.Output
+	}
+
+	// Discover interface if it's not been set yet
+	if !interactive {
+		if cfg.Interface == "" {
+			cfg.Interface, err = chooseInterface(app.Flags)
+			if err != nil {
+				panic(err)
+			}
+			v.Set("interface", cfg.Interface)
+			if err := v.WriteConfig(); err != nil {
+				panic(err)
+			}
 		}
 	}
-	return cfg, nil
+
+	return cfg
 }
 
-// Wizard starts an interactive configuration managements
-func Wizard(path string, listAllInterfaces bool) error {
-	if err := setConfigFile(path); err != nil {
-		return err
+func getViperInstance(app application.App) *viper.Viper {
+	var configFile string
+	v := viper.New()
+	v.SetConfigType("yml")
+	if app.Flags.Config != "" {
+		configFile = app.Flags.Config
+	} else {
+		configFile = filepath.Join(xdg.ConfigHome, app.Name, "config.yml")
 	}
-	var cfg Config
-	if file, err := ioutil.ReadFile(configFile); err == nil {
-		// Read the config
-		if err := json.Unmarshal(file, &cfg); err != nil {
-			return err
+	v.SetConfigFile(configFile)
+	v.AutomaticEnv()
+	v.SetEnvPrefix(app.Name)
+	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_", "-", "_"))
+	return v
+}
+
+func Wizard(app application.App) error {
+	interactive = true
+	cfg := New(app)
+	v := getViperInstance(app)
+	// Choose interface
+	var err error
+	cfg.Interface, err = chooseInterface(app.Flags)
+	if err != nil {
+		panic(err)
+	}
+	v.Set("interface", cfg.Interface)
+	if err := v.WriteConfig(); err != nil {
+		panic(err)
+	}
+	// Ask for port
+	validatePort := func(input string) error {
+		_, err := strconv.ParseUint(input, 10, 16)
+		if err != nil {
+			return errors.New("invalid number")
+		}
+		return nil
+	}
+	promptPort := promptui.Prompt{
+		Validate: validatePort,
+		Label:    "Choose port, 0 means random port",
+		Default:  fmt.Sprintf("%d", cfg.Port),
+	}
+	if promptPortResultString, err := promptPort.Run(); err == nil {
+		if port, err := strconv.ParseUint(promptPortResultString, 10, 16); err == nil {
+			if port > 0 {
+				v.Set("port", port)
+			}
 		}
 	}
-	// Ask for interface
-	opts := Options{
-		Interactive:       true,
-		ListAllInterfaces: listAllInterfaces,
-	}
-	iface, err := chooseInterface(opts)
-	if err != nil {
-		return err
-	}
-	cfg.Interface = iface
 	// Ask for fully qualified domain name
 	validateFqdn := func(input string) error {
 		if input != "" && !govalidator.IsDNSName(input) {
@@ -142,28 +173,81 @@ func Wizard(path string, listAllInterfaces bool) error {
 	promptFqdn := promptui.Prompt{
 		Validate: validateFqdn,
 		Label:    "Choose fully-qualified domain name",
-		Default:  "",
+		Default:  cfg.FQDN,
 	}
 	if promptFqdnString, err := promptFqdn.Run(); err == nil {
-		cfg.FQDN = promptFqdnString
+		if promptFqdnString != "" {
+			v.Set("fqdn", promptFqdnString)
+		}
+
 	}
-	// Ask for port
-	validatePort := func(input string) error {
-		_, err := strconv.ParseUint(input, 10, 16)
+	promptPath := promptui.Prompt{
+		Label:   "Choose URL path, empty means random",
+		Default: cfg.Path,
+	}
+	if promptPathResultString, err := promptPath.Run(); err == nil {
+		if promptPathResultString != "" {
+			v.Set("path", promptPathResultString)
+		}
+	}
+	// Ask for keep alive
+	promptKeepAlive := promptui.Select{
+		Items: []string{"No", "Yes"},
+		Label: "Should the server keep alive after transferring?",
+	}
+	if _, promptKeepAliveResultString, err := promptKeepAlive.Run(); err == nil {
+		if promptKeepAliveResultString == "Yes" {
+			v.Set("keepAlive", true)
+		}
+	}
+	// HTTPS
+	// Ask if path is readable and is a file
+	pathIsReadableFile := func(input string) error {
+		if input == "" {
+			return errors.New("invalid path")
+		}
+		path, err := filepath.Abs(util.Expand(input))
 		if err != nil {
-			return errors.New("invalid number")
+			return err
+		}
+		fmt.Println(path)
+		fileinfo, err := os.Stat(path)
+		if err != nil {
+			return err
+		}
+		if fileinfo.Mode().IsDir() {
+			return fmt.Errorf(fmt.Sprintf("%s is a directory", input))
 		}
 		return nil
 	}
-
-	promptPort := promptui.Prompt{
-		Validate: validatePort,
-		Label:    "Choose port, 0 means random port",
-		Default:  fmt.Sprintf("%d", cfg.Port),
+	promptSecure := promptui.Select{
+		Items: []string{"No", "Yes"},
+		Label: "Should files be securely transferred with HTTPS?",
 	}
-	if promptPortResultString, err := promptPort.Run(); err == nil {
-		if port, err := strconv.ParseUint(promptPortResultString, 10, 16); err == nil {
-			cfg.Port = int(port)
+	if _, promptSecureResultString, err := promptSecure.Run(); err == nil {
+		if promptSecureResultString == "Yes" {
+			v.Set("secure", true)
+		}
+		cfg.Secure = v.GetBool("secure")
+	}
+	if cfg.Secure {
+		// TLS Cert
+		promptTlsCert := promptui.Prompt{
+			Label:    "Choose TLS certificate path. Empty if not using HTTPS.",
+			Default:  cfg.TlsCert,
+			Validate: pathIsReadableFile,
+		}
+		if promptTlsCertString, err := promptTlsCert.Run(); err == nil {
+			v.Set("tlsCert", util.Expand(promptTlsCertString))
+		}
+		// TLS key
+		promptTlsKey := promptui.Prompt{
+			Label:    "Choose TLS certificate key. Empty if not using HTTPS.",
+			Default:  cfg.TlsKey,
+			Validate: pathIsReadableFile,
+		}
+		if promptTlsKeyString, err := promptTlsKey.Run(); err == nil {
+			v.Set("tlsKey", util.Expand(promptTlsKeyString))
 		}
 	}
 	validateIsDir := func(input string) error {
@@ -183,207 +267,18 @@ func Wizard(path string, listAllInterfaces bool) error {
 		}
 		return nil
 	}
+	// Ask for default output directory
 	promptOutput := promptui.Prompt{
 		Label:    "Choose default output directory for received files, empty does not set a default",
 		Default:  cfg.Output,
 		Validate: validateIsDir,
 	}
-
 	if promptOutputResultString, err := promptOutput.Run(); err == nil {
 		if promptOutputResultString != "" {
-			p, _ := filepath.Abs(promptOutputResultString)
-			cfg.Output = p
+			output, _ := filepath.Abs(promptOutputResultString)
+			v.Set("output", output)
 		}
 	}
 
-	// Ask for path
-	promptPath := promptui.Prompt{
-		Label:   "Choose path, empty means random",
-		Default: cfg.Path,
-	}
-	if promptPathResultString, err := promptPath.Run(); err == nil {
-		if promptPathResultString != "" {
-			cfg.Path = promptPathResultString
-		}
-	}
-
-	// Ask for keep alive
-	promptKeepAlive := promptui.Select{
-		Items: []string{"No", "Yes"},
-		Label: "Should the server keep alive after transferring?",
-	}
-	if _, promptKeepAliveResultString, err := promptKeepAlive.Run(); err == nil {
-		if promptKeepAliveResultString == "Yes" {
-			cfg.KeepAlive = true
-		} else {
-			cfg.KeepAlive = false
-		}
-
-	}
-	// TLS
-	promptSecure := promptui.Select{
-		Items: []string{"No", "Yes"},
-		Label: "Should files be securely transferred with HTTPS?",
-	}
-	if _, promptSecureResultString, err := promptSecure.Run(); err == nil {
-		if promptSecureResultString == "Yes" {
-			cfg.Secure = true
-		} else {
-			cfg.Secure = false
-		}
-	}
-	pathIsReadable := func(input string) error {
-		if input == "" {
-			return nil
-		}
-		path, err := filepath.Abs(util.Expand(input))
-		if err != nil {
-			return err
-		}
-		fmt.Println(path)
-		fileinfo, err := os.Stat(path)
-		if err != nil {
-			return err
-		}
-		if fileinfo.Mode().IsDir() {
-			return fmt.Errorf(fmt.Sprintf("%s is a directory", input))
-		}
-		return nil
-	}
-	// TLS Cert
-	promptTLSCert := promptui.Prompt{
-		Label:    "Choose TLS certificate path. Empty if not using HTTPS.",
-		Default:  cfg.TLSCert,
-		Validate: pathIsReadable,
-	}
-	if promptTLSCertString, err := promptTLSCert.Run(); err == nil {
-		cfg.TLSCert = util.Expand(promptTLSCertString)
-	}
-	// TLS key
-	promptTLSKey := promptui.Prompt{
-		Label:    "Choose TLS certificate key. Empty if not using HTTPS.",
-		Default:  cfg.TLSKey,
-		Validate: pathIsReadable,
-	}
-	if promptTLSKeyString, err := promptTLSKey.Run(); err == nil {
-		cfg.TLSKey = util.Expand(promptTLSKeyString)
-	}
-	// Write it down
-	if err := write(cfg); err != nil {
-		return err
-	}
-	b, err := json.MarshalIndent(cfg, "", "  ")
-	if err != nil {
-		return err
-	}
-	fmt.Printf("Configuration updated:\n%s\n", string(b))
-	return nil
-}
-
-// write the configuration file to disk
-func write(cfg Config) error {
-	j, err := json.MarshalIndent(cfg, "", "    ")
-	if err != nil {
-		return err
-	}
-	if err := ioutil.WriteFile(configFile, j, 0644); err != nil {
-		return err
-	}
-	return nil
-}
-
-func pathExists(path string) bool {
-	_, err := os.Stat(path)
-	return !os.IsNotExist(err)
-}
-
-func setConfigFile(path string) error {
-	// If not explicitly set then use the default
-	if path == "" {
-		// First try legacy location
-		var legacyConfigFile = filepath.Join(xdg.Home, ".qrcp.json")
-		if pathExists(legacyConfigFile) {
-			configFile = legacyConfigFile
-			return nil
-		}
-
-		// Else use modern location, first ensuring that the directory
-		// exists
-		var configDir = filepath.Join(xdg.ConfigHome, "qrcp")
-		if !pathExists(configDir) {
-			if err := os.Mkdir(configDir, 0744); err != nil {
-				panic(err)
-			}
-		}
-		configFile = filepath.Join(configDir, "config.json")
-		return nil
-	}
-	absolutepath, err := filepath.Abs(path)
-	if err != nil {
-		return err
-	}
-	fileinfo, err := os.Stat(absolutepath)
-	if err != nil && !os.IsNotExist(err) {
-		return err
-	}
-	if fileinfo != nil && fileinfo.IsDir() {
-		return fmt.Errorf("%s is not a file", absolutepath)
-	}
-	configFile = absolutepath
-	return nil
-}
-
-// New returns a new configuration struct. It loads defaults, then overrides
-// values if any.
-func New(path string, opts Options) (Config, error) {
-	var cfg Config
-	// Set configFile
-	if err := setConfigFile(path); err != nil {
-		return cfg, err
-	}
-	// Load saved file / defaults
-	cfg, err := Load(opts)
-	if err != nil {
-		return cfg, err
-	}
-	if opts.Interface != "" {
-		cfg.Interface = opts.Interface
-	}
-	if opts.FQDN != "" {
-		if !govalidator.IsDNSName(opts.FQDN) {
-			return cfg, errors.New("invalid value for fully-qualified domain name")
-		}
-		cfg.FQDN = opts.FQDN
-	}
-	if opts.Port != 0 {
-		cfg.Port = opts.Port
-	} else if portVal, ok := os.LookupEnv("QRCP_PORT"); ok {
-		port, err := strconv.Atoi(portVal)
-		if err != nil {
-			return cfg, errors.New("could not parse port from environment variable QRCP_PORT")
-		}
-		cfg.Port = port
-	}
-	if cfg.Port != 0 && !govalidator.IsPort(fmt.Sprintf("%d", cfg.Port)) {
-		return cfg, fmt.Errorf("%d is not a valid port", cfg.Port)
-	}
-	if opts.KeepAlive {
-		cfg.KeepAlive = true
-	}
-	if opts.Path != "" {
-		cfg.Path = opts.Path
-	}
-	if opts.Secure {
-		cfg.Secure = true
-	}
-	if opts.TLSCert != "" {
-		cfg.TLSCert = opts.TLSCert
-	}
-	if opts.TLSKey != "" {
-		cfg.TLSKey = opts.TLSKey
-	}
-	if opts.Output != "" {
-		cfg.Output = opts.Output
-	}
-	return cfg, nil
+	return v.WriteConfig()
 }

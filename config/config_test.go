@@ -1,6 +1,7 @@
-package newconfig
+package config
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -12,6 +13,7 @@ import (
 )
 
 func TestNew(t *testing.T) {
+	os.Clearenv()
 	_, f, _, _ := runtime.Caller(0)
 	testdir := filepath.Join(filepath.Dir(f), "testdata")
 	tempfile, err := ioutil.TempFile("", "qrcp*tmp.yml")
@@ -24,7 +26,7 @@ func TestNew(t *testing.T) {
 		panic(err)
 	}
 	defer os.Remove(partialconfig.Name())
-	if err := ioutil.WriteFile(partialconfig.Name(), []byte(`port: 9090`), os.ModePerm); err != nil {
+	if err := os.WriteFile(partialconfig.Name(), []byte(`port: 9090`), os.ModePerm); err != nil {
 		panic(err)
 	}
 	type args struct {
@@ -122,4 +124,5 @@ func TestNew(t *testing.T) {
 			}
 		})
 	}
+	fmt.Println(os.Environ())
 }

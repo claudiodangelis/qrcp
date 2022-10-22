@@ -1,27 +1,14 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/claudiodangelis/qrcp/application"
-	"github.com/claudiodangelis/qrcp/newconfig"
 	"github.com/spf13/cobra"
 )
 
 var app application.App
 
-var debugCmd = &cobra.Command{
-	Use: "debug",
-	Run: func(c *cobra.Command, args []string) {
-		fmt.Println("debug")
-		cc := newconfig.New(app)
-		fmt.Println(cc.KeepAlive)
-	},
-}
-
 func init() {
 	app = application.New()
-	rootCmd.AddCommand(debugCmd)
 	rootCmd.AddCommand(sendCmd)
 	rootCmd.AddCommand(receiveCmd)
 	rootCmd.AddCommand(configCmd)

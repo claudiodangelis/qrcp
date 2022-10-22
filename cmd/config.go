@@ -6,7 +6,7 @@ import (
 )
 
 func configCmdFunc(command *cobra.Command, args []string) error {
-	return config.Wizard(app.Flags.Config, app.Flags.ListAllInterfaces)
+	return config.Wizard(app)
 }
 
 var configCmd = &cobra.Command{

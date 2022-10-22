@@ -19,19 +19,7 @@ func sendCmdFunc(command *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	// Load configuration
-	configOptions := config.Options{
-		Interface:         app.Flags.Interface,
-		Port:              app.Flags.Port,
-		Path:              app.Flags.Path,
-		FQDN:              app.Flags.FQDN,
-		KeepAlive:         app.Flags.KeepAlive,
-		ListAllInterfaces: app.Flags.ListAllInterfaces,
-		Secure:            app.Flags.Secure,
-		TLSCert:           app.Flags.TlsCert,
-		TLSKey:            app.Flags.TlsKey,
-	}
-	cfg, err := config.New(app.Flags.Config, configOptions)
+	cfg := config.New(app)
 	if err != nil {
 		return err
 	}

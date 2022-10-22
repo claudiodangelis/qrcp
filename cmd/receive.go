@@ -14,22 +14,7 @@ import (
 func receiveCmdFunc(command *cobra.Command, args []string) error {
 	log := logger.New(app.Flags.Quiet)
 	// Load configuration
-	configOptions := config.Options{
-		Interface:         app.Flags.Interface,
-		Port:              app.Flags.Port,
-		Path:              app.Flags.Path,
-		FQDN:              app.Flags.FQDN,
-		KeepAlive:         app.Flags.KeepAlive,
-		ListAllInterfaces: app.Flags.ListAllInterfaces,
-		Secure:            app.Flags.Secure,
-		TLSCert:           app.Flags.TlsCert,
-		TLSKey:            app.Flags.TlsKey,
-		Output:            app.Flags.Output,
-	}
-	cfg, err := config.New(app.Flags.Config, configOptions)
-	if err != nil {
-		return err
-	}
+	cfg := config.New(app)
 	// Create the server
 	srv, err := server.New(&cfg)
 	if err != nil {

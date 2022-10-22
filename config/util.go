@@ -1,4 +1,4 @@
-package newconfig
+package config
 
 import (
 	"errors"
