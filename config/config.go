@@ -16,6 +16,10 @@ import (
 	"github.com/spf13/viper"
 )
 
+func init() {
+	migrate()
+}
+
 type Config struct {
 	Interface string
 	Port      int
