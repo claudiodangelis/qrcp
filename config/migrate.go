@@ -35,18 +35,16 @@ func migrate() {
 		return
 	}
 	var oldConfigStruct struct {
-		Fqdn        string `yaml:"fqdn,omitempty"`
-		Iface       string `yaml:"interface,omitempty"`
-		Keepalive   bool   `yaml:"keepalive,omitempty"`
-		Output      string `yaml:"output,omitempty"`
-		Path        string `yaml:"path,omitempty"`
-		Port        int    `yaml:"port,omitempty"`
-		Questaprova string `yaml:"questaprova,omitempty"`
-		Secure      bool   `yaml:"secure,omitempty"`
-		Tlscert     string `yaml:"tls-cert,omitempty"`
-		Tlskey      string `yaml:"tls-key,omitempty"`
+		Fqdn      string `yaml:"fqdn,omitempty"`
+		Interface string `yaml:"interface,omitempty"`
+		Keepalive bool   `yaml:"keepalive,omitempty"`
+		Output    string `yaml:"output,omitempty"`
+		Path      string `yaml:"path,omitempty"`
+		Port      int    `yaml:"port,omitempty"`
+		Secure    bool   `yaml:"secure,omitempty"`
+		Tlscert   string `yaml:"tls-cert,omitempty"`
+		Tlskey    string `yaml:"tls-key,omitempty"`
 	}
-	// Heads-up: Replace tls-cert, tls-key with tlscert, tlskey
 	if err := yaml.Unmarshal(oldConfig, &oldConfigStruct); err != nil {
 		fmt.Println("warning: error while parsing JSON from old configuration file", err)
 		return
@@ -55,6 +53,7 @@ func migrate() {
 	if err != nil {
 		fmt.Println("warning: error while migrating JSON file to YAML file", err)
 	}
+	// Heads-up: Replace tls-cert, tls-key with tlscert, tlskey
 	if err := os.WriteFile(newConfigFile, []byte(strings.ReplaceAll(string(newConfig), "tls-", "tls")), 0644); err != nil {
 		fmt.Println("warning: error while creating the migrated YAML file", err)
 	}
