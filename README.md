@@ -44,6 +44,10 @@ _Note: it requires go 1.8_
 
     go get github.com/claudiodangelis/qrcp
 
+If using go 1.18 or higher,
+
+    go install github.com/claudiodangelis/qrcp@latest
+
 ## Linux
 
 Download the latest Linux .tar.gz archive from the [Releases](https://github.com/claudiodangelis/qrcp/releases) page, extract it, move the binary to the proper directory, then set execution permissions.
