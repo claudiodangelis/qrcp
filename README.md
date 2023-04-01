@@ -193,7 +193,7 @@ qrcp receive --output=/tmp/dir
 To configure `qrcp` you can create a configuration file inside `$XDG_CONFIG_HOME/qrcp`.
 
 > Note: On Linux, the `$XDG_CONFIG_HOME` is `.config` under user home directory.
-> So, for example, on Linux the configuration file will be `$HOME/.config/qrcp/config.yaml`.
+> So, for example, on Linux the configuration file will be `$HOME/.config/qrcp/config.yml`.
 
 > Note: Starting from version 0.10.0, qrcp uses a YAML configuration file instead of the old JSON one. You can automatically migrate the legacy JSON format to the new YAML format by running `qrcp config migrate`.
 
@@ -233,10 +233,10 @@ qrcp --list-all-interfaces config
 
 ### Configuration File
 
-The default configuration file is stored in $XDG_CONFIG_HOME/qrcp/config.yaml, however, you can specify the location of the config file by passing the `--config` flag:
+The default configuration file is stored in $XDG_CONFIG_HOME/qrcp/config.yml, however, you can specify the location of the config file by passing the `--config` flag:
 
 ```sh
-qrcp --config /tmp/qrcp.yaml MyDocument.pdf
+qrcp --config /tmp/qrcp.yml MyDocument.pdf
 ```
 
 ### Port
