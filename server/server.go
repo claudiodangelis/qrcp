@@ -320,7 +320,7 @@ func New(cfg *config.Config) (*Server, error) {
 	go func() {
 		netListener := tcpKeepAliveListener{listener.(*net.TCPListener)}
 		if cfg.Secure {
-			if err := httpserver.ServeTLS(netListener, cfg.TLSCert, cfg.TLSKey); err != http.ErrServerClosed {
+			if err := httpserver.ServeTLS(netListener, cfg.TlsCert, cfg.TlsKey); err != http.ErrServerClosed {
 				log.Fatalln("error starting the server:", err)
 			}
 		} else {
