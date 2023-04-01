@@ -86,6 +86,7 @@ func TestNew(t *testing.T) {
 				Interface: "wlo1",
 				Port:      18080,
 				KeepAlive: false,
+				Bind:      "10.20.30.40",
 				Path:      "random",
 				Secure:    false,
 				TlsKey:    "/path/to/key",
@@ -106,6 +107,7 @@ func TestNew(t *testing.T) {
 			Config{
 				Interface: "wlo1",
 				Port:      99999,
+				Bind:      "10.20.30.40",
 				KeepAlive: false,
 				Path:      "random",
 				Secure:    false,

@@ -22,6 +22,7 @@ func init() {
 	rootCmd.PersistentFlags().IntVarP(&app.Flags.Port, "port", "p", 0, "port to use for the server")
 	rootCmd.PersistentFlags().StringVar(&app.Flags.Path, "path", "", "path to use. Defaults to a random string")
 	rootCmd.PersistentFlags().StringVarP(&app.Flags.Interface, "interface", "i", "", "network interface to use for the server")
+	rootCmd.PersistentFlags().StringVar(&app.Flags.Bind, "bind", "", "address to bind the web server to")
 	rootCmd.PersistentFlags().StringVarP(&app.Flags.FQDN, "fqdn", "d", "", "fully-qualified domain name to use for the resulting URLs")
 	rootCmd.PersistentFlags().BoolVarP(&app.Flags.Zip, "zip", "z", false, "zip content before transferring")
 	rootCmd.PersistentFlags().StringVarP(&app.Flags.Config, "config", "c", "", "path to the config file, defaults to $XDG_CONFIG_HOME/qrcp/config.json")

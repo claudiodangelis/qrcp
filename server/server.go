@@ -102,10 +102,14 @@ func (s Server) Shutdown() {
 func New(cfg *config.Config) (*Server, error) {
 
 	app := &Server{}
-	// Get the address of the configured interface to bind the server to
+	// Get the address of the configured interface to bind the server to.
+	// If `bind` configuration parameter has been configured, it takes precedence
 	bind, err := util.GetInterfaceAddress(cfg.Interface)
 	if err != nil {
 		return &Server{}, err
+	}
+	if cfg.Bind != "" {
+		bind = cfg.Bind
 	}
 	// Create a listener. If `port: 0`, a random one is chosen
 	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", bind, cfg.Port))

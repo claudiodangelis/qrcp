@@ -7,6 +7,7 @@ type Flags struct {
 	Port              int
 	Path              string
 	Interface         string
+	Bind              string
 	FQDN              string
 	Zip               bool
 	Config            string

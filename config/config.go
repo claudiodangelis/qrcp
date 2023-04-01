@@ -19,6 +19,7 @@ import (
 type Config struct {
 	Interface string `yaml:",omitempty"`
 	Port      int    `yaml:",omitempty"`
+	Bind      string `yaml:",omitempty"`
 	KeepAlive bool   `yaml:",omitempty"`
 	Path      string `yaml:",omitempty"`
 	Secure    bool   `yaml:",omitempty"`
@@ -51,6 +52,7 @@ func New(app application.App) Config {
 	}
 	// Load file
 	cfg.Interface = v.GetString("interface")
+	cfg.Bind = v.GetString("bind")
 	cfg.Port = v.GetInt("port")
 	cfg.KeepAlive = v.GetBool("keepAlive")
 	cfg.Path = v.GetString("path")
@@ -64,33 +66,30 @@ func New(app application.App) Config {
 	if app.Flags.Interface != "" {
 		cfg.Interface = app.Flags.Interface
 	}
+	if app.Flags.Bind != "" {
+		cfg.Bind = app.Flags.Bind
+	}
 	if app.Flags.Port != 0 {
 		cfg.Port = app.Flags.Port
 	}
 	if app.Flags.KeepAlive {
 		cfg.KeepAlive = true
 	}
-
 	if app.Flags.Path != "" {
 		cfg.Path = app.Flags.Path
 	}
-
 	if app.Flags.Secure {
 		cfg.Secure = true
 	}
-
 	if app.Flags.TlsKey != "" {
 		cfg.TlsKey = app.Flags.TlsKey
 	}
-
 	if app.Flags.TlsCert != "" {
 		cfg.TlsCert = app.Flags.TlsCert
 	}
-
 	if app.Flags.FQDN != "" {
 		cfg.FQDN = app.Flags.FQDN
 	}
-
 	if app.Flags.Output != "" {
 		cfg.Output = app.Flags.Output
 	}
@@ -150,6 +149,26 @@ func Wizard(app application.App) error {
 	v.Set("interface", cfg.Interface)
 	if err := v.WriteConfig(); err != nil {
 		panic(err)
+	}
+	// Ask for bind address
+	validateBind := func(input string) error {
+		if input == "" {
+			return nil
+		}
+		if !govalidator.IsIPv4(input) {
+			return errors.New("invalid address")
+		}
+		return nil
+	}
+	promptBind := promptui.Prompt{
+		Validate: validateBind,
+		Label:    "Enter bind address (this will override the chosen interface address)",
+		Default:  cfg.Bind,
+	}
+	if promptBindResultString, err := promptBind.Run(); err == nil {
+		if promptBindResultString != "" {
+			v.Set("bind", promptBindResultString)
+		}
 	}
 	// Ask for port
 	validatePort := func(input string) error {
