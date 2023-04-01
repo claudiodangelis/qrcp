@@ -195,6 +195,8 @@ To configure `qrcp` you can create a configuration file inside `$XDG_CONFIG_HOME
 > Note: On Linux, the `$XDG_CONFIG_HOME` is `.config` under user home directory.
 > So, for example, on Linux the configuration file will be `$HOME/.config/qrcp/config.yaml`.
 
+> Note: Starting from version 0.10.0, qrcp uses a YAML configuration file instead of the old JSON one. You can automatically migrate the legacy JSON format to the new YAML format by running `qrcp config migrate`.
+
 | Key         | Type    | Notes                                                                                                                                                                                  |
 |-------------|---------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `interface` | String  | This value is automatically discovered during the first launch of `qrcp`, you can set it to override the default. You can use the `any` interface to bind the web server to `0.0.0.0`. |
@@ -204,8 +206,8 @@ To configure `qrcp` you can create a configuration file inside `$XDG_CONFIG_HOME
 | `fqdn` | String | When this value is set, `qrcp` will use it to replace the IP address in the generated URL.  |
 | `keepAlive` | Bool | Controls whether `qrcp` should quit after transferring the file. Defaults to `false`. |
 | `secure` | Bool | Controls whether `qrcp` should use HTTPS instead of HTTP. Defaults to `false` |
-| `tlsCert` | String | Path to the TLS certificate. It's only used when `secure: true`. |
-| `tlsKey` | String | Path to the TLS key. It's only used when `secure: true`. |
+| `tls-cert` | String | Path to the TLS certificate. It's only used when `secure: true`. |
+| `tls-key` | String | Path to the TLS key. It's only used when `secure: true`. |
 
 
 All the configuration parameters can be controlled via environment variables prefixed with `QRCP_`, for example:

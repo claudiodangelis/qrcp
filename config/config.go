@@ -16,20 +16,16 @@ import (
 	"github.com/spf13/viper"
 )
 
-func init() {
-	migrate()
-}
-
 type Config struct {
-	Interface string
-	Port      int
-	KeepAlive bool
-	Path      string
-	Secure    bool
-	TlsKey    string
-	TlsCert   string
-	FQDN      string
-	Output    string
+	Interface string `yaml:",omitempty"`
+	Port      int    `yaml:",omitempty"`
+	KeepAlive bool   `yaml:",omitempty"`
+	Path      string `yaml:",omitempty"`
+	Secure    bool   `yaml:",omitempty"`
+	TlsKey    string `yaml:",omitempty"`
+	TlsCert   string `yaml:",omitempty"`
+	FQDN      string `yaml:",omitempty"`
+	Output    string `yaml:",omitempty"`
 }
 
 var interactive bool = false
@@ -59,8 +55,8 @@ func New(app application.App) Config {
 	cfg.KeepAlive = v.GetBool("keepAlive")
 	cfg.Path = v.GetString("path")
 	cfg.Secure = v.GetBool("secure")
-	cfg.TlsKey = v.GetString("tlsKey")
-	cfg.TlsCert = v.GetString("tlsCert")
+	cfg.TlsKey = v.GetString("tls-key")
+	cfg.TlsCert = v.GetString("tls-cert")
 	cfg.FQDN = v.GetString("fqdn")
 	cfg.Output = v.GetString("output")
 
@@ -71,7 +67,6 @@ func New(app application.App) Config {
 	if app.Flags.Port != 0 {
 		cfg.Port = app.Flags.Port
 	}
-
 	if app.Flags.KeepAlive {
 		cfg.KeepAlive = true
 	}
@@ -118,14 +113,23 @@ func New(app application.App) Config {
 }
 
 func getViperInstance(app application.App) *viper.Viper {
+	var configType string
 	var configFile string
 	v := viper.New()
-	v.SetConfigType("yml")
 	if app.Flags.Config != "" {
 		configFile = app.Flags.Config
+		configType = filepath.Ext(configFile)[1:]
 	} else {
-		configFile = filepath.Join(xdg.ConfigHome, app.Name, "config.yml")
+		oldConfigFile := filepath.Join(xdg.ConfigHome, "qrcp", "config.json")
+		// Check if old configuration file exists
+		if _, err := os.Stat(oldConfigFile); os.IsNotExist(err) {
+			configType = "yml"
+		} else {
+			configType = "json"
+		}
+		configFile = filepath.Join(xdg.ConfigHome, app.Name, fmt.Sprintf("config.%s", configType))
 	}
+	v.SetConfigType(configType)
 	v.SetConfigFile(configFile)
 	v.AutomaticEnv()
 	v.SetEnvPrefix(app.Name)

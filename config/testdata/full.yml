@@ -3,7 +3,7 @@ port: 18080
 keepAlive: false
 path: random
 secure: false
-tlsKey: /path/to/key
-tlsCert: /path/to/cert
+tls-key: /path/to/key
+tls-cert: /path/to/cert
 fqdn: mylan.com
 output: /path/to/default/output/dir
