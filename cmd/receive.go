@@ -12,24 +12,9 @@ import (
 )
 
 func receiveCmdFunc(command *cobra.Command, args []string) error {
-	log := logger.New(quietFlag)
+	log := logger.New(app.Flags.Quiet)
 	// Load configuration
-	configOptions := config.Options{
-		Interface:         interfaceFlag,
-		Port:              portFlag,
-		Path:              pathFlag,
-		FQDN:              fqdnFlag,
-		KeepAlive:         keepaliveFlag,
-		ListAllInterfaces: listallinterfacesFlag,
-		Secure:            secureFlag,
-		TLSCert:           tlscertFlag,
-		TLSKey:            tlskeyFlag,
-		Output:            outputFlag,
-	}
-	cfg, err := config.New(configFlag, configOptions)
-	if err != nil {
-		return err
-	}
+	cfg := config.New(app)
 	// Create the server
 	srv, err := server.New(&cfg)
 	if err != nil {
@@ -44,7 +29,7 @@ func receiveCmdFunc(command *cobra.Command, args []string) error {
 	log.Print(srv.ReceiveURL)
 	// Renders the QR
 	qr.RenderString(srv.ReceiveURL)
-	if browserFlag {
+	if app.Flags.Browser {
 		srv.DisplayQR(srv.ReceiveURL)
 	}
 	if err := keyboard.Open(); err == nil {
