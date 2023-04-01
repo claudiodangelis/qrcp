@@ -21,7 +21,7 @@ var configCmd = &cobra.Command{
 
 var migrateCmd = &cobra.Command{
 	Use:   "migrate",
-	Short: "Migrate the legacy JSON configuration file to the new YAML format",
+	Short: "Migrate the legacy configuration file",
 	Long:  "Migrate the legacy JSON configuration file to the new YAML format",
 	Run: func(cmd *cobra.Command, args []string) {
 		ok, err := config.Migrate(app)
