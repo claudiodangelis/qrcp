@@ -205,6 +205,7 @@ To configure `qrcp` you can create a configuration file inside `$XDG_CONFIG_HOME
 | Key         | Type    | Notes                                                                                                                                                                                  |
 |-------------|---------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `interface` | String  | This value is automatically discovered during the first launch of `qrcp`, you can set it to override the default. You can use the `any` interface to bind the web server to `0.0.0.0`. |
+| `bind`      | String  | This value is used by qrcp to bind the web server to. Note: if this value is set, the `interface` parameter is ignored.                                                                |
 | `port`      | Integer | When this value is not set, `qrcp` will pick a random port at any launch.                                                                                                              |
 | `path`      | String  | When this value is not set, `qrcp` will add a random string at the end of URL.                                                                                                         |
 | `output`    | String  | Default directory to receive files to. If empty, the current working directory is used.                                                                                                |
@@ -282,6 +283,13 @@ This is useful when you want to transfer files from your Amazon EC2, Digital Oce
 qrcp -i any MyDocument.pdf
 ```
 
+### Bind
+
+Alternatively to choosing the interface, you can directly specify the address you want `qrcp` to bind the webserver to.
+
+```sh
+qrcp --bind 10.20.30.40 MyDocument.pdf
+```
 
 ### URL
 
