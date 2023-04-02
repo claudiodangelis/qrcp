@@ -36,6 +36,18 @@ changelog:
     exclude:
     - '^docs:'
     - '^test:'
+    - '^chore:'
+release:
+  footer: |
+    ## Downloads
+    | Platform | Download link                                                                                                                 |
+    |----------|-------------------------------------------------------------------------------------------------------------------------------|
+    | Linux    | [deb package](https://github.com/claudiodangelis/qrcp/releases/download/{{ .Tag }}/qrcp_{{ .Tag }}_linux_x86_64.deb)          |
+    | Linux    | [RPM package](https://github.com/claudiodangelis/qrcp/releases/download/{{ .Tag }}/qrcp_{{ .Tag }}_linux_x86_64.rpm)          |
+    | macOS    | [macOS package](https://github.com/claudiodangelis/qrcp/releases/download/{{ .Tag }}/qrcp_{{ .Tag }}_macOS_x86_64.tar.gz)     |
+    | Windows  | [Windows package](https://github.com/claudiodangelis/qrcp/releases/download/{{ .Tag }}/qrcp_{{ .Tag }}_Windows_x86_64.tar.gz) |
+
+    Refer to the list of assets below for all supported platform.
 nfpms:
   - replacements:
       darwin: macOS

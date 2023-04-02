@@ -183,7 +183,6 @@ func New(cfg *config.Config) (*Server, error) {
 	// Send handler (sends file to caller)
 	http.HandleFunc("/send/"+path, func(w http.ResponseWriter, r *http.Request) {
 		if !cfg.KeepAlive && strings.HasPrefix(r.Header.Get("User-Agent"), "Mozilla") {
-			fmt.Println("new req...")
 			if cookie.Value == "" {
 				initCookie.Do(func() {
 					value, err := util.GetSessionID()

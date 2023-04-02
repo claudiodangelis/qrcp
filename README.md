@@ -8,7 +8,8 @@ Transfer files over Wi-Fi from your computer to a mobile device by scanning a QR
 
 You can support development by donating with  [![Buy Me A Coffee](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/claudiodangelis).
 
-Join the **Telegram channel** [qrcp_dev](https://t.me/qrcp_dev) for news about the development.
+Join the **Telegram channel** [qrcp_dev](https://t.me/qrcp_dev) or the [@qrcp_dev](https://twitter.com/qrcp_dev) **Twitter account** for news about the development.
+
 
 ## How does it work?
 ![Screenshot](docs/screenshot.png)
@@ -205,13 +206,13 @@ To configure `qrcp` you can create a configuration file inside `$XDG_CONFIG_HOME
 |-------------|---------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `interface` | String  | This value is automatically discovered during the first launch of `qrcp`, you can set it to override the default. You can use the `any` interface to bind the web server to `0.0.0.0`. |
 | `port`      | Integer | When this value is not set, `qrcp` will pick a random port at any launch.                                                                                                              |
-| `path` | String | When this value is not set, `qrcp` will add a random string at the end of URL. |
-| `output` | String | Default directory to receive files to. If empty, the current working directory is used. |
-| `fqdn` | String | When this value is set, `qrcp` will use it to replace the IP address in the generated URL.  |
-| `keepAlive` | Bool | Controls whether `qrcp` should quit after transferring the file. Defaults to `false`. |
-| `secure` | Bool | Controls whether `qrcp` should use HTTPS instead of HTTP. Defaults to `false` |
-| `tls-cert` | String | Path to the TLS certificate. It's only used when `secure: true`. |
-| `tls-key` | String | Path to the TLS key. It's only used when `secure: true`. |
+| `path`      | String  | When this value is not set, `qrcp` will add a random string at the end of URL.                                                                                                         |
+| `output`    | String  | Default directory to receive files to. If empty, the current working directory is used.                                                                                                |
+| `fqdn`      | String  | When this value is set, `qrcp` will use it to replace the IP address in the generated URL.                                                                                             |
+| `keepAlive` | Bool    | Controls whether `qrcp` should quit after transferring the file. Defaults to `false`.                                                                                                  |
+| `secure`    | Bool    | Controls whether `qrcp` should use HTTPS instead of HTTP. Defaults to `false`                                                                                                          |
+| `tls-cert`  | String  | Path to the TLS certificate. It's only used when `secure: true`.                                                                                                                       |
+| `tls-key`   | String  | Path to the TLS key. It's only used when `secure: true`.                                                                                                                               |
 
 
 All the configuration parameters can be controlled via environment variables prefixed with `QRCP_`, for example:
@@ -383,7 +384,7 @@ To load completions for each session, execute once:
 
 ## Authors
 
-**qrcp**, originally called **qr-filetransfer**, started from an idea of [Claudio d'Angelis](claudiodangelis@gmail.com) ([@daw985](https://twitter.com/daw985) on Twitter), the current maintainer, and it's [developed by the community](https://github.com/claudiodangelis/qrcp/graphs/contributors).
+**qrcp**, originally called **qr-filetransfer**, started from an idea of [Claudio d'Angelis](claudiodangelis@gmail.com) ([@claudiodangelis](https://t.me/claudiodangelis) on Telegram), the current maintainer, and it's [developed by the community](https://github.com/claudiodangelis/qrcp/graphs/contributors).
 
 
 [Join us!](https://github.com/claudiodangelis/qrcp/fork)
