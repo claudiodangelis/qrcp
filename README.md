@@ -8,7 +8,8 @@ Transfer files over Wi-Fi from your computer to a mobile device by scanning a QR
 
 You can support development by donating with  [![Buy Me A Coffee](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/claudiodangelis).
 
-Join the **Telegram channel** [qrcp_dev](https://t.me/qrcp_dev) for news about the development.
+Join the **Telegram channel** [qrcp_dev](https://t.me/qrcp_dev) or the [@qrcp_dev](https://twitter.com/qrcp_dev) **Twitter account** for news about the development.
+
 
 ## How does it work?
 ![Screenshot](docs/screenshot.png)
@@ -43,6 +44,10 @@ Receive files from mobile:
 _Note: it requires go 1.8_
 
     go get github.com/claudiodangelis/qrcp
+
+If using go 1.18 or higher,
+
+    go install github.com/claudiodangelis/qrcp@latest
 
 ## Linux
 
@@ -186,9 +191,40 @@ qrcp receive --output=/tmp/dir
 ```
 
 
-## Options
+## Configuration
 
-`qrcp` works without any prior configuration, however, you can choose to configure to use specific values. The `config` command launches a wizard that lets you configure parameters like interface, port, fully-qualified domain name and keep alive.
+`qrcp` works without any prior configuration, however, you can choose to configure to use specific values.
+
+To configure `qrcp` you can create a configuration file inside `$XDG_CONFIG_HOME/qrcp`.
+
+> Note: On Linux, the `$XDG_CONFIG_HOME` is `.config` under user home directory.
+> So, for example, on Linux the configuration file will be `$HOME/.config/qrcp/config.yml`.
+
+> Note: Starting from version 0.10.0, qrcp uses a YAML configuration file instead of the old JSON one. You can automatically migrate the legacy JSON format to the new YAML format by running `qrcp config migrate`.
+
+| Key         | Type    | Notes                                                                                                                                                                                  |
+|-------------|---------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `interface` | String  | This value is automatically discovered during the first launch of `qrcp`, you can set it to override the default. You can use the `any` interface to bind the web server to `0.0.0.0`. |
+| `bind`      | String  | This value is used by qrcp to bind the web server to. Note: if this value is set, the `interface` parameter is ignored.                                                                |
+| `port`      | Integer | When this value is not set, `qrcp` will pick a random port at any launch.                                                                                                              |
+| `path`      | String  | When this value is not set, `qrcp` will add a random string at the end of URL.                                                                                                         |
+| `output`    | String  | Default directory to receive files to. If empty, the current working directory is used.                                                                                                |
+| `fqdn`      | String  | When this value is set, `qrcp` will use it to replace the IP address in the generated URL.                                                                                             |
+| `keepAlive` | Bool    | Controls whether `qrcp` should quit after transferring the file. Defaults to `false`.                                                                                                  |
+| `secure`    | Bool    | Controls whether `qrcp` should use HTTPS instead of HTTP. Defaults to `false`                                                                                                          |
+| `tls-cert`  | String  | Path to the TLS certificate. It's only used when `secure: true`.                                                                                                                       |
+| `tls-key`   | String  | Path to the TLS key. It's only used when `secure: true`.                                                                                                                               |
+
+
+All the configuration parameters can be controlled via environment variables prefixed with `QRCP_`, for example:
+- `$QRCP_INTERFACE`
+- `$QRCP_PORT`
+- `$QRCP_KEEPALIVE`
+- _etc_
+
+### Config Wizard
+
+The `config` command launches a wizard that lets you configure parameters like interface, port, fully-qualified domain name and keep alive.
 
 ```sh
 qrcp config
@@ -203,10 +239,10 @@ qrcp --list-all-interfaces config
 
 ### Configuration File
 
-The default configuration file is stored in $XDG_CONFIG_HOME/qrcp/config.json, however, you can specify the location of the config file by passing the `--config` flag:
+The default configuration file is stored in $XDG_CONFIG_HOME/qrcp/config.yml, however, you can specify the location of the config file by passing the `--config` flag:
 
 ```sh
-qrcp --config /tmp/qrcp.json MyDocument.pdf
+qrcp --config /tmp/qrcp.yml MyDocument.pdf
 ```
 
 ### Port
@@ -247,6 +283,13 @@ This is useful when you want to transfer files from your Amazon EC2, Digital Oce
 qrcp -i any MyDocument.pdf
 ```
 
+### Bind
+
+Alternatively to choosing the interface, you can directly specify the address you want `qrcp` to bind the webserver to.
+
+```sh
+qrcp --bind 10.20.30.40 MyDocument.pdf
+```
 
 ### URL
 
@@ -349,7 +392,7 @@ To load completions for each session, execute once:
 
 ## Authors
 
-**qrcp**, originally called **qr-filetransfer**, started from an idea of [Claudio d'Angelis](claudiodangelis@gmail.com) ([@daw985](https://twitter.com/daw985) on Twitter), the current maintainer, and it's [developed by the community](https://github.com/claudiodangelis/qrcp/graphs/contributors).
+**qrcp**, originally called **qr-filetransfer**, started from an idea of [Claudio d'Angelis](claudiodangelis@gmail.com) ([@claudiodangelis](https://t.me/claudiodangelis) on Telegram), the current maintainer, and it's [developed by the community](https://github.com/claudiodangelis/qrcp/graphs/contributors).
 
 
 [Join us!](https://github.com/claudiodangelis/qrcp/fork)

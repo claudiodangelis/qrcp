@@ -14,24 +14,12 @@ import (
 )
 
 func sendCmdFunc(command *cobra.Command, args []string) error {
-	log := logger.New(quietFlag)
-	payload, err := payload.FromArgs(args, zipFlag)
+	log := logger.New(app.Flags.Quiet)
+	payload, err := payload.FromArgs(args, app.Flags.Zip)
 	if err != nil {
 		return err
 	}
-	// Load configuration
-	configOptions := config.Options{
-		Interface:         interfaceFlag,
-		Port:              portFlag,
-		Path:              pathFlag,
-		FQDN:              fqdnFlag,
-		KeepAlive:         keepaliveFlag,
-		ListAllInterfaces: listallinterfacesFlag,
-		Secure:            secureFlag,
-		TLSCert:           tlscertFlag,
-		TLSKey:            tlskeyFlag,
-	}
-	cfg, err := config.New(configFlag, configOptions)
+	cfg := config.New(app)
 	if err != nil {
 		return err
 	}
@@ -44,7 +32,7 @@ func sendCmdFunc(command *cobra.Command, args []string) error {
 	log.Print(`Scan the following URL with a QR reader to start the file transfer, press CTRL+C or "q" to exit:`)
 	log.Print(srv.SendURL)
 	qr.RenderString(srv.SendURL)
-	if browserFlag {
+	if app.Flags.Browser {
 		srv.DisplayQR(srv.SendURL)
 	}
 	if err := keyboard.Open(); err == nil {

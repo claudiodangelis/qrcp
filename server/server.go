@@ -102,10 +102,14 @@ func (s Server) Shutdown() {
 func New(cfg *config.Config) (*Server, error) {
 
 	app := &Server{}
-	// Get the address of the configured interface to bind the server to
+	// Get the address of the configured interface to bind the server to.
+	// If `bind` configuration parameter has been configured, it takes precedence
 	bind, err := util.GetInterfaceAddress(cfg.Interface)
 	if err != nil {
 		return &Server{}, err
+	}
+	if cfg.Bind != "" {
+		bind = cfg.Bind
 	}
 	// Create a listener. If `port: 0`, a random one is chosen
 	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", bind, cfg.Port))
@@ -183,7 +187,6 @@ func New(cfg *config.Config) (*Server, error) {
 	// Send handler (sends file to caller)
 	http.HandleFunc("/send/"+path, func(w http.ResponseWriter, r *http.Request) {
 		if !cfg.KeepAlive && strings.HasPrefix(r.Header.Get("User-Agent"), "Mozilla") {
-			fmt.Println("new req...")
 			if cookie.Value == "" {
 				initCookie.Do(func() {
 					value, err := util.GetSessionID()
@@ -320,7 +323,7 @@ func New(cfg *config.Config) (*Server, error) {
 	go func() {
 		netListener := tcpKeepAliveListener{listener.(*net.TCPListener)}
 		if cfg.Secure {
-			if err := httpserver.ServeTLS(netListener, cfg.TLSCert, cfg.TLSKey); err != http.ErrServerClosed {
+			if err := httpserver.ServeTLS(netListener, cfg.TlsCert, cfg.TlsKey); err != http.ErrServerClosed {
 				log.Fatalln("error starting the server:", err)
 			}
 		} else {

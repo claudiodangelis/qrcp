@@ -20,7 +20,7 @@ jobs:
     - name: Run GoReleaser
       uses: goreleaser/goreleaser-action@v1
       with:
-        version: latest
+        version: v1.6.3
         args: release --rm-dist
         key: ${{ secrets.YOUR_PRIVATE_KEY }}
       env:
