@@ -3,12 +3,7 @@ module github.com/claudiodangelis/qrcp
 go 1.14
 
 require (
-<<<<<<< HEAD
 	github.com/adrg/xdg v0.4.0
-=======
-	github.com/adrg/xdg v0.3.2
-	github.com/armon/consul-api v0.0.0-20180202201655-eb2c6b5be1b6 // indirect
->>>>>>> 0659204 (chore(deps): bump several dependencies)
 	github.com/asaskevich/govalidator v0.0.0-20200108200545-475eaeb16496
 	github.com/coreos/bbolt v1.3.2 // indirect
 	github.com/coreos/etcd v3.3.10+incompatible // indirect
@@ -16,14 +11,8 @@ require (
 	github.com/coreos/pkg v0.0.0-20180928190104-399ea9e2e55f // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/eiannone/keyboard v0.0.0-20200508000154-caf4b762e807
-<<<<<<< HEAD
 	github.com/fatih/color v1.9.0 // indirect
 	github.com/glendc/go-external-ip v0.1.0
-=======
-	github.com/glendc/go-external-ip v0.0.0-20170425150139-139229dcdddd
-	github.com/gorilla/websocket v1.4.0 // indirect
-	github.com/grpc-ecosystem/go-grpc-middleware v1.0.0 // indirect
->>>>>>> 0659204 (chore(deps): bump several dependencies)
 	github.com/jhoonb/archivex v0.0.0-20180718040744-0488e4ce1681
 	github.com/jonboulle/clockwork v0.1.0 // indirect
 	github.com/juju/ansiterm v0.0.0-20180109212912-720a0952cc2a // indirect
@@ -44,9 +33,5 @@ require (
 	github.com/xordataexchange/crypt v0.0.3-0.20170626215501-b2862e3d0a77 // indirect
 	go.etcd.io/bbolt v1.3.2 // indirect
 	gopkg.in/cheggaaa/pb.v1 v1.0.28
-<<<<<<< HEAD
-=======
-	gopkg.in/resty.v1 v1.12.0 // indirect
->>>>>>> 0659204 (chore(deps): bump several dependencies)
 	gopkg.in/yaml.v2 v2.4.0
 )
