@@ -11,7 +11,6 @@ require (
 	github.com/coreos/pkg v0.0.0-20180928190104-399ea9e2e55f // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/eiannone/keyboard v0.0.0-20200508000154-caf4b762e807
-	github.com/fatih/color v1.9.0 // indirect
 	github.com/glendc/go-external-ip v0.1.0
 	github.com/jhoonb/archivex v0.0.0-20180718040744-0488e4ce1681
 	github.com/jonboulle/clockwork v0.1.0 // indirect
