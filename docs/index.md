@@ -261,10 +261,10 @@ A `--secure` flag is available too, you can use it to override the default value
 
 ### Color scheme
 
-By default, `qrcp`` is configured for terminals with light text on a dark background. Terminals with a light color scheme can invert this with the `--reverse` or `-r` flag.
+By default, `qrcp`` is configured for terminals with light text on a dark background. Terminals with a light color scheme can invert this with the `--reversed` or `-r` flag.
 
 ```sh
-qrcp --reverse MyDocument.pdf
+qrcp --reversed MyDocument.pdf
 ```
 
 ### Open in browser
