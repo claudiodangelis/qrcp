@@ -199,6 +199,7 @@ To configure `qrcp` you can create a configuration file inside `$XDG_CONFIG_HOME
 
 > Note: On Linux, the `$XDG_CONFIG_HOME` is `.config` under user home directory.
 > So, for example, on Linux the configuration file will be `$HOME/.config/qrcp/config.yml`.
+> On MacOS, it defaults to `$HOME/Library/Application Support/qrcp/config.yml``
 
 > Note: Starting from version 0.10.0, qrcp uses a YAML configuration file instead of the old JSON one. You can automatically migrate the legacy JSON format to the new YAML format by running `qrcp config migrate`.
 
@@ -214,6 +215,7 @@ To configure `qrcp` you can create a configuration file inside `$XDG_CONFIG_HOME
 | `secure`    | Bool    | Controls whether `qrcp` should use HTTPS instead of HTTP. Defaults to `false`                                                                                                          |
 | `tls-cert`  | String  | Path to the TLS certificate. It's only used when `secure: true`.                                                                                                                       |
 | `tls-key`   | String  | Path to the TLS key. It's only used when `secure: true`.                                                                                                                               |
+| `reversed`  | Bool    | Reverse QR code (black text on white background)?" true`.                                                                                                                               |
 
 
 All the configuration parameters can be controlled via environment variables prefixed with `QRCP_`, for example:

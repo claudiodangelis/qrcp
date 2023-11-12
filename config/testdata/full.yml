@@ -8,3 +8,4 @@ tls-key: /path/to/key
 tls-cert: /path/to/cert
 fqdn: mylan.com
 output: /path/to/default/output/dir
+reversed: true
