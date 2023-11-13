@@ -1,11 +1,22 @@
 name: CI
 on:
   push:
-    tags:
-    - '*'
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21.x'
+      - name: Install dependencies
+        run: go get .
+      - name: Test with the Go CLI
+        run: go test ./...
   build:
     runs-on: ubuntu-latest
+    if: startsWith(github.event.ref, 'refs/tags/')
     steps:
     - uses: actions/checkout@v2
     # Required to build changeleg
