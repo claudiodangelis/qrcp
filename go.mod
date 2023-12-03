@@ -8,7 +8,6 @@ require (
 	github.com/eiannone/keyboard v0.0.0-20200508000154-caf4b762e807
 	github.com/fatih/color v1.9.0 // indirect
 	github.com/glendc/go-external-ip v0.0.0-20170425150139-139229dcdddd
-	github.com/jhoonb/archivex v0.0.0-20180718040744-0488e4ce1681
 	github.com/manifoldco/promptui v0.7.0
 	github.com/mattn/go-colorable v0.1.6 // indirect
 	github.com/mattn/go-runewidth v0.0.9 // indirect
