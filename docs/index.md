@@ -259,6 +259,13 @@ qrcp --tls-cert /path/to/cert.pem --tls-key /path/to/cert.key MyDocument
 
 A `--secure` flag is available too, you can use it to override the default value.
 
+### Color scheme
+
+By default, `qrcp`` is configured for terminals with light text on a dark background. Terminals with a light color scheme can invert this with the `--reversed` or `-r` flag.
+
+```sh
+qrcp --reversed MyDocument.pdf
+```
 
 ### Open in browser
 

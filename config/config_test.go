@@ -96,6 +96,7 @@ func TestNew(t *testing.T) {
 				TlsCert:   "/path/to/cert",
 				FQDN:      "mylan.com",
 				Output:    "/path/to/default/output/dir",
+				Reversed:  true,
 			},
 		},
 		{
@@ -118,6 +119,7 @@ func TestNew(t *testing.T) {
 				TlsCert:   "/path/to/cert",
 				FQDN:      "mylan.com",
 				Output:    "/path/to/default/output/dir",
+				Reversed:  true,
 			},
 		},
 	}
