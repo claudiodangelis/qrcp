@@ -130,7 +130,7 @@ func New(cfg *config.Config) (*Server, error) {
 	// Use external IP when using `interface: any`, unless a FQDN is set
 	if bind == "0.0.0.0" && cfg.FQDN == "" {
 		fmt.Println("Retrieving the external IP...")
-		extIP, err := util.GetExernalIP()
+		extIP, err := util.GetExternalIP()
 		if err != nil {
 			panic(err)
 		}

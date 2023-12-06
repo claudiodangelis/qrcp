@@ -1,4 +1,4 @@
-interface: wlo1
+interface: __PLACEHOLDER_INTERFACE__
 port: 18080
 bind: '10.20.30.40'
 keepAlive: false
