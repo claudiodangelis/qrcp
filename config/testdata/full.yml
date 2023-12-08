@@ -1,4 +1,4 @@
-interface: wlo1
+interface: __PLACEHOLDER_INTERFACE__
 port: 18080
 bind: '10.20.30.40'
 keepAlive: false
@@ -8,3 +8,4 @@ tls-key: /path/to/key
 tls-cert: /path/to/cert
 fqdn: mylan.com
 output: /path/to/default/output/dir
+reversed: true

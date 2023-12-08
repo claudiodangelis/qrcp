@@ -199,6 +199,7 @@ To configure `qrcp` you can create a configuration file inside `$XDG_CONFIG_HOME
 
 > Note: On Linux, the `$XDG_CONFIG_HOME` is `.config` under user home directory.
 > So, for example, on Linux the configuration file will be `$HOME/.config/qrcp/config.yml`.
+> On MacOS, it defaults to `$HOME/Library/Application Support/qrcp/config.yml``
 
 > Note: Starting from version 0.10.0, qrcp uses a YAML configuration file instead of the old JSON one. You can automatically migrate the legacy JSON format to the new YAML format by running `qrcp config migrate`.
 
@@ -214,6 +215,7 @@ To configure `qrcp` you can create a configuration file inside `$XDG_CONFIG_HOME
 | `secure`    | Bool    | Controls whether `qrcp` should use HTTPS instead of HTTP. Defaults to `false`                                                                                                          |
 | `tls-cert`  | String  | Path to the TLS certificate. It's only used when `secure: true`.                                                                                                                       |
 | `tls-key`   | String  | Path to the TLS key. It's only used when `secure: true`.                                                                                                                               |
+| `reversed`  | Bool    | Reverse QR code (black text on white background)?" true`.                                                                                                                               |
 
 
 All the configuration parameters can be controlled via environment variables prefixed with `QRCP_`, for example:
@@ -420,6 +422,7 @@ Releases are handled with [goreleaser](https://goreleaser.com).
 - [ezshare](https://github.com/mifi/ezshare) - Another Node.js two way file sharing tool supporting folders and multiple files
 - [local_file_share](https://github.com/woshimanong1990/local_file_share)  - _"share local file to other people, OR smartphone download files which is in pc"_
 - [qrcp](https://github.com/pearl2201/qrcp) - a desktop app clone of `qrcp`, writing with C# and .NET Core, work for Windows.
+- [swift_file](https://github.com/mateoradman/swift_file) - Rust project inspired by `qrcp`.
 ## License
 
 MIT. See [LICENSE](LICENSE).

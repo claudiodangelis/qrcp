@@ -9,12 +9,12 @@ import (
 )
 
 // RenderString as a QR code
-func RenderString(s string) {
+func RenderString(s string, inverseColor bool) {
 	q, err := qrcode.New(s, qrcode.Medium)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(q.ToSmallString(false))
+	fmt.Println(q.ToSmallString(inverseColor))
 }
 
 // RenderImage returns a QR code as an image.Image

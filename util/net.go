@@ -31,8 +31,8 @@ func Interfaces(listAll bool) (map[string]string, error) {
 	return names, nil
 }
 
-// GetExernalIP of this host
-func GetExernalIP() (net.IP, error) {
+// GetExternalIP of this host
+func GetExternalIP() (net.IP, error) {
 	consensus := externalip.DefaultConsensus(nil, nil)
 	// Get your IP, which is never <nil> when err is <nil>
 	ip, err := consensus.ExternalIP()

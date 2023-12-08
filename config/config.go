@@ -27,6 +27,7 @@ type Config struct {
 	TlsCert   string `yaml:",omitempty"`
 	FQDN      string `yaml:",omitempty"`
 	Output    string `yaml:",omitempty"`
+	Reversed  bool   `yaml:",omitempty"`
 }
 
 var interactive bool = false
@@ -61,6 +62,7 @@ func New(app application.App) Config {
 	cfg.TlsCert = v.GetString("tls-cert")
 	cfg.FQDN = v.GetString("fqdn")
 	cfg.Output = v.GetString("output")
+	cfg.Reversed = v.GetBool("reversed")
 
 	// Override
 	if app.Flags.Interface != "" {
@@ -92,6 +94,9 @@ func New(app application.App) Config {
 	}
 	if app.Flags.Output != "" {
 		cfg.Output = app.Flags.Output
+	}
+	if app.Flags.Reversed {
+		cfg.Reversed = true
 	}
 
 	// Discover interface if it's not been set yet
@@ -305,6 +310,16 @@ func Wizard(app application.App) error {
 			output, _ := filepath.Abs(promptOutputResultString)
 			v.Set("output", output)
 		}
+	}
+	promptReversed := promptui.Select{
+		Items: []string{"No", "Yes"},
+		Label: "Reverse QR code (black text on white background)?",
+	}
+	if _, promptReversedResultString, err := promptReversed.Run(); err == nil {
+		if promptReversedResultString == "Yes" {
+			v.Set("reversed", true)
+		}
+		cfg.Reversed = v.GetBool("reversed")
 	}
 
 	return v.WriteConfig()
