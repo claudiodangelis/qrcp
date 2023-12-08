@@ -32,9 +32,8 @@ func Expand(input string) string {
 	return input
 }
 
-
-//add folder to the zip file
-func addFolderToZip(zipWriter *zip.Writer,source, target string) error {
+// add folder to the zip file
+func addFolderToZip(zipWriter *zip.Writer, source, target string) error {
 
 	//explore the folder and add all to the zip
 	return filepath.Walk(source, func(path string, info os.FileInfo, err error) error {
@@ -74,21 +73,21 @@ func addFolderToZip(zipWriter *zip.Writer,source, target string) error {
 	})
 }
 
-//add files to the zip file
-func addFileToZip(zipWriter *zip.Writer,fileToAdd string) error {
+// add files to the zip file
+func addFileToZip(zipWriter *zip.Writer, fileToAdd string) error {
 	f1, err := os.Open(fileToAdd)
-    if err != nil {
-        return err
-    }
-    defer f1.Close()
+	if err != nil {
+		return err
+	}
+	defer f1.Close()
 
 	w1, err := zipWriter.Create(filepath.Base(fileToAdd))
-    if err != nil {
-        panic(err)
-    }
-    if _, err := io.Copy(w1, f1); err != nil {
-        panic(err)
-    }
+	if err != nil {
+		panic(err)
+	}
+	if _, err := io.Copy(w1, f1); err != nil {
+		panic(err)
+	}
 
 	return nil
 }
@@ -100,7 +99,7 @@ func ZipFiles(files []string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	tempFileName:= tmpfile.Name() + ".zip"
+	tempFileName := tmpfile.Name() + ".zip"
 	tmpfile.Close()
 	if err := os.Rename(tmpfile.Name(), tempFileName); err != nil {
 		return "", err
@@ -109,7 +108,7 @@ func ZipFiles(files []string) (string, error) {
 	//create zip file
 	zipFile, err := os.Create(tempFileName)
 	if err != nil {
-		return "",err
+		return "", err
 	}
 	defer zipFile.Close()
 
@@ -122,11 +121,11 @@ func ZipFiles(files []string) (string, error) {
 			return "", err
 		}
 		if fileinfo.IsDir() {
-			if err := addFolderToZip(zipWriter,filename,tempFileName); err != nil {
+			if err := addFolderToZip(zipWriter, filename, tempFileName); err != nil {
 				return "", err
 			}
 		} else {
-			if err := addFileToZip(zipWriter,filename); err != nil {
+			if err := addFileToZip(zipWriter, filename); err != nil {
 				return "", err
 			}
 		}
