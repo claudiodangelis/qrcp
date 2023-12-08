@@ -8,7 +8,7 @@ require (
 	github.com/eiannone/keyboard v0.0.0-20200508000154-caf4b762e807
 	github.com/glendc/go-external-ip v0.1.0
 	github.com/jhoonb/archivex v0.0.0-20180718040744-0488e4ce1681
-	github.com/manifoldco/promptui v0.7.0
+	github.com/manifoldco/promptui v0.9.0
 	github.com/mattn/go-runewidth v0.0.9 // indirect
 	github.com/skip2/go-qrcode v0.0.0-20191027152451-9434209cb086
 	github.com/spf13/cobra v1.8.0
