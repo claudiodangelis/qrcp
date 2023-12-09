@@ -12,7 +12,7 @@ Join the **Telegram channel** [qrcp_dev](https://t.me/qrcp_dev) or the [@qrcp_de
 
 
 ## How does it work?
-![Screenshot](docs/screenshot.png)
+![Screenshot](docs/img/screenshot.png)
 
 `qrcp` binds a web server to the address of your Wi-Fi network interface on a random port and creates a handler for it. The default handler serves the content and exits the program when the transfer is complete. When used to receive files, `qrcp` serves an upload page and handles the transfer.
 
@@ -27,15 +27,15 @@ Most QR apps can detect URLs in decoded text and act accordingly (i.e. open the 
 
 Send files to mobile:
 
-![screenshot](docs/demo.gif)
+![screenshot](docs/img/demo.gif)
 
 Receive files from mobile:
 
-![Screenshot](docs/mobile-demo.gif)
+![Screenshot](docs/img/mobile-demo.gif)
 
 ## Tutorials
 
-- [Secure transfers with mkcert](https://claudiodangelis.com/qrcp/tutorials/secure-transfers-with-mkcert)
+- [Secure transfers with mkcert](https://qrcp.sh/tutorials/secure-transfers-with-mkcert)
 
 # Installation
 

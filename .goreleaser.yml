@@ -58,7 +58,7 @@ nfpms:
   #     windows: Windows
   #     386: i386
   #     amd64: x86_64
-  - homepage: https://claudiodangelis.com/qrcp
+  - homepage: https://qrcp.sh
     maintainer: Claudio d'Angelis <claudiodangelis@gmail.com>
     description: Transfer files over wifi from your computer to your mobile device by scanning a QR code without leaving the terminal.
     license: MIT
