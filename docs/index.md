@@ -8,10 +8,11 @@ Transfer files over Wi-Fi from your computer to a mobile device by scanning a QR
 
 You can support development by donating with  [![Buy Me A Coffee](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/claudiodangelis).
 
-Join the **Telegram channel** [qrcp_dev](https://t.me/qrcp_dev) for news about the development.
+Join the **Telegram channel** [qrcp_dev](https://t.me/qrcp_dev) or the [@qrcp_dev](https://twitter.com/qrcp_dev) **Twitter account** for news about the development.
+
 
 ## How does it work?
-![Screenshot](screenshot.png)
+![Screenshot](docs/screenshot.png)
 
 `qrcp` binds a web server to the address of your Wi-Fi network interface on a random port and creates a handler for it. The default handler serves the content and exits the program when the transfer is complete. When used to receive files, `qrcp` serves an upload page and handles the transfer.
 
@@ -26,19 +27,27 @@ Most QR apps can detect URLs in decoded text and act accordingly (i.e. open the 
 
 Send files to mobile:
 
-![screenshot](demo.gif)
+![screenshot](docs/demo.gif)
 
 Receive files from mobile:
 
-![Screenshot](mobile-demo.gif)
+![Screenshot](docs/mobile-demo.gif)
+
+## Tutorials
+
+- [Secure transfers with mkcert](https://claudiodangelis.com/qrcp/tutorials/secure-transfers-with-mkcert)
 
 # Installation
 
 ## Install the latest development version with Go
-    
+
 _Note: it requires go 1.8_
 
     go get github.com/claudiodangelis/qrcp
+
+If using go 1.18 or higher,
+
+    go install github.com/claudiodangelis/qrcp@latest
 
 ## Linux
 
@@ -93,12 +102,19 @@ qrcp --help
 
 Download the latest Windows .tar.gz archive from the [Releases page](https://github.com/claudiodangelis/qrcp/releases) and extract the EXE file.
 
-### Scoop 
+### Scoop
 
 If you use [Scoop](https://scoop.sh/) for package management on Windows, you can install qrcp with the following one-liner:
 
 ```
 scoop install qrcp
+```
+### Chocolatey
+
+If you use [Chocolatey](https://community.chocolatey.org/packages/qrcp) for package management on Windows, you can install qrcp with the following one-liner:
+
+```
+choco install qrcp
 ```
 
 ## MacOS
@@ -115,7 +131,15 @@ sudo chmod +x /usr/local/bin/qrcp
 # Confirm it's working:
 qrcp --help
 ```
-    
+
+### Homebrew
+
+If you use [Homebrew](https://brew.sh) for package management on macOS, you can install qrcp with the following one-liner:
+
+```
+brew install qrcp
+```
+
 # Usage
 
 ## Send files
@@ -167,9 +191,42 @@ qrcp receive --output=/tmp/dir
 ```
 
 
-## Options
+## Configuration
 
-`qrcp` works without any prior configuration, however, you can choose to configure to use specific values. The `config` command launches a wizard that lets you configure parameters like interface, port, fully-qualified domain name and keep alive.
+`qrcp` works without any prior configuration, however, you can choose to configure to use specific values.
+
+To configure `qrcp` you can create a configuration file inside `$XDG_CONFIG_HOME/qrcp`.
+
+> Note: On Linux, the `$XDG_CONFIG_HOME` is `.config` under user home directory.
+> So, for example, on Linux the configuration file will be `$HOME/.config/qrcp/config.yml`.
+> On MacOS, it defaults to `$HOME/Library/Application Support/qrcp/config.yml``
+
+> Note: Starting from version 0.10.0, qrcp uses a YAML configuration file instead of the old JSON one. You can automatically migrate the legacy JSON format to the new YAML format by running `qrcp config migrate`.
+
+| Key         | Type    | Notes                                                                                                                                                                                  |
+|-------------|---------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `interface` | String  | This value is automatically discovered during the first launch of `qrcp`, you can set it to override the default. You can use the `any` interface to bind the web server to `0.0.0.0`. |
+| `bind`      | String  | This value is used by qrcp to bind the web server to. Note: if this value is set, the `interface` parameter is ignored.                                                                |
+| `port`      | Integer | When this value is not set, `qrcp` will pick a random port at any launch.                                                                                                              |
+| `path`      | String  | When this value is not set, `qrcp` will add a random string at the end of URL.                                                                                                         |
+| `output`    | String  | Default directory to receive files to. If empty, the current working directory is used.                                                                                                |
+| `fqdn`      | String  | When this value is set, `qrcp` will use it to replace the IP address in the generated URL.                                                                                             |
+| `keepAlive` | Bool    | Controls whether `qrcp` should quit after transferring the file. Defaults to `false`.                                                                                                  |
+| `secure`    | Bool    | Controls whether `qrcp` should use HTTPS instead of HTTP. Defaults to `false`                                                                                                          |
+| `tls-cert`  | String  | Path to the TLS certificate. It's only used when `secure: true`.                                                                                                                       |
+| `tls-key`   | String  | Path to the TLS key. It's only used when `secure: true`.                                                                                                                               |
+| `reversed`  | Bool    | Reverse QR code (black text on white background)?" true`.                                                                                                                               |
+
+
+All the configuration parameters can be controlled via environment variables prefixed with `QRCP_`, for example:
+- `$QRCP_INTERFACE`
+- `$QRCP_PORT`
+- `$QRCP_KEEPALIVE`
+- _etc_
+
+### Config Wizard
+
+The `config` command launches a wizard that lets you configure parameters like interface, port, fully-qualified domain name and keep alive.
 
 ```sh
 qrcp config
@@ -178,25 +235,33 @@ qrcp config
 Note: if some network interfaces are not showing up, use the `--list-all-interfaces` flag to suppress the interfaces' filter.
 
 ```sh
-qrcp --list-all-interfaces config 
+qrcp --list-all-interfaces config
 ```
 
 
 ### Configuration File
 
-The default configuration file is stored in $HOME/qrcp.json, however, you can specify the location of the config file by passing the `--config` flag:
+The default configuration file is stored in $XDG_CONFIG_HOME/qrcp/config.yml, however, you can specify the location of the config file by passing the `--config` flag:
 
 ```sh
-qrcp --config /tmp/qrcp.json MyDocument.pdf
+qrcp --config /tmp/qrcp.yml MyDocument.pdf
 ```
 
 ### Port
 
-By default `qrcp` listens on a random port. Pass the `--port` (or `-p`) flag to choose a specific one:
+By default `qrcp` listens on a random port. Set the `QRCP_PORT` environment variable or pass the `--port` (or `-p`) flag to choose a specific one:
+
+```sh
+export QRCP_PORT=8080
+qrcp MyDocument
+```
+
+Or:
 
 ```sh
 qrcp --port 8080 MyDocument.pdf
 ```
+
 ### Network Interface
 
 `qrcp` will try to automatically find the suitable network interface to use for the transfers. If more than one suitable interface is found, it asks you to choose one.
@@ -212,7 +277,7 @@ qrcp -i tun0 MyDocument.dpf
 ```
 
 
-You can also use a special interface name, `any`, which binds the web server to `0.0.0.0`, making the web server visible by everyone on any network, even from an external network. 
+You can also use a special interface name, `any`, which binds the web server to `0.0.0.0`, making the web server visible by everyone on any network, even from an external network.
 
 This is useful when you want to transfer files from your Amazon EC2, Digital Ocean Droplet, Google Cloud Platform Compute Instance or any other VPS.
 
@@ -220,6 +285,13 @@ This is useful when you want to transfer files from your Amazon EC2, Digital Oce
 qrcp -i any MyDocument.pdf
 ```
 
+### Bind
+
+Alternatively to choosing the interface, you can directly specify the address you want `qrcp` to bind the webserver to.
+
+```sh
+qrcp --bind 10.20.30.40 MyDocument.pdf
+```
 
 ### URL
 
@@ -259,13 +331,7 @@ qrcp --tls-cert /path/to/cert.pem --tls-key /path/to/cert.key MyDocument
 
 A `--secure` flag is available too, you can use it to override the default value.
 
-### Color scheme
-
-By default, `qrcp`` is configured for terminals with light text on a dark background. Terminals with a light color scheme can invert this with the `--reversed` or `-r` flag.
-
-```sh
-qrcp --reversed MyDocument.pdf
-```
+### Default output directory
 
 ### Open in browser
 
@@ -325,9 +391,10 @@ To load completions for each session, execute once:
 
     $ qrcp completion fish > ~/.config/fish/completions/qrcp.fish
 
+
 ## Authors
 
-**qrcp**, originally called **qr-filetransfer**, started from an idea of [Claudio d'Angelis](claudiodangelis@gmail.com) ([@daw985](https://twitter.com/daw985) on Twitter), the current maintainer, and it's [developed by the community](https://github.com/claudiodangelis/qrcp/graphs/contributors).
+**qrcp**, originally called **qr-filetransfer**, started from an idea of [Claudio d'Angelis](claudiodangelis@gmail.com) ([@claudiodangelis](https://t.me/claudiodangelis) on Telegram), the current maintainer, and it's [developed by the community](https://github.com/claudiodangelis/qrcp/graphs/contributors).
 
 
 [Join us!](https://github.com/claudiodangelis/qrcp/fork)
@@ -355,6 +422,7 @@ Releases are handled with [goreleaser](https://goreleaser.com).
 - [ezshare](https://github.com/mifi/ezshare) - Another Node.js two way file sharing tool supporting folders and multiple files
 - [local_file_share](https://github.com/woshimanong1990/local_file_share)  - _"share local file to other people, OR smartphone download files which is in pc"_
 - [qrcp](https://github.com/pearl2201/qrcp) - a desktop app clone of `qrcp`, writing with C# and .NET Core, work for Windows.
+- [swift_file](https://github.com/mateoradman/swift_file) - Rust project inspired by `qrcp`.
 ## License
 
 MIT. See [LICENSE](LICENSE).
