@@ -1,4 +1,4 @@
-![Logo](logo.svg)
+![Logo](docs/img/logo.svg)
 
 # $ qrcp
 
