@@ -1,7 +1,6 @@
 package util
 
 import (
-	"archive/zip"
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
@@ -15,6 +14,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/jhoonb/archivex"
 )
 
 // Expand tilde in paths
@@ -32,105 +33,56 @@ func Expand(input string) string {
 	return input
 }
 
-// add folder to the zip file
-func addFolderToZip(zipWriter *zip.Writer, source, target string) error {
 
-	//explore the folder and add all to the zip
-	return filepath.Walk(source, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-
-		header, err := zip.FileInfoHeader(info)
-		if err != nil {
-			return err
-		}
-		header.Name = path
-
-		if info.IsDir() {
-			header.Name += "/"
-		} else {
-			header.Method = zip.Deflate
-		}
-
-		writer, err := zipWriter.CreateHeader(header)
-		if err != nil {
-			return err
-		}
-
-		if info.IsDir() {
-			return nil
-		}
-
-		file, err := os.Open(path)
-		if err != nil {
-			return err
-		}
-		defer file.Close()
-
-		_, err = io.Copy(writer, file)
-		return err
-	})
-}
-
-// add files to the zip file
-func addFileToZip(zipWriter *zip.Writer, fileToAdd string) error {
-	f1, err := os.Open(fileToAdd)
-	if err != nil {
-		return err
-	}
-	defer f1.Close()
-
-	w1, err := zipWriter.Create(filepath.Base(fileToAdd))
-	if err != nil {
-		panic(err)
-	}
-	if _, err := io.Copy(w1, f1); err != nil {
-		panic(err)
-	}
-
-	return nil
-}
 
 // ZipFiles and return the resulting zip's filename
 func ZipFiles(files []string) (string, error) {
-	//create temporary file
+	zip := new(archivex.ZipFile)
 	tmpfile, err := os.CreateTemp("", "qrcp")
 	if err != nil {
 		return "", err
 	}
-	tempFileName := tmpfile.Name() + ".zip"
 	tmpfile.Close()
-	if err := os.Rename(tmpfile.Name(), tempFileName); err != nil {
+	if err := os.Rename(tmpfile.Name(), tmpfile.Name()+".zip"); err != nil {
 		return "", err
 	}
-
-	//create zip file
-	zipFile, err := os.Create(tempFileName)
+	tmpfile,err = os.OpenFile(tmpfile.Name()+".zip", os.O_RDWR, 0644)
 	if err != nil {
 		return "", err
 	}
-	defer zipFile.Close()
+	if err := zip.CreateWriter(tmpfile.Name(),tmpfile); err != nil {
+		return "", err
+	}
 
-	//add files and folder in the zip
-	zipWriter := zip.NewWriter(zipFile)
-	defer zipWriter.Close()
 	for _, filename := range files {
 		fileinfo, err := os.Stat(filename)
 		if err != nil {
 			return "", err
 		}
 		if fileinfo.IsDir() {
-			if err := addFolderToZip(zipWriter, filename, tempFileName); err != nil {
+			if err := zip.AddAll(filename, true); err != nil {
 				return "", err
 			}
 		} else {
-			if err := addFileToZip(zipWriter, filename); err != nil {
+			file, err := os.Open(filename)
+			if err != nil {
+				return "", err
+			}
+			defer file.Close()
+			if err := zip.Add(filename, file, fileinfo); err != nil {
 				return "", err
 			}
 		}
 	}
-	return tempFileName, nil
+
+	if err := zip.Writer.Close(); err != nil {
+		return "", err
+	}
+	if err:= tmpfile.Close(); err != nil {
+		return "", err
+	}
+
+	return zip.Name, nil
 }
 
 // GetRandomURLPath returns a random string of 4 alphanumeric characters
