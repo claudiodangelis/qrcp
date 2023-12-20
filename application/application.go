@@ -16,7 +16,7 @@ type Flags struct {
 	TlsCert           string
 	TlsKey            string
 	Output            string
-	Reversed           bool
+	Reversed          bool
 }
 
 type App struct {
