@@ -33,8 +33,6 @@ func Expand(input string) string {
 	return input
 }
 
-
-
 // ZipFiles and return the resulting zip's filename
 func ZipFiles(files []string) (string, error) {
 	zip := new(archivex.ZipFile)
@@ -46,11 +44,11 @@ func ZipFiles(files []string) (string, error) {
 	if err := os.Rename(tmpfile.Name(), tmpfile.Name()+".zip"); err != nil {
 		return "", err
 	}
-	tmpfile,err = os.OpenFile(tmpfile.Name()+".zip", os.O_RDWR, 0644)
+	tmpfile, err = os.OpenFile(tmpfile.Name()+".zip", os.O_RDWR, 0644)
 	if err != nil {
 		return "", err
 	}
-	if err := zip.CreateWriter(tmpfile.Name(),tmpfile); err != nil {
+	if err := zip.CreateWriter(tmpfile.Name(), tmpfile); err != nil {
 		return "", err
 	}
 
@@ -78,7 +76,7 @@ func ZipFiles(files []string) (string, error) {
 	if err := zip.Writer.Close(); err != nil {
 		return "", err
 	}
-	if err:= tmpfile.Close(); err != nil {
+	if err := tmpfile.Close(); err != nil {
 		return "", err
 	}
 
