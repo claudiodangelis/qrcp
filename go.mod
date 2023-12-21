@@ -5,6 +5,7 @@ go 1.14
 require (
 	github.com/adrg/xdg v0.4.0
 	github.com/asaskevich/govalidator v0.0.0-20200108200545-475eaeb16496
+	github.com/briandowns/spinner v1.23.0
 	github.com/eiannone/keyboard v0.0.0-20200508000154-caf4b762e807
 	github.com/glendc/go-external-ip v0.1.0
 	github.com/jhoonb/archivex v0.0.0-20180718040744-0488e4ce1681
