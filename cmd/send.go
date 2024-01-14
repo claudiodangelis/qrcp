@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"os/exec"
 
 	"github.com/claudiodangelis/qrcp/config"
 	"github.com/claudiodangelis/qrcp/logger"
@@ -44,6 +45,8 @@ func sendCmdFunc(command *cobra.Command, args []string) error {
 				char, key, _ := keyboard.GetKey()
 				if string(char) == "q" || key == keyboard.KeyCtrlC {
 					srv.Shutdown()
+				} else if string(char) == "y" {
+					exec.Command("wl-copy", srv.SendURL).Run()
 				}
 			}
 		}()
