@@ -41,11 +41,7 @@ Receive files from mobile:
 
 ## Install the latest development version with Go
 
-_Note: it requires go 1.8_
-
-    go get github.com/claudiodangelis/qrcp
-
-If using go 1.18 or higher,
+_Note: it requires go 1.18_
 
     go install github.com/claudiodangelis/qrcp@latest
 
