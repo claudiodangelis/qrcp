@@ -37,6 +37,7 @@ type Server struct {
 	instance    *http.Server
 	payload     payload.Payload
 	outputDir   string
+	fileName    string
 	stopChannel chan bool
 	// expectParallelRequests is set to true when qrcp sends files, in order
 	// to support downloading of parallel chunks
@@ -58,6 +59,17 @@ func (s *Server) ReceiveTo(dir string) error {
 		return fmt.Errorf("%s is not a valid directory", output)
 	}
 	s.outputDir = output
+	return nil
+}
+
+// FileName sets the filename of the received file
+func (s *Server) FileName(name string) error {
+	output, err := filepath.Abs(name)
+	if err != nil {
+		return err
+	}
+
+	s.fileName = output
 	return nil
 }
 
@@ -257,13 +269,22 @@ func New(cfg *config.Config) (*Server, error) {
 				if err == io.EOF {
 					break
 				}
-				// iIf part.FileName() is empty, skip this iteration.
+				// If part.FileName() is empty, skip this iteration.
 				if part.FileName() == "" {
 					continue
 				}
-				// Prepare the destination
+
 				fileName := getFileName(filepath.Base(part.FileName()), filenames)
-				out, err := os.Create(filepath.Join(app.outputDir, fileName))
+				var filePath string
+
+				if app.fileName != "" {
+					filePath = app.fileName
+				} else {
+					// Prepare the destination
+					filePath = filepath.Join(app.outputDir, fileName)
+				}
+
+				out, err := os.Create(filePath)
 				if err != nil {
 					// Output to server
 					fmt.Fprintf(w, "Unable to create the file for writing: %s\n", err)

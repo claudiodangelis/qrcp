@@ -33,6 +33,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&app.Flags.Reversed, "reversed", "r", false, "Reverse QR code (black text on white background)")
 	// Receive command flags
 	receiveCmd.PersistentFlags().StringVarP(&app.Flags.Output, "output-dir", "o", "", "output directory for receiving files")
+	receiveCmd.PersistentFlags().StringVarP(&app.Flags.FileName, "file", "f", "", "file name for the saved file. Use - to output to stdout instead")
 }
 
 // The root command (`qrcp`) is like a shortcut of the `send` command
