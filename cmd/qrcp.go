@@ -32,7 +32,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&app.Flags.TlsKey, "tls-key", "", "path to TLS private key to use with HTTPS")
 	rootCmd.PersistentFlags().BoolVarP(&app.Flags.Reversed, "reversed", "r", false, "Reverse QR code (black text on white background)")
 	// Receive command flags
-	receiveCmd.PersistentFlags().StringVarP(&app.Flags.Output, "output", "o", "", "output directory for receiving files")
+	receiveCmd.PersistentFlags().StringVarP(&app.Flags.Output, "output-dir", "o", "", "output directory for receiving files")
 }
 
 // The root command (`qrcp`) is like a shortcut of the `send` command
