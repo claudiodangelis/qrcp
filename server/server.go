@@ -134,7 +134,13 @@ func New(cfg *config.Config) (*Server, error) {
 		if err != nil {
 			panic(err)
 		}
-		hostname = fmt.Sprintf("%s:%d", extIP.String(), port)
+		extIPString := extIP.String()
+		fmtstring := "%s:%d"
+		if strings.Count(extIPString, ":") >= 2 {
+			// IPv6 address, wrap it in [] to add a port
+			fmtstring = "[%s]:%d"
+		}
+		hostname = fmt.Sprintf(fmtstring, extIPString, port)
 	}
 	// Use a fully-qualified domain name if set
 	if cfg.FQDN != "" {
