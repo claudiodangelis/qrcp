@@ -9,6 +9,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -219,8 +220,10 @@ func New(cfg *config.Config) (*Server, error) {
 			// Remove connection from the waitgroup when done
 			defer waitgroup.Done()
 		}
-		w.Header().Set("Content-Disposition", "attachment; filename="+
-			app.payload.Filename)
+		w.Header().Set("Content-Disposition", "attachment; filename=\""+
+			app.payload.Filename+
+			"\"; filename*=UTF-8''"+
+			url.QueryEscape(app.payload.Filename))
 		http.ServeFile(w, r, app.payload.Path)
 	})
 	// Upload handler (serves the upload page)
