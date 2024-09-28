@@ -62,10 +62,20 @@ func (s *Server) ReceiveTo(dir string) error {
 	return nil
 }
 
-// FileName sets the filename of the received file
-func (s *Server) FileName(name string) error {
+// FileName sets the user-desired filename of the received file
+func (s *Server) FileName(name string, dir string) error {
+	if name == "" {
+		s.fileName = ""
+		return nil
+	}
+
 	if name == "-" {
 		s.fileName = "-"
+		return nil
+	}
+
+	if dir != "" {
+		s.fileName = filepath.Join(dir, name)
 		return nil
 	}
 

@@ -33,7 +33,7 @@ func receiveCmdFunc(command *cobra.Command, args []string) error {
 	if app.Flags.Browser {
 		srv.DisplayQR(srv.ReceiveURL)
 	}
-	if err := srv.FileName(app.Flags.FileName); err != nil {
+	if err := srv.FileName(app.Flags.FileName, app.Flags.OutputDir); err != nil {
 		return err
 	}
 	if err := keyboard.Open(); err == nil {
