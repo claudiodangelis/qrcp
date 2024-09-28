@@ -64,6 +64,11 @@ func (s *Server) ReceiveTo(dir string) error {
 
 // FileName sets the filename of the received file
 func (s *Server) FileName(name string) error {
+	if name == "-" {
+		s.fileName = "-"
+		return nil
+	}
+
 	output, err := filepath.Abs(name)
 	if err != nil {
 		return err
@@ -284,15 +289,21 @@ func New(cfg *config.Config) (*Server, error) {
 					filePath = filepath.Join(app.outputDir, fileName)
 				}
 
-				out, err := os.Create(filePath)
-				if err != nil {
-					// Output to server
-					fmt.Fprintf(w, "Unable to create the file for writing: %s\n", err)
-					// Output to console
-					log.Printf("Unable to create the file for writing: %s\n", err)
-					// Send signal to server to shutdown
-					app.stopChannel <- true
-					return
+				var out *os.File
+
+				if filePath == "-" {
+					out = os.Stdout
+				} else {
+					out, err = os.Create(filePath)
+					if err != nil {
+						// Output to server
+						fmt.Fprintf(w, "Unable to create the file for writing: %s\n", err)
+						// Output to console
+						log.Printf("Unable to create the file for writing: %s\n", err)
+						// Send signal to server to shutdown
+						app.stopChannel <- true
+						return
+					}
 				}
 				defer out.Close()
 				// Add name of new file
