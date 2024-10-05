@@ -20,9 +20,6 @@ func sendCmdFunc(command *cobra.Command, args []string) error {
 		return err
 	}
 	cfg := config.New(app)
-	if err != nil {
-		return err
-	}
 	srv, err := server.New(&cfg)
 	if err != nil {
 		return err

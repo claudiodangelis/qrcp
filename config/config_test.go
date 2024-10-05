@@ -1,7 +1,6 @@
 package config
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -19,12 +18,12 @@ func TestNew(t *testing.T) {
 		panic(err)
 	}
 	testdir := filepath.Join(filepath.Dir(f), "testdata")
-	tempfile, err := ioutil.TempFile("", "qrcp*tmp.yml")
+	tempfile, err := os.CreateTemp("", "qrcp*tmp.yml")
 	if err != nil {
 		t.Skip()
 	}
 	defer os.Remove(tempfile.Name())
-	partialconfig, err := ioutil.TempFile("", "qrcp*partial.yml")
+	partialconfig, err := os.CreateTemp("", "qrcp*partial.yml")
 	if err != nil {
 		panic(err)
 	}

@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"errors"
 	"io"
-	"io/ioutil"
 	"net"
 	"os"
 	"os/user"
@@ -158,7 +157,7 @@ func FindIP(iface net.Interface) (string, error) {
 
 // ReadFilenames from dir
 func ReadFilenames(dir string) []string {
-	files, err := ioutil.ReadDir(dir)
+	files, err := os.ReadDir(dir)
 	if err != nil {
 		panic(err)
 	}
