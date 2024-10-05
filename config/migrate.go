@@ -2,7 +2,6 @@ package config
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -20,7 +19,7 @@ func Migrate(app application.App) (bool, error) {
 	if _, err := os.Stat(oldConfigFile); os.IsNotExist(err) {
 		return false, nil
 	}
-	oldConfigFileBytes, err := ioutil.ReadFile(oldConfigFile)
+	oldConfigFileBytes, err := os.ReadFile(oldConfigFile)
 	if err != nil {
 		panic(err)
 	}
@@ -32,7 +31,7 @@ func Migrate(app application.App) (bool, error) {
 	if err != nil {
 		panic(err)
 	}
-	if err := ioutil.WriteFile(newConfigFile, newConfigFileBytes, 0644); err != nil {
+	if err := os.WriteFile(newConfigFile, newConfigFileBytes, 0644); err != nil {
 		panic(err)
 	}
 	// Delete old file
