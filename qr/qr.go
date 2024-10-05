@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"image"
 	"log"
+	"os"
 
+	"github.com/claudiodangelis/qrcp/util"
 	"github.com/skip2/go-qrcode"
 )
 
@@ -14,7 +16,12 @@ func RenderString(s string, inverseColor bool) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(q.ToSmallString(inverseColor))
+
+	if util.OutputIsPipe() {
+		fmt.Fprintln(os.Stderr, q.ToSmallString(inverseColor))
+	} else {
+		fmt.Println(q.ToSmallString(inverseColor))
+	}
 }
 
 // RenderImage returns a QR code as an image.Image
