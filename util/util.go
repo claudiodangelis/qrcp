@@ -170,3 +170,9 @@ func ReadFilenames(dir string) []string {
 	}
 	return filenames
 }
+
+func OutputIsPipe() bool {
+	fi, _ := os.Stdout.Stat()
+
+	return fi.Mode()&os.ModeCharDevice == 0
+}

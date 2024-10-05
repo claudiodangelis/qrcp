@@ -278,7 +278,13 @@ func New(cfg *config.Config) (*Server, error) {
 			}
 			transferredFiles := []string{}
 			progressBar := pb.New64(r.ContentLength)
+
+			if util.OutputIsPipe() {
+				progressBar.Output = os.Stderr
+			}
+
 			progressBar.ShowCounters = false
+
 			for {
 				part, err := reader.NextPart()
 				if err == io.EOF {
@@ -318,8 +324,14 @@ func New(cfg *config.Config) (*Server, error) {
 				defer out.Close()
 				// Add name of new file
 				filenames = append(filenames, fileName)
+
 				// Write the content from POSTed file to the out
-				fmt.Println("Transferring file: ", out.Name())
+				if util.OutputIsPipe() {
+					fmt.Fprintln(os.Stderr, "Transferring file: ", out.Name())
+				} else {
+					fmt.Println("Transferring file: ", out.Name())
+				}
+
 				progressBar.Prefix(out.Name())
 				progressBar.Start()
 				buf := make([]byte, 1024)
@@ -330,7 +342,7 @@ func New(cfg *config.Config) (*Server, error) {
 						// Output to server
 						fmt.Fprintf(w, "Unable to write file to disk: %v", err)
 						// Output to console
-						fmt.Printf("Unable to write file to disk: %v", err)
+						fmt.Fprintf(os.Stderr, "Unable to write file to disk %v", err)
 						// Send signal to server to shutdown
 						app.stopChannel <- true
 						return
