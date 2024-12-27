@@ -1,15 +1,33 @@
 name: CI
 on:
   push:
+    branches: [ main ]
+  pull_request:
+permissions:
+  contents: read
+env:
+  GOLANG_VERSION: 1.21.x
 jobs:
+  lint:
+    name: lint
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GOLANG_VERSION }}
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: v1.60
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.21.x'
+          go-version: ${{ env.GOLANG_VERSION }}
       - name: Install dependencies
         run: go get .
       - name: Build
@@ -17,8 +35,8 @@ jobs:
       - name: Test with the Go CLI
         run: go test ./...
   release:
-    runs-on: ubuntu-latest
-    needs: test
+    runs-on: ubuntu-24.04
+    needs: [ lint, test ]
     if: startsWith(github.event.ref, 'refs/tags/')
     steps:
     - uses: actions/checkout@v2
@@ -29,7 +47,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v1
       with:
-        go-version: 1.21.x
+        go-version: ${{ env.GOLANG_VERSION }}
     # Runs the goreleaser
     - name: Run GoReleaser
       uses: goreleaser/goreleaser-action@v5
