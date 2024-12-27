@@ -20,9 +20,9 @@ import (
 
 	"github.com/claudiodangelis/qrcp/qr"
 
+	"github.com/claudiodangelis/qrcp/body"
 	"github.com/claudiodangelis/qrcp/config"
 	"github.com/claudiodangelis/qrcp/pages"
-	"github.com/claudiodangelis/qrcp/payload"
 	"github.com/claudiodangelis/qrcp/util"
 	"gopkg.in/cheggaaa/pb.v1"
 )
@@ -35,7 +35,7 @@ type Server struct {
 	// ReceiveURL is the URL used to Receive the file
 	ReceiveURL  string
 	instance    *http.Server
-	payload     payload.Payload
+	body        body.Body
 	outputDir   string
 	stopChannel chan bool
 	// expectParallelRequests is set to true when qrcp sends files, in order
@@ -62,8 +62,8 @@ func (s *Server) ReceiveTo(dir string) error {
 }
 
 // Send adds a handler for sending the file
-func (s *Server) Send(p payload.Payload) {
-	s.payload = p
+func (s *Server) Send(p body.Body) {
+	s.body = p
 	s.expectParallelRequests = true
 }
 
@@ -86,8 +86,8 @@ func (s Server) Wait() error {
 	if err := s.instance.Shutdown(context.Background()); err != nil {
 		log.Println(err)
 	}
-	if s.payload.DeleteAfterTransfer {
-		if err := s.payload.Delete(); err != nil {
+	if s.body.DeleteAfterTransfer {
+		if err := s.body.Delete(); err != nil {
 			panic(err)
 		}
 	}
@@ -227,10 +227,10 @@ func New(cfg *config.Config) (*Server, error) {
 			defer waitgroup.Done()
 		}
 		w.Header().Set("Content-Disposition", "attachment; filename=\""+
-			app.payload.Filename+
+			app.body.Filename+
 			"\"; filename*=UTF-8''"+
-			url.QueryEscape(app.payload.Filename))
-		http.ServeFile(w, r, app.payload.Path)
+			url.QueryEscape(app.body.Filename))
+		http.ServeFile(w, r, app.body.Path)
 	})
 	// Upload handler (serves the upload page)
 	http.HandleFunc("/receive/"+path, func(w http.ResponseWriter, r *http.Request) {
