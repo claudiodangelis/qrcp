@@ -7,7 +7,7 @@ permissions:
 env:
   GOLANG_VERSION: 1.21.x
 jobs:
-  golangci:
+  lint:
     name: lint
     runs-on: ubuntu-latest
     steps:
