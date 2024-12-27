@@ -248,7 +248,7 @@ func Wizard(app application.App) error {
 			return err
 		}
 		if fileinfo.Mode().IsDir() {
-			return fmt.Errorf(fmt.Sprintf("%s is a directory", input))
+			return fmt.Errorf("%s is a directory", input)
 		}
 		return nil
 	}
