@@ -20,7 +20,7 @@ jobs:
         with:
           version: v1.60
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - name: Setup Go
@@ -34,7 +34,7 @@ jobs:
       - name: Test with the Go CLI
         run: go test ./...
   release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: [ lint, test ]
     if: startsWith(github.event.ref, 'refs/tags/')
     steps:
