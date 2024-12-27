@@ -124,7 +124,7 @@ Secure transfer:
 qrcp MyDocument.pdf
 ```
 
-Unsecure transfer:
+Insecure transfer:
 ```
 qrcp --secure=false MyDocument.pdf
 ```
