@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
 before:
   hooks:
     - go mod download
@@ -11,15 +12,15 @@ builds:
   - darwin
   - windows
   goarch:
-  - 386
+  - '386'
   - amd64
   - arm
   - arm64
   goarm:
-  - 7
+  - '7'
   ignore:
   - goos: darwin
-    goarch: 386
+    goarch: '386'
   - goos: darwin
     goarch: arm64
   - goos: windows
@@ -30,6 +31,9 @@ archives:
 #     windows: Windows
 #     386: i386
 #     amd64: x86_64
+  - format_overrides:
+      - format: zip
+        goos: windows
 checksum:
   name_template: 'checksums.txt'
 snapshot:
