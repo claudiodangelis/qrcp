@@ -22,6 +22,41 @@ var Upload = `
         body {
             margin: 10px;
         }
+        #pasted-file-container .pasted-file-wrapper {
+            border: 2px dashed #00AEEF;
+            padding: 10px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        #pasted-file-container .pasted-file-wrapper::before {
+            content: 'Pasted File';
+            position: absolute;
+            top: -12px;
+            left: 10px;
+            background: #fff;
+            padding: 0 5px;
+            font-size: 12px;
+            color: #00AEEF;
+        }
+        #pasted-file-container .file-info {
+            display: flex;
+            align-items: center;
+        }
+        #pasted-file-container .file-icon {
+            font-size: 50px;
+            margin-right: 10px;
+            color: #00AEEF;
+        }
+        #pasted-file-container .file-name {
+            font-size: 16px;
+            word-break: break-all;
+        }
+        #pasted-file-container img {
+            display: block;
+            margin: 10px 10px 10px 0;
+            max-width: calc(100vw - 20px - 20px - 4px);
+            height: auto;
+        }
     </style>
 </head>
 
@@ -149,7 +184,7 @@ var Upload = `
                 </div>
                 <div class="form-group form-check">
                     <input type="checkbox" class="form-check-input" id="check-send-text">
-                    <label class="form-check-label" for="check-send-text">Show text options</label>
+                    <label class="form-check-label" for="check-send-text">Show paste options</label>
                 </div>
                 <div id="send-text-form" style="display: none">
                     <div class="form-group">
@@ -160,11 +195,12 @@ var Upload = `
                     </div>
                     <div class="form-group">
                         <label for="plaintext-text">
-                            Text
+                            Text (You can paste files here)
                         </label>
-                        <textarea class="form-control" id="plaintext-text"></textarea>
+                        <textarea class="form-control" id="plaintext-text" placeholder="You can paste files here"></textarea>
                     </div>
                 </div>
+                <div id="pasted-file-container"></div>
                 <div class="form-group">
                     <input class="btn btn-primary form-control form-control-lg" type="submit" 
                         id="submit" name="submit" value="Transfer">
@@ -185,13 +221,63 @@ var Upload = `
         }
     </script>
     <script>
-        var uploadForm = document.getElementById('upload-form')
+        var uploadForm = document.getElementById('upload-form');
+        var pastedFiles = [];
+        var textArea = document.getElementById('plaintext-text');
+        var pastedFileContainer = document.getElementById('pasted-file-container');
+
+        textArea.addEventListener('paste', function (e) {
+            var clipboardData = e.clipboardData || window.clipboardData;
+            var items = clipboardData.items;
+            var foundFile = false;
+
+            for (var i = 0; i < items.length; i++) {
+                var item = items[i];
+                if (item.kind === 'file') {
+                    var blob = item.getAsFile();
+                    foundFile = true;
+                    e.preventDefault();
+                    pastedFiles.push(blob);
+
+                    var fileWrapper = document.createElement('div');
+                    fileWrapper.className = 'pasted-file-wrapper';
+
+                    if (blob.type.startsWith('image/')) {
+                        // Display image
+                        var img = document.createElement('img');
+                        img.src = URL.createObjectURL(blob);
+                        fileWrapper.appendChild(img);
+                    } else {
+                        // Display file icon and name
+                        var fileInfo = document.createElement('div');
+                        fileInfo.className = 'file-info';
+
+                        var fileIcon = document.createElement('span');
+                        fileIcon.className = 'file-icon';
+                        fileIcon.innerHTML = '&#128196;'; // Document icon
+
+                        var fileName = document.createElement('span');
+                        fileName.className = 'file-name';
+                        fileName.textContent = blob.name || 'Pasted File';
+
+                        fileInfo.appendChild(fileIcon);
+                        fileInfo.appendChild(fileName);
+                        fileWrapper.appendChild(fileInfo);
+                    }
+
+                    pastedFileContainer.appendChild(fileWrapper);
+                }
+            }
+
+            if (foundFile) {
+                e.preventDefault();
+            }
+        });
 
         uploadForm.addEventListener('submit', function(e) {
-            e.preventDefault()
+            e.preventDefault();
 
-            var xhr = new XMLHttpRequest()
-            // Put the request response HTML ('Done' page) on the window 
+            var xhr = new XMLHttpRequest();
             xhr.onreadystatechange = function() {
                 if (xhr.readyState === 4) {
                     document.write(xhr.response)
@@ -210,6 +296,13 @@ var Upload = `
                 var blob = new Blob([textInput.value + '\n'], { type: "text/plain" })
                 // Append the text file to the form data with '.txt' extension
                 formData.append("textFile", blob, filename + ".txt")
+            }
+
+            // Append pasted files to the form data
+            for (var i = 0; i < pastedFiles.length; i++) {
+                var file = pastedFiles[i];
+                var fileName = file.name || ('pasted_file_' + i);
+                formData.append('files', file, fileName);
             }
 
             xhr.open("POST", "{{.Route}}")
