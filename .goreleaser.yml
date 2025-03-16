@@ -21,6 +21,10 @@ builds:
   ignore:
   - goos: darwin
     goarch: 386
+archives:
+  - format_overrides:
+    - goos: windows
+      formats: [ tar.gz, zip ]
 checksum:
   name_template: 'checksums.txt'
 snapshot:
