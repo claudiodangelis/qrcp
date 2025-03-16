@@ -11,6 +11,7 @@ import (
 	"github.com/adrg/xdg"
 	"github.com/asaskevich/govalidator"
 	"github.com/claudiodangelis/qrcp/application"
+	"github.com/claudiodangelis/qrcp/logger"
 	"github.com/claudiodangelis/qrcp/util"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/viper"
@@ -33,6 +34,7 @@ type Config struct {
 var interactive bool = false
 
 func New(app application.App) Config {
+	log := logger.New(app.Flags.Quiet)
 	v := getViperInstance(app)
 	var err error
 	cfg := Config{}
@@ -108,7 +110,7 @@ func New(app application.App) Config {
 			}
 			v.Set("interface", cfg.Interface)
 			if err := v.WriteConfig(); err != nil {
-				panic(err)
+				log.Print(fmt.Sprintf("Warning: the configuration file could not be saved: %v\n", err))
 			}
 		}
 	}
@@ -153,7 +155,7 @@ func Wizard(app application.App) error {
 	}
 	v.Set("interface", cfg.Interface)
 	if err := v.WriteConfig(); err != nil {
-		panic(err)
+		return err
 	}
 	// Ask for bind address
 	validateBind := func(input string) error {
