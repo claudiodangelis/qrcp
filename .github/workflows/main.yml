@@ -26,7 +26,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Setup Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GOLANG_VERSION }}
       - name: Install dependencies
@@ -40,21 +40,20 @@ jobs:
     needs: [ lint, test ]
     if: startsWith(github.event.ref, 'refs/tags/')
     steps:
-    - uses: actions/checkout@v2
-    # Required to build changeleg
+    - uses: actions/checkout@v4
+
     - name: Unshallow
       run: git fetch --prune --unshallow
-    # Setup go
+
     - name: Set up Go
-      uses: actions/setup-go@v1
+      uses: actions/setup-go@v5
       with:
         go-version: ${{ env.GOLANG_VERSION }}
-    # Runs the goreleaser
+
     - name: Run GoReleaser
-      uses: goreleaser/goreleaser-action@v5
+      uses: goreleaser/goreleaser-action@v6
       with:
-        version: latest
-        args: release --rm-dist
-        key: ${{ secrets.YOUR_PRIVATE_KEY }}
+        args: release --clean
+        version: '~> v2'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
