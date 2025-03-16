@@ -20,10 +20,6 @@ builds:
   ignore:
   - goos: darwin
     goarch: 386
-  - goos: darwin
-    goarch: arm64
-  - goos: windows
-    goarch: arm64
 archives:
 # - replacements:
 #     darwin: macOS
