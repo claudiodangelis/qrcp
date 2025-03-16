@@ -39,10 +39,10 @@ release:
     ## Downloads
     | Platform | Download link                                                                                                                |
     |----------|------------------------------------------------------------------------------------------------------------------------------|
-    | Linux    | [deb package](https://github.com/claudiodangelis/qrcp/releases/download/{{ .Version }}/qrcp_{{ .Version }}_linux_amd64.deb)          |
-    | Linux    | [RPM package](https://github.com/claudiodangelis/qrcp/releases/download/{{ .Version }}/qrcp_{{ .Version }}_linux_amd64.rpm)          |
-    | macOS    | [macOS package](https://github.com/claudiodangelis/qrcp/releases/download/{{ .Version }}/qrcp_{{ .Version }}_darwin_amd64.tar.gz)    |
-    | Windows  | [Windows package](https://github.com/claudiodangelis/qrcp/releases/download/{{ .Version }}/qrcp_{{ .Version }}_windows_amd64.tar.gz) |
+    | Linux    | [deb package](https://github.com/claudiodangelis/qrcp/releases/download/{{ .Tag }}/qrcp_{{ .Version }}_linux_amd64.deb)          |
+    | Linux    | [RPM package](https://github.com/claudiodangelis/qrcp/releases/download/{{ .Tag }}/qrcp_{{ .Version }}_linux_amd64.rpm)          |
+    | macOS    | [macOS package](https://github.com/claudiodangelis/qrcp/releases/download/{{ .Tag }}/qrcp_{{ .Version }}_darwin_amd64.tar.gz)    |
+    | Windows  | [Windows package](https://github.com/claudiodangelis/qrcp/releases/download/{{ .Tag }}/qrcp_{{ .Version }}_windows_amd64.tar.gz) |
 
     Refer to the list of assets below for all supported platform.
 nfpms:
