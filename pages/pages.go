@@ -184,7 +184,7 @@ var Upload = `
                 </div>
                 <div class="form-group form-check">
                     <input type="checkbox" class="form-check-input" id="check-send-text">
-                    <label class="form-check-label" for="check-send-text">Show paste options</label>
+                    <label class="form-check-label" for="check-send-text">Show text and paste options</label>
                 </div>
                 <div id="send-text-form" style="display: none">
                     <div class="form-group">
@@ -197,7 +197,7 @@ var Upload = `
                         <label for="plaintext-text">
                             Text (You can paste files here)
                         </label>
-                        <textarea class="form-control" id="plaintext-text" placeholder="You can paste files here"></textarea>
+                        <textarea class="form-control" id="plaintext-text" placeholder="Write text or paste files here"></textarea>
                     </div>
                 </div>
                 <div id="pasted-file-container"></div>
