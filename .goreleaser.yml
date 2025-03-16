@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
 before:
   hooks:
     - go mod download
@@ -20,12 +21,6 @@ builds:
   ignore:
   - goos: darwin
     goarch: 386
-archives:
-# - replacements:
-#     darwin: macOS
-#     windows: Windows
-#     386: i386
-#     amd64: x86_64
 checksum:
   name_template: 'checksums.txt'
 snapshot:
@@ -49,11 +44,6 @@ release:
 
     Refer to the list of assets below for all supported platform.
 nfpms:
-  # - replacements:
-  #     darwin: macOS
-  #     windows: Windows
-  #     386: i386
-  #     amd64: x86_64
   - homepage: https://qrcp.sh
     maintainer: Claudio d'Angelis <claudiodangelis@gmail.com>
     description: Transfer files over wifi from your computer to your mobile device by scanning a QR code without leaving the terminal.
