@@ -77,15 +77,13 @@ jobs:
               Start-Process -FilePath ./qrcp -ArgumentList "-i", "any", "-p", "8080", "--path", "test", "$env:TEMP\qrcp-test.txt" -NoNewWindow -Wait
           }
           Start-Sleep -Seconds 2
-          Write-Host "hello"
           $CURL_OUTPUT = Invoke-RestMethod -Uri http://127.0.0.1:8080/send/test
+          Write-Host "TEST_CONTENT: $TEST_CONTENT"
           Write-Host "CURL Output: $CURL_OUTPUT"
-
-          if ($TEST_CONTENT -ne $CURL_OUTPUT) {
+          if ("$TEST_CONTENT" -ne "$CURL_OUTPUT") {
               exit 1
           }
-
-          exit 0
+          Write-Host "So far so good"
   release:
     runs-on: ubuntu-24.04
     needs: [ e2e ]
