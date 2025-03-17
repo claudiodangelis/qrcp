@@ -41,6 +41,7 @@ jobs:
       - run: |
           curl https://github.com/claudiodangelis/qrcp/releases/download/v0.11.6/qrcp_0.11.6_darwin_arm64.tar.gz -o qrcp_0.11.6_darwin_arm64.tar.gz
           tar xf qrcp_0.11.6_darwin_arm64.tar.gz
+          ls
           TEST_CONTENT="hello"
           TEST_FILE="/tmp/qrcp-test.txt"
           echo $TEST_CONTENT > $TEST_FILE
