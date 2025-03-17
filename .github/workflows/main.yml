@@ -48,6 +48,7 @@ jobs:
           go-version: ${{ env.GOLANG_VERSION }}
       - name: Run tests
         run: |
+          uname -m
           TEST_CONTENT="hello"
           TEST_FILE="/tmp/qrcp-test.txt"
           echo $TEST_CONTENT > $TEST_FILE
