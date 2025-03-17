@@ -37,6 +37,7 @@ type Server struct {
 	instance    *http.Server
 	body        body.Body
 	outputDir   string
+	fileName    string
 	stopChannel chan bool
 	// expectParallelRequests is set to true when qrcp sends files, in order
 	// to support downloading of parallel chunks
@@ -58,6 +59,32 @@ func (s *Server) ReceiveTo(dir string) error {
 		return fmt.Errorf("%s is not a valid directory", output)
 	}
 	s.outputDir = output
+	return nil
+}
+
+// FileName sets the user-desired filename of the received file
+func (s *Server) FileName(name string, dir string) error {
+	if name == "" {
+		s.fileName = ""
+		return nil
+	}
+
+	if name == "-" {
+		s.fileName = "-"
+		return nil
+	}
+
+	if dir != "" {
+		s.fileName = filepath.Join(dir, name)
+		return nil
+	}
+
+	output, err := filepath.Abs(name)
+	if err != nil {
+		return err
+	}
+
+	s.fileName = output
 	return nil
 }
 
@@ -251,33 +278,60 @@ func New(cfg *config.Config) (*Server, error) {
 			}
 			transferredFiles := []string{}
 			progressBar := pb.New64(r.ContentLength)
+
+			if util.OutputIsPipe() {
+				progressBar.Output = os.Stderr
+			}
+
 			progressBar.ShowCounters = false
+
 			for {
 				part, err := reader.NextPart()
 				if err == io.EOF {
 					break
 				}
-				// iIf part.FileName() is empty, skip this iteration.
+				// If part.FileName() is empty, skip this iteration.
 				if part.FileName() == "" {
 					continue
 				}
-				// Prepare the destination
+
 				fileName := getFileName(filepath.Base(part.FileName()), filenames)
-				out, err := os.Create(filepath.Join(app.outputDir, fileName))
-				if err != nil {
-					// Output to server
-					fmt.Fprintf(w, "Unable to create the file for writing: %s\n", err)
-					// Output to console
-					log.Printf("Unable to create the file for writing: %s\n", err)
-					// Send signal to server to shutdown
-					app.stopChannel <- true
-					return
+				var filePath string
+
+				if app.fileName != "" {
+					filePath = app.fileName
+				} else {
+					// Prepare the destination
+					filePath = filepath.Join(app.outputDir, fileName)
+				}
+
+				var out *os.File
+
+				if filePath == "-" {
+					out = os.Stdout
+				} else {
+					out, err = os.Create(filePath)
+					if err != nil {
+						// Output to server
+						fmt.Fprintf(w, "Unable to create the file for writing: %s\n", err)
+						// Output to console
+						log.Printf("Unable to create the file for writing: %s\n", err)
+						// Send signal to server to shutdown
+						app.stopChannel <- true
+						return
+					}
 				}
 				defer out.Close()
 				// Add name of new file
 				filenames = append(filenames, fileName)
+
 				// Write the content from POSTed file to the out
-				fmt.Println("Transferring file: ", out.Name())
+				if util.OutputIsPipe() {
+					fmt.Fprintln(os.Stderr, "Transferring file: ", out.Name())
+				} else {
+					fmt.Println("Transferring file: ", out.Name())
+				}
+
 				progressBar.Prefix(out.Name())
 				progressBar.Start()
 				buf := make([]byte, 1024)
@@ -288,7 +342,7 @@ func New(cfg *config.Config) (*Server, error) {
 						// Output to server
 						fmt.Fprintf(w, "Unable to write file to disk: %v", err)
 						// Output to console
-						fmt.Printf("Unable to write file to disk: %v", err)
+						fmt.Fprintf(os.Stderr, "Unable to write file to disk %v", err)
 						// Send signal to server to shutdown
 						app.stopChannel <- true
 						return
