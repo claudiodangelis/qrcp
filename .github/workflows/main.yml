@@ -35,12 +35,22 @@ jobs:
         run: go build -v ./...
       - name: Test with the Go CLI
         run: go test ./...
+  debug:
+    runs-on: macos-15
+    steps:
+      - run: |
+        curl https://github.com/claudiodangelis/qrcp/releases/download/v0.11.6/qrcp_0.11.6_darwin_arm64.tar.gz -o qrcp_0.11.6_darwin_arm64.tar.gz
+        tar xf qrcp_0.11.6_darwin_arm64.tar.gz
+        TEST_CONTENT="hello"
+        TEST_FILE="/tmp/qrcp-test.txt"
+        echo $TEST_CONTENT > $TEST_FILE
+        ./qrcp -i lo0 -p 1606 --path test $TEST_FILE
   e2e:
-    # needs: test
+    needs: [ test, lint ]
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-latest, macos-15 ]
+        os: [ ubuntu-24.04, macos-15 ]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -48,7 +58,6 @@ jobs:
           go-version: ${{ env.GOLANG_VERSION }}
       - name: Run tests
         run: |
-          uname -m
           TEST_CONTENT="hello"
           TEST_FILE="/tmp/qrcp-test.txt"
           echo $TEST_CONTENT > $TEST_FILE
