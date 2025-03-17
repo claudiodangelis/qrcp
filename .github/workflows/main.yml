@@ -36,7 +36,7 @@ jobs:
       - name: Test with the Go CLI
         run: go test ./...
   e2e:
-    # needs: [ test, lint ]
+    needs: [ test, lint ]
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -74,10 +74,13 @@ jobs:
           $TEST_CONTENT | Out-File -FilePath $TEST_FILE -Encoding UTF8
           go build
           $Job = Start-Job -ScriptBlock {
-              Start-Process -FilePath ./qrcp -ArgumentList "-i", "any", "-p", "8080", "--path", "test", "$env:TEMP\qrcp-test.txt" -NoNewWindow -Wait
+              Start-Process -FilePath ./qrcp -ArgumentList "-i", "any", "-p", "1606", "--path", "test", "$env:TEMP\qrcp-test.txt" -NoNewWindow -Wait
           }
           Start-Sleep -Seconds 2
-          $CURL_OUTPUT = Invoke-WebRequest -Uri http://127.0.0.1:8080/send/test
+          $CURL_OUTPUT = Invoke-WebRequest -Uri http://127.0.0.1:1606/send/test
+          Write-Host "CURL_OUTPUT (raw):"
+          $CURL_OUTPUT.Content | Format-Hex
+
           if ($CURL_OUTPUT.Content -ne $TEST_CONTENT) {
               Write-Host "Expected: $TEST_CONTENT"
               Write-Host "Got: $($CURL_OUTPUT.Content)"
