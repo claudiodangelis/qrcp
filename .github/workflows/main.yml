@@ -77,20 +77,12 @@ jobs:
               Start-Process -FilePath ./qrcp -ArgumentList "-i", "any", "-p", "8080", "--path", "test", "$env:TEMP\qrcp-test.txt" -NoNewWindow -Wait
           }
           Start-Sleep -Seconds 2
-          $CURL_OUTPUT = Invoke-RestMethod -Uri http://127.0.0.1:8080/send/test
-
-          # Print raw content of both variables
-          Write-Host "TEST_CONTENT (raw):"
-          $TEST_CONTENT | Format-Hex
-          Write-Host "CURL_OUTPUT (raw):"
-          $CURL_OUTPUT | Format-Hex
-
-          # Compare the two variables
-          if ($TEST_CONTENT -ceq $CURL_OUTPUT) {
-              exit 0
+          $CURL_OUTPUT = Invoke-WebRequest -Uri http://127.0.0.1:8080/send/test
+          if ($CURL_OUTPUT.Content -ne $TEST_CONTENT) {
+              Write-Host "Expected: $TEST_CONTENT"
+              Write-Host "Got: $($CURL_OUTPUT.Content)"
+              exit 1
           }
-          Write-Host "Vars don't match"
-          exit 1
   release:
     runs-on: ubuntu-24.04
     needs: [ e2e ]
