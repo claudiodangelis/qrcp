@@ -36,11 +36,11 @@ jobs:
       - name: Test with the Go CLI
         run: go test ./...
   e2e:
-    needs: test
+    # needs: test
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-latest, macos-latest ]
+        os: [ ubuntu-24.04, ubuntu-24.04-arm64, macos-latest ]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
