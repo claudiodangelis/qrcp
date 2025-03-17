@@ -73,9 +73,13 @@ jobs:
           $TEST_FILE = "$env:TEMP\qrcp-test.txt"
           $TEST_CONTENT | Out-File -FilePath $TEST_FILE -Encoding UTF8
           go build
-          Start-Process -FilePath ./qrcp -ArgumentList "-i", "any", "-p", "8080", "--path", "test", $TEST_FILE -NoNewWindow -PassThru | Out-Null
+          $Job = Start-Job -ScriptBlock {
+              Start-Process -FilePath ./qrcp -ArgumentList "-i", "any", "-p", "8080", "--path", "test", "$env:TEMP\qrcp-test.txt" -NoNewWindow -PassThru
+          }
           Start-Sleep -Seconds 2
           $CURL_OUTPUT = Invoke-RestMethod -Uri http://127.0.0.1:8080/send/test
+          Stop-Job -Job $Job.Id
+          Remove-Job -Job $Job.Id
           if ($TEST_CONTENT -ne $CURL_OUTPUT) {
               exit 1
           }
