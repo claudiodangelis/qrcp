@@ -39,12 +39,12 @@ jobs:
     runs-on: macos-15
     steps:
       - run: |
-        curl https://github.com/claudiodangelis/qrcp/releases/download/v0.11.6/qrcp_0.11.6_darwin_arm64.tar.gz -o qrcp_0.11.6_darwin_arm64.tar.gz
-        tar xf qrcp_0.11.6_darwin_arm64.tar.gz
-        TEST_CONTENT="hello"
-        TEST_FILE="/tmp/qrcp-test.txt"
-        echo $TEST_CONTENT > $TEST_FILE
-        ./qrcp -i lo0 -p 1606 --path test $TEST_FILE
+          curl https://github.com/claudiodangelis/qrcp/releases/download/v0.11.6/qrcp_0.11.6_darwin_arm64.tar.gz -o qrcp_0.11.6_darwin_arm64.tar.gz
+          tar xf qrcp_0.11.6_darwin_arm64.tar.gz
+          TEST_CONTENT="hello"
+          TEST_FILE="/tmp/qrcp-test.txt"
+          echo $TEST_CONTENT > $TEST_FILE
+          ./qrcp -i lo0 -p 1606 --path test $TEST_FILE
   e2e:
     needs: [ test, lint ]
     runs-on: ${{ matrix.os }}
