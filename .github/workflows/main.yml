@@ -35,6 +35,29 @@ jobs:
         run: go build -v ./...
       - name: Test with the Go CLI
         run: go test ./...
+  integration:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GOLANG_VERSION }}
+      - name: Run tests
+        run: |
+          TEST_CONTENT="hello"
+          TEST_FILE="/tmp/qrcp-test.txt"
+          echo $TEST_CONTENT > $TEST_FILE
+          qrcp -i lo -p 1606 --path test $TEST_FILE > /dev/null 2>&1 &
+          QRCP_PID=$!
+          sleep 2
+          CURL_OUTPUT=$(curl -s http://127.0.0.1:1606/send/test)
+          kill $QRCP_PID || true
+          if [[ "${TEST_CONTENT}" != "${CURL_OUTPUT}" ]]; then
+              exit 1
+          fi
   release:
     runs-on: ubuntu-24.04
     needs: [ lint, test ]
