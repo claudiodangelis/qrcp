@@ -35,9 +35,58 @@ jobs:
         run: go build -v ./...
       - name: Test with the Go CLI
         run: go test ./...
+  e2e:
+    needs: [ test, lint ]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-24.04, macos-15, windows-latest ]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GOLANG_VERSION }}
+      - name: Run tests on *nix
+        if: runner.os != 'Windows'
+        run: |
+          TEST_CONTENT="hello"
+          TEST_FILE="/tmp/qrcp-test.txt"
+          echo $TEST_CONTENT > $TEST_FILE
+          go build
+          OS=$(uname)
+          INTERFACE=lo
+          if [[ "$OS" == "Darwin" ]]; then
+              INTERFACE="lo0"
+          fi
+          ./qrcp -i $INTERFACE -p 1606 --path test $TEST_FILE > /dev/null 2>&1 &
+          QRCP_PID=$!
+          sleep 2
+          CURL_OUTPUT=$(curl -s http://127.0.0.1:1606/send/test)
+          kill $QRCP_PID || true
+          if [[ "${TEST_CONTENT}" != "${CURL_OUTPUT}" ]]; then
+              exit 1
+          fi
+      - name: Run tests on Windows
+        if: runner.os == 'Windows'
+        run: |
+          $TestContent = "hello"
+          $TestFile = "$env:TEMP\qrcp-test.txt"
+          $TestContent | Out-File -FilePath $TestFile -Encoding UTF8
+          go build
+          $Job = Start-Job -ScriptBlock {
+              Start-Process -FilePath ./qrcp -ArgumentList "-i", "any", "-p", "1606", "--path", "test", "$env:TEMP\qrcp-test.txt" -NoNewWindow -Wait
+          }
+          Start-Sleep -Seconds 2
+          $Request = Invoke-WebRequest -Uri http://127.0.0.1:1606/send/test
+          $FileContent = Get-Content -Path $TestFile -Raw
+          if ($Request.Content -ne $FileContent) {
+              Write-Host "Expected: $FileContent"
+              Write-Host "Got: $($Request.Content)"
+              exit 1
+          }
   release:
     runs-on: ubuntu-24.04
-    needs: [ lint, test ]
+    needs: [ e2e ]
     if: startsWith(github.event.ref, 'refs/tags/')
     steps:
     - uses: actions/checkout@v4
