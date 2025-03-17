@@ -52,12 +52,17 @@ jobs:
           TEST_FILE="/tmp/qrcp-test.txt"
           echo $TEST_CONTENT > $TEST_FILE
           go build
-          ./qrcp -i lo -p 1606 --path test $TEST_FILE > /dev/null 2>&1 &
+          OS=$(uname)
+          INTERFACE=lo
+          if [[ "$OS" == "Darwin" ]]; then
+              INTERFACE="lo0"
+          fi
+          ./qrcp -i $INTERFACE -p 1606 --path test $TEST_FILE > /dev/null 2>&1 &
           QRCP_PID=$!
           sleep 2
           CURL_OUTPUT=$(curl -s http://127.0.0.1:1606/send/test)
           kill $QRCP_PID || true
-          if [[ "${TEST_CONTENT}__breakme" != "${CURL_OUTPUT}" ]]; then
+          if [[ "${TEST_CONTENT}" != "${CURL_OUTPUT}" ]]; then
               exit 1
           fi
   release:
