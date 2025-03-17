@@ -57,12 +57,12 @@ jobs:
           sleep 2
           CURL_OUTPUT=$(curl -s http://127.0.0.1:1606/send/test)
           kill $QRCP_PID || true
-          if [[ "${TEST_CONTENT}" != "${CURL_OUTPUT}" ]]; then
+          if [[ "${TEST_CONTENT}__breakme" != "${CURL_OUTPUT}" ]]; then
               exit 1
           fi
   release:
     runs-on: ubuntu-24.04
-    needs: [ lint, test ]
+    needs: [ e2e ]
     if: startsWith(github.event.ref, 'refs/tags/')
     steps:
     - uses: actions/checkout@v4
