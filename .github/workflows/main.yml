@@ -35,7 +35,8 @@ jobs:
         run: go build -v ./...
       - name: Test with the Go CLI
         run: go test ./...
-  integration:
+  e2e:
+    needs: test
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -51,7 +52,7 @@ jobs:
           TEST_FILE="/tmp/qrcp-test.txt"
           echo $TEST_CONTENT > $TEST_FILE
           go build
-          ./qrcp -i lo -p 1606 --path test $TEST_FILE
+          ./qrcp -i lo -p 1606 --path test $TEST_FILE > /dev/null 2>&1 &
           QRCP_PID=$!
           sleep 2
           CURL_OUTPUT=$(curl -s http://127.0.0.1:1606/send/test)
