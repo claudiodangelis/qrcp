@@ -39,7 +39,7 @@ jobs:
     runs-on: macos-15
     steps:
       - run: |
-          curl https://github.com/claudiodangelis/qrcp/releases/download/v0.11.6/qrcp_0.11.6_darwin_arm64.tar.gz -o qrcp_0.11.6_darwin_arm64.tar.gz
+          curl -L https://github.com/claudiodangelis/qrcp/releases/download/v0.11.6/qrcp_0.11.6_darwin_arm64.tar.gz -o qrcp_0.11.6_darwin_arm64.tar.gz
           tar xf qrcp_0.11.6_darwin_arm64.tar.gz
           ls
           TEST_CONTENT="hello"
