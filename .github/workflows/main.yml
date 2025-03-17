@@ -78,11 +78,10 @@ jobs:
           }
           Start-Sleep -Seconds 2
           $CURL_OUTPUT = Invoke-RestMethod -Uri http://127.0.0.1:8080/send/test
-          Stop-Job -Job $Job
-          Remove-Job -Job $Job.Id
           if ($TEST_CONTENT -ne $CURL_OUTPUT) {
               exit 1
           }
+          exit 0
   release:
     runs-on: ubuntu-24.04
     needs: [ e2e ]
