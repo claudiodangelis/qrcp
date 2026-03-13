@@ -94,8 +94,8 @@ func New(app application.App) Config {
 	if app.Flags.FQDN != "" {
 		cfg.FQDN = app.Flags.FQDN
 	}
-	if app.Flags.Output != "" {
-		cfg.Output = app.Flags.Output
+	if app.Flags.OutputDir != "" {
+		cfg.Output = app.Flags.OutputDir
 	}
 	if app.Flags.Reversed {
 		cfg.Reversed = true
