@@ -291,7 +291,7 @@ func New(cfg *config.Config) (*Server, error) {
 				out, err := os.Create(filepath.Join(app.outputDir, fileName))
 				if err != nil {
 					// Output to server
-					fmt.Fprintf(w, "Unable to create the file for writing: %s\n", err)
+					_, _ = fmt.Fprintf(w, "Unable to create the file for writing: %s\n", err)
 					// Output to console
 					log.Printf("Unable to create the file for writing: %s\n", err)
 					// Send signal to server to shutdown
@@ -308,7 +308,7 @@ func New(cfg *config.Config) (*Server, error) {
 				_, copyErr := io.Copy(out, progressBar.NewProxyReader(part))
 				_ = out.Close()
 				if copyErr != nil {
-					fmt.Fprintf(w, "Unable to write file to disk: %v", copyErr)
+					_, _ = fmt.Fprintf(w, "Unable to write file to disk: %v", copyErr)
 					log.Printf("Unable to write file to disk: %v", copyErr)
 					app.stopChannel <- struct{}{}
 					return
