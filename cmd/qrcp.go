@@ -2,8 +2,33 @@ package cmd
 
 import (
 	"github.com/claudiodangelis/qrcp/application"
+	"github.com/claudiodangelis/qrcp/logger"
+	"github.com/claudiodangelis/qrcp/server"
+	"github.com/eiannone/keyboard"
 	"github.com/spf13/cobra"
 )
+
+// listenForQuit starts a goroutine that shuts down the server when "q" or
+// Ctrl+C is pressed. The returned function must be deferred by the caller to
+// release the keyboard.
+func listenForQuit(srv *server.Server, log logger.Logger) func() {
+	if err := keyboard.Open(); err != nil {
+		log.Print("Warning: keyboard not detected:", err)
+		return func() {}
+	}
+	go func() {
+		for {
+			char, key, err := keyboard.GetKey()
+			if err != nil {
+				break
+			}
+			if string(char) == "q" || key == keyboard.KeyCtrlC {
+				srv.Shutdown()
+			}
+		}
+	}()
+	return func() { keyboard.Close() }
+}
 
 var app application.App
 

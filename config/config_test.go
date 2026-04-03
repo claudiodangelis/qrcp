@@ -13,7 +13,7 @@ import (
 func TestNew(t *testing.T) {
 	os.Clearenv()
 	_, f, _, _ := runtime.Caller(0)
-	foundIface, err := chooseInterface(application.Flags{})
+	foundIface, err := chooseInterface(application.Flags{}, false)
 	if err != nil {
 		panic(err)
 	}
@@ -124,7 +124,10 @@ func TestNew(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := New(tt.args.app)
+			got, err := New(tt.args.app)
+			if err != nil {
+				t.Fatal(err)
+			}
 			got.Interface = foundIface
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("New() = %v, want %v", got, tt.want)

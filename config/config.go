@@ -31,9 +31,12 @@ type Config struct {
 	Reversed  bool   `yaml:",omitempty"`
 }
 
-var interactive bool = false
+func New(app application.App) (Config, error) {
+	cfg, _, err := newConfig(app, false)
+	return cfg, err
+}
 
-func New(app application.App) Config {
+func newConfig(app application.App, interactive bool) (Config, *viper.Viper, error) {
 	log := logger.New(app.Flags.Quiet)
 	v := getViperInstance(app)
 	var err error
@@ -42,16 +45,16 @@ func New(app application.App) Config {
 	_, err = os.Stat(v.ConfigFileUsed())
 	if os.IsNotExist(err) {
 		if err := os.MkdirAll(filepath.Dir(v.ConfigFileUsed()), os.ModeDir|os.ModePerm); err != nil {
-			panic(err)
+			return Config{}, nil, err
 		}
 		file, err := os.Create(v.ConfigFileUsed())
 		if err != nil {
-			panic(err)
+			return Config{}, nil, err
 		}
 		defer file.Close()
 	}
 	if err := v.ReadInConfig(); err != nil {
-		panic(fmt.Errorf("fatal error config file: %s", err))
+		return Config{}, nil, fmt.Errorf("fatal error config file: %s", err)
 	}
 	// Load file
 	cfg.Interface = v.GetString("interface")
@@ -104,18 +107,18 @@ func New(app application.App) Config {
 	// Discover interface if it's not been set yet
 	if !interactive {
 		if cfg.Interface == "" {
-			cfg.Interface, err = chooseInterface(app.Flags)
+			cfg.Interface, err = chooseInterface(app.Flags, interactive)
 			if err != nil {
-				panic(err)
+				return Config{}, nil, err
 			}
 			v.Set("interface", cfg.Interface)
 			if err := v.WriteConfig(); err != nil {
-				log.Print(fmt.Sprintf("Warning: the configuration file could not be saved: %v\n", err))
+				log.Print("Warning: the configuration file could not be saved:", err)
 			}
 		}
 	}
 
-	return cfg
+	return cfg, v, nil
 }
 
 func getViperInstance(app application.App) *viper.Viper {
@@ -144,14 +147,14 @@ func getViperInstance(app application.App) *viper.Viper {
 }
 
 func Wizard(app application.App) error {
-	interactive = true
-	cfg := New(app)
-	v := getViperInstance(app)
-	// Choose interface
-	var err error
-	cfg.Interface, err = chooseInterface(app.Flags)
+	cfg, v, err := newConfig(app, true)
 	if err != nil {
-		panic(err)
+		return err
+	}
+	// Choose interface
+	cfg.Interface, err = chooseInterface(app.Flags, true)
+	if err != nil {
+		return err
 	}
 	v.Set("interface", cfg.Interface)
 	if err := v.WriteConfig(); err != nil {
@@ -188,7 +191,7 @@ func Wizard(app application.App) error {
 	promptPort := promptui.Prompt{
 		Validate: validatePort,
 		Label:    "Choose port, 0 means random port",
-		Default:  fmt.Sprintf("%d", cfg.Port),
+		Default:  strconv.Itoa(cfg.Port),
 	}
 	if promptPortResultString, err := promptPort.Run(); err == nil {
 		if port, err := strconv.ParseUint(promptPortResultString, 10, 16); err == nil {
@@ -309,8 +312,9 @@ func Wizard(app application.App) error {
 	}
 	if promptOutputResultString, err := promptOutput.Run(); err == nil {
 		if promptOutputResultString != "" {
-			output, _ := filepath.Abs(promptOutputResultString)
-			v.Set("output", output)
+			if output, err := filepath.Abs(promptOutputResultString); err == nil {
+				v.Set("output", output)
+			}
 		}
 	}
 	promptReversed := promptui.Select{

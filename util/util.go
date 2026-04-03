@@ -4,15 +4,12 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
-	"io"
 	"net"
 	"os"
 	"os/user"
 	"path/filepath"
 	"runtime"
-	"strconv"
 	"strings"
-	"time"
 
 	"github.com/jhoonb/archivex"
 )
@@ -22,7 +19,10 @@ func Expand(input string) string {
 	if runtime.GOOS == "windows" {
 		return input
 	}
-	usr, _ := user.Current()
+	usr, err := user.Current()
+	if err != nil {
+		return input
+	}
 	dir := usr.HomeDir
 	if input == "~" {
 		input = dir
@@ -35,15 +35,7 @@ func Expand(input string) string {
 // ZipFiles and return the resulting zip's filename
 func ZipFiles(files []string) (string, error) {
 	zip := new(archivex.ZipFile)
-	tmpfile, err := os.CreateTemp("", "qrcp")
-	if err != nil {
-		return "", err
-	}
-	tmpfile.Close()
-	if err := os.Rename(tmpfile.Name(), tmpfile.Name()+".zip"); err != nil {
-		return "", err
-	}
-	tmpfile, err = os.OpenFile(tmpfile.Name()+".zip", os.O_RDWR, 0644)
+	tmpfile, err := os.CreateTemp("", "qrcp*.zip")
 	if err != nil {
 		return "", err
 	}
@@ -65,8 +57,9 @@ func ZipFiles(files []string) (string, error) {
 			if err != nil {
 				return "", err
 			}
-			defer file.Close()
-			if err := zip.Add(filename, file, fileinfo); err != nil {
+			err = zip.Add(filename, file, fileinfo)
+			file.Close()
+			if err != nil {
 				return "", err
 			}
 		}
@@ -82,20 +75,22 @@ func ZipFiles(files []string) (string, error) {
 	return zip.Name, nil
 }
 
-// GetRandomURLPath returns a random string of 4 alphanumeric characters
+// GetRandomURLPath returns a random string of 4 URL-safe characters
 func GetRandomURLPath() string {
-	timeNum := time.Now().UTC().UnixNano()
-	alphaString := strconv.FormatInt(timeNum, 36)
-	return alphaString[len(alphaString)-4:]
+	b := make([]byte, 3) // 3 bytes encodes to exactly 4 base64 chars
+	if _, err := rand.Read(b); err != nil {
+		panic(err)
+	}
+	return base64.RawURLEncoding.EncodeToString(b)
 }
 
-// GetSessionID returns a base64 encoded string of 40 random characters
+// GetSessionID returns a base64 encoded string of 40 random bytes
 func GetSessionID() (string, error) {
-	randbytes := make([]byte, 40)
-	if _, err := io.ReadFull(rand.Reader, randbytes); err != nil {
+	b := make([]byte, 40)
+	if _, err := rand.Read(b); err != nil {
 		return "", err
 	}
-	return base64.StdEncoding.EncodeToString(randbytes), nil
+	return base64.StdEncoding.EncodeToString(b), nil
 }
 
 // GetInterfaceAddress returns the address of the network interface to
@@ -156,16 +151,14 @@ func FindIP(iface net.Interface) (string, error) {
 }
 
 // ReadFilenames from dir
-func ReadFilenames(dir string) []string {
+func ReadFilenames(dir string) ([]string, error) {
 	files, err := os.ReadDir(dir)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	// Create array of names of files which are stored in dir
-	// used later to set valid name for received files
 	filenames := make([]string, 0, len(files))
 	for _, fi := range files {
 		filenames = append(filenames, fi.Name())
 	}
-	return filenames
+	return filenames, nil
 }

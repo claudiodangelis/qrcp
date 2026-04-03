@@ -9,7 +9,7 @@ import (
 	"github.com/manifoldco/promptui"
 )
 
-func chooseInterface(flags application.Flags) (string, error) {
+func chooseInterface(flags application.Flags, interactive bool) (string, error) {
 	interfaces, err := util.Interfaces(flags.ListAllInterfaces)
 	if err != nil {
 		return "", err
