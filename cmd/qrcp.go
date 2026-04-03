@@ -27,7 +27,11 @@ func listenForQuit(srv *server.Server, log logger.Logger) func() {
 			}
 		}
 	}()
-	return func() { keyboard.Close() }
+	return func() {
+		if err := keyboard.Close(); err != nil {
+			log.Print("keyboard.Close:", err)
+		}
+	}
 }
 
 var app application.App

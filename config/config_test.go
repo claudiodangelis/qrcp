@@ -22,12 +22,12 @@ func TestNew(t *testing.T) {
 	if err != nil {
 		t.Skip()
 	}
-	defer os.Remove(tempfile.Name())
+	defer func() { _ = os.Remove(tempfile.Name()) }()
 	partialconfig, err := os.CreateTemp("", "qrcp*partial.yml")
 	if err != nil {
 		panic(err)
 	}
-	defer os.Remove(partialconfig.Name())
+	defer func() { _ = os.Remove(partialconfig.Name()) }()
 	if err := os.WriteFile(partialconfig.Name(), []byte(`port: 9090`), os.ModePerm); err != nil {
 		panic(err)
 	}

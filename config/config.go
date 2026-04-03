@@ -51,7 +51,7 @@ func newConfig(app application.App, interactive bool) (Config, *viper.Viper, err
 		if err != nil {
 			return Config{}, nil, err
 		}
-		defer file.Close()
+		defer func() { _ = file.Close() }()
 	}
 	if err := v.ReadInConfig(); err != nil {
 		return Config{}, nil, fmt.Errorf("fatal error config file: %s", err)

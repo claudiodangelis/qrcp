@@ -58,7 +58,7 @@ func ZipFiles(files []string) (string, error) {
 				return "", err
 			}
 			err = zip.Add(filename, file, fileinfo)
-			file.Close()
+			_ = file.Close()
 			if err != nil {
 				return "", err
 			}

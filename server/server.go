@@ -137,7 +137,7 @@ func New(cfg *config.Config) (*Server, error) {
 		fmt.Println("Retrieving the external IP...")
 		extIP, err := util.GetExternalIP()
 		if err != nil {
-			listener.Close()
+			_ = listener.Close()
 			return nil, fmt.Errorf("retrieving external IP: %w", err)
 		}
 		extIPString := extIP.String()
@@ -256,14 +256,14 @@ func New(cfg *config.Config) (*Server, error) {
 		case "POST":
 			filenames, err := util.ReadFilenames(app.outputDir)
 			if err != nil {
-				fmt.Fprintf(w, "Unable to read output directory: %v\n", err)
+				_, _ = fmt.Fprintf(w, "Unable to read output directory: %v\n", err)
 				log.Printf("Unable to read output directory: %v\n", err)
 				app.stopChannel <- struct{}{}
 				return
 			}
 			reader, err := r.MultipartReader()
 			if err != nil {
-				fmt.Fprintf(w, "Upload error: %v\n", err)
+				_, _ = fmt.Fprintf(w, "Upload error: %v\n", err)
 				log.Printf("Upload error: %v\n", err)
 				app.stopChannel <- struct{}{}
 				return
@@ -277,7 +277,7 @@ func New(cfg *config.Config) (*Server, error) {
 					break
 				}
 				if err != nil {
-					fmt.Fprintf(w, "Upload error: %v\n", err)
+					_, _ = fmt.Fprintf(w, "Upload error: %v\n", err)
 					log.Printf("Upload error: %v\n", err)
 					app.stopChannel <- struct{}{}
 					return
@@ -306,7 +306,7 @@ func New(cfg *config.Config) (*Server, error) {
 				progressBar.Prefix(outName)
 				progressBar.Start()
 				_, copyErr := io.Copy(out, progressBar.NewProxyReader(part))
-				out.Close()
+				_ = out.Close()
 				if copyErr != nil {
 					fmt.Fprintf(w, "Unable to write file to disk: %v", copyErr)
 					log.Printf("Unable to write file to disk: %v", copyErr)
