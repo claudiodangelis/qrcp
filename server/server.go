@@ -22,8 +22,8 @@ import (
 
 	"github.com/claudiodangelis/qrcp/body"
 	"github.com/claudiodangelis/qrcp/config"
-	"github.com/claudiodangelis/qrcp/pages"
 	"github.com/claudiodangelis/qrcp/util"
+	"github.com/claudiodangelis/qrcp/web"
 	"gopkg.in/cheggaaa/pb.v1"
 )
 
@@ -313,12 +313,12 @@ func New(cfg *config.Config) (*Server, error) {
 			progressBar.FinishPrint("File transfer completed")
 			// Set the value of the variable to the actually transferred files
 			htmlVariables.File = strings.Join(transferredFiles, ", ")
-			serveTemplate("done", pages.Done, w, htmlVariables)
+			serveTemplate("done", web.Done, w, htmlVariables)
 			if !cfg.KeepAlive {
 				app.stopChannel <- true
 			}
 		case "GET":
-			serveTemplate("upload", pages.Upload, w, htmlVariables)
+			serveTemplate("upload", web.Upload, w, htmlVariables)
 		}
 	})
 	// Wait for all wg to be done, then send shutdown signal
