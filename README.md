@@ -22,7 +22,12 @@ The tool prints a QR code that encodes the text:
 http://{address}:{port}/{random_path}
 ```
 
-Most QR apps can detect URLs in decoded text and act accordingly (i.e., open the decoded URL with the default browser), so when the QR code is scanned, the content will begin downloading by the mobile browser.
+Most QR apps can detect URLs in decoded text and act accordingly (i.e., open the decoded URL with the default browser), so when the QR code is scanned:
+
+- **Web browsers** are shown a page where the download starts automatically. Once the transfer is done, the page displays "You can close this page."
+- **Terminal clients** (curl, wget, etc.) receive the file directly with no UI.
+
+When receiving files, the mobile browser is shown an upload page where files can be selected or pasted. A progress bar tracks the upload, and a confirmation is shown when the transfer is complete.
 
 ### Demo
 
