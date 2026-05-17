@@ -212,7 +212,7 @@
                 </div>
             </div>
             <div id="pasted-file-container" style="margin-bottom:8px"></div>
-            <input type="submit" id="submit" name="submit" value="Transfer">
+            <input type="submit" id="submit" name="submit" value="Transfer" disabled>
             <div id="progress-container" style="display:none;margin-top:16px">
                 <progress id="upload-progress" value="0" max="100"></progress>
                 <span id="upload-percent">0%</span>
@@ -224,6 +224,7 @@
         var textForm = document.getElementById('send-text-form');
         textCheckbox.addEventListener('change', function() {
             textForm.style.display = this.checked ? 'block' : 'none';
+            updateSubmitState();
         });
 
         var fileInput = document.getElementById('files');
@@ -246,8 +247,15 @@
             renderFileList();
         });
 
+        function updateSubmitState() {
+            var hasFiles = selectedFiles.length > 0 || (typeof pastedFiles !== 'undefined' && pastedFiles.length > 0);
+            var hasText = textCheckbox.checked && document.getElementById('plaintext-text').value.trim().length > 0;
+            document.getElementById('submit').disabled = !(hasFiles || hasText);
+        }
+
         function renderFileList() {
             fileList.innerHTML = '';
+            updateSubmitState();
             for (var i = 0; i < selectedFiles.length; i++) {
                 var f = selectedFiles[i];
                 var li = document.createElement('li');
@@ -300,6 +308,8 @@
         var textArea = document.getElementById('plaintext-text');
         var pastedFileContainer = document.getElementById('pasted-file-container');
 
+        textArea.addEventListener('input', updateSubmitState);
+
         textArea.addEventListener('paste', function(e) {
             var clipboardData = e.clipboardData || window.clipboardData;
             var items = clipboardData.items;
@@ -312,6 +322,7 @@
                     foundFile = true;
                     e.preventDefault();
                     pastedFiles.push(blob);
+                    updateSubmitState();
 
                     var fileWrapper = document.createElement('div');
                     fileWrapper.className = 'pasted-file-wrapper';
