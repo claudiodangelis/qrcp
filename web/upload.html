@@ -59,7 +59,7 @@
             align-items: center;
             gap: 8px;
             font-size: 15px;
-            color: #4b5563;
+            color: #374151;
             padding: 6px 10px;
             background: #f9fafb;
             border: 1px solid #e5e7eb;
@@ -75,7 +75,7 @@
         }
 
         #file-list li .file-list-size {
-            color: #9ca3af;
+            color: #94a3b8;
             flex-shrink: 0;
         }
 
@@ -124,7 +124,7 @@
         }
 
         .toggle-row input[type=checkbox] { width: 14px; height: 14px; cursor: pointer; flex-shrink: 0; accent-color: #2563eb; }
-        .toggle-row label { margin: 0; font-size: 14px; color: #4b5563; cursor: pointer; text-transform: none; letter-spacing: 0; font-weight: 400; }
+        .toggle-row label { margin: 0; font-size: 14px; color: #374151; cursor: pointer; text-transform: none; letter-spacing: 0; font-weight: 400; }
 
         #pasted-file-container { display: flex; flex-wrap: wrap; gap: 8px; }
 
@@ -139,8 +139,8 @@
         .pasted-file-wrapper img { display: block; max-width: 120px; max-height: 120px; object-fit: cover; }
 
         .file-info { display: flex; align-items: center; gap: 8px; padding: 10px 14px; }
-        .file-icon { color: #9ca3af; display: flex; align-items: center; }
-        .file-name { font-size: 19px; color: #4b5563; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .file-icon { color: #94a3b8; display: flex; align-items: center; }
+        .file-name { font-size: 19px; color: #374151; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
         #add-files-btn,
         input[type=submit] {
@@ -212,7 +212,7 @@
                 </div>
             </div>
             <div id="pasted-file-container" style="margin-bottom:8px"></div>
-            <input type="submit" id="submit" name="submit" value="Transfer">
+            <input type="submit" id="submit" name="submit" value="Transfer" disabled>
             <div id="progress-container" style="display:none;margin-top:16px">
                 <progress id="upload-progress" value="0" max="100"></progress>
                 <span id="upload-percent">0%</span>
@@ -224,6 +224,7 @@
         var textForm = document.getElementById('send-text-form');
         textCheckbox.addEventListener('change', function() {
             textForm.style.display = this.checked ? 'block' : 'none';
+            updateSubmitState();
         });
 
         var fileInput = document.getElementById('files');
@@ -246,15 +247,22 @@
             renderFileList();
         });
 
+        function updateSubmitState() {
+            var hasFiles = selectedFiles.length > 0 || (typeof pastedFiles !== 'undefined' && pastedFiles.length > 0);
+            var hasText = textCheckbox.checked && document.getElementById('plaintext-text').value.trim().length > 0;
+            document.getElementById('submit').disabled = !(hasFiles || hasText);
+        }
+
         function renderFileList() {
             fileList.innerHTML = '';
+            updateSubmitState();
             for (var i = 0; i < selectedFiles.length; i++) {
                 var f = selectedFiles[i];
                 var li = document.createElement('li');
 
                 var icon = document.createElement('span');
                 icon.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>';
-                icon.style.color = '#9ca3af';
+                icon.style.color = '#94a3b8';
                 icon.style.flexShrink = '0';
                 icon.style.display = 'flex';
 
@@ -300,6 +308,8 @@
         var textArea = document.getElementById('plaintext-text');
         var pastedFileContainer = document.getElementById('pasted-file-container');
 
+        textArea.addEventListener('input', updateSubmitState);
+
         textArea.addEventListener('paste', function(e) {
             var clipboardData = e.clipboardData || window.clipboardData;
             var items = clipboardData.items;
@@ -312,6 +322,7 @@
                     foundFile = true;
                     e.preventDefault();
                     pastedFiles.push(blob);
+                    updateSubmitState();
 
                     var fileWrapper = document.createElement('div');
                     fileWrapper.className = 'pasted-file-wrapper';
