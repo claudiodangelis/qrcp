@@ -32,6 +32,8 @@ type Server struct {
 	BaseURL string
 	// SendURL is the URL used to send the file
 	SendURL string
+	// SendFileURL is the direct file download URL (used by the send UI)
+	SendFileURL string
 	// ReceiveURL is the URL used to receive the file
 	ReceiveURL             string
 	instance               *http.Server
@@ -40,9 +42,8 @@ type Server struct {
 	stopChannel            chan bool
 	expectParallelRequests bool
 	cfg                    *config.Config
-	cookie                 http.Cookie
-	initCookie             sync.Once
 	waitgroup              sync.WaitGroup
+	fileServeOnce          sync.Once
 	receiveRoute           string
 }
 
@@ -102,37 +103,39 @@ func (s *Server) Shutdown() {
 }
 
 func (s *Server) handleSend(w http.ResponseWriter, r *http.Request) {
-	if !s.cfg.KeepAlive && strings.HasPrefix(r.Header.Get("User-Agent"), "Mozilla") {
-		if s.cookie.Value == "" {
-			s.initCookie.Do(func() {
-				value, err := util.GetSessionID()
-				if err != nil {
-					log.Println("Unable to generate session ID", err)
-					s.stopChannel <- true
-					return
-				}
-				s.cookie.Value = value
-				http.SetCookie(w, &s.cookie)
-			})
-		} else {
-			rcookie, err := r.Cookie(s.cookie.Name)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
-				return
-			}
-			if rcookie.Value != s.cookie.Value {
-				http.Error(w, "mismatching cookie", http.StatusBadRequest)
-				return
-			}
-			s.waitgroup.Add(1)
-		}
-		defer s.waitgroup.Done()
+	if !strings.HasPrefix(r.Header.Get("User-Agent"), "Mozilla") {
+		// Terminal browser: serve file directly and signal shutdown
+		defer s.triggerShutdownOnce()
+		w.Header().Set("Content-Disposition", "attachment; filename=\""+
+			s.body.Filename+
+			"\"; filename*=UTF-8''"+
+			url.QueryEscape(s.body.Filename))
+		http.ServeFile(w, r, s.body.Path)
+		return
 	}
+	// Web browser: serve the send UI
+	serveTemplate("send", web.Send, w, struct {
+		DownloadURL string
+		Filename    string
+	}{
+		DownloadURL: s.SendFileURL,
+		Filename:    s.body.Filename,
+	})
+}
+
+func (s *Server) handleSendFile(w http.ResponseWriter, r *http.Request) {
+	defer s.triggerShutdownOnce()
 	w.Header().Set("Content-Disposition", "attachment; filename=\""+
 		s.body.Filename+
 		"\"; filename*=UTF-8''"+
 		url.QueryEscape(s.body.Filename))
 	http.ServeFile(w, r, s.body.Path)
+}
+
+func (s *Server) triggerShutdownOnce() {
+	s.fileServeOnce.Do(func() {
+		s.waitgroup.Done()
+	})
 }
 
 func (s *Server) handleReceive(w http.ResponseWriter, r *http.Request) {
@@ -211,8 +214,7 @@ func (s *Server) handleReceive(w http.ResponseWriter, r *http.Request) {
 // New instance of the server
 func New(cfg *config.Config) (*Server, error) {
 	app := &Server{
-		cfg:    cfg,
-		cookie: http.Cookie{Name: "qrcp", Value: ""},
+		cfg: cfg,
 	}
 
 	bind, err := util.GetInterfaceAddress(cfg.Interface)
@@ -259,6 +261,7 @@ func New(cfg *config.Config) (*Server, error) {
 	}
 	app.BaseURL = fmt.Sprintf("%s://%s", protocol, hostname)
 	app.SendURL = fmt.Sprintf("%s/send/%s", app.BaseURL, path)
+	app.SendFileURL = fmt.Sprintf("%s/send/%s/file", app.BaseURL, path)
 	app.ReceiveURL = fmt.Sprintf("%s/receive/%s", app.BaseURL, path)
 	app.receiveRoute = "/receive/" + path
 
@@ -289,6 +292,7 @@ func New(cfg *config.Config) (*Server, error) {
 
 	app.waitgroup.Add(1)
 	http.HandleFunc("/send/"+path, app.handleSend)
+	http.HandleFunc("/send/"+path+"/file", app.handleSendFile)
 	http.HandleFunc("/receive/"+path, app.handleReceive)
 
 	go func() {
