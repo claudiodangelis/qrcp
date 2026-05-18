@@ -48,7 +48,9 @@ func New(app application.App) Config {
 		if err != nil {
 			panic(err)
 		}
-		defer file.Close()
+		if err := file.Close(); err != nil {
+			panic(err)
+		}
 	}
 	if err := v.ReadInConfig(); err != nil {
 		panic(fmt.Errorf("fatal error config file: %s", err))

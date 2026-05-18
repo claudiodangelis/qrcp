@@ -34,7 +34,7 @@ func sendCmdFunc(command *cobra.Command, args []string) error {
 	}
 	if err := keyboard.Open(); err == nil {
 		defer func() {
-			keyboard.Close()
+			_ = keyboard.Close()
 		}()
 		go func() {
 			for {

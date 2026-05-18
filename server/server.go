@@ -244,7 +244,7 @@ func New(cfg *config.Config) (*Server, error) {
 			filenames := util.ReadFilenames(app.outputDir)
 			reader, err := r.MultipartReader()
 			if err != nil {
-				fmt.Fprintf(w, "Upload error: %v\n", err)
+				_, _ = fmt.Fprintf(w, "Upload error: %v\n", err)
 				log.Printf("Upload error: %v\n", err)
 				app.stopChannel <- true
 				return
@@ -266,14 +266,14 @@ func New(cfg *config.Config) (*Server, error) {
 				out, err := os.Create(filepath.Join(app.outputDir, fileName))
 				if err != nil {
 					// Output to server
-					fmt.Fprintf(w, "Unable to create the file for writing: %s\n", err)
+					_, _ = fmt.Fprintf(w, "Unable to create the file for writing: %s\n", err)
 					// Output to console
 					log.Printf("Unable to create the file for writing: %s\n", err)
 					// Send signal to server to shutdown
 					app.stopChannel <- true
 					return
 				}
-				defer out.Close()
+				defer func() { _ = out.Close() }()
 				// Add name of new file
 				filenames = append(filenames, fileName)
 				// Write the content from POSTed file to the out
@@ -286,7 +286,7 @@ func New(cfg *config.Config) (*Server, error) {
 					n, err := part.Read(buf)
 					if err != nil && err != io.EOF {
 						// Output to server
-						fmt.Fprintf(w, "Unable to write file to disk: %v", err)
+						_, _ = fmt.Fprintf(w, "Unable to write file to disk: %v", err)
 						// Output to console
 						fmt.Printf("Unable to write file to disk: %v", err)
 						// Send signal to server to shutdown
@@ -299,7 +299,7 @@ func New(cfg *config.Config) (*Server, error) {
 					// Write a chunk
 					if _, err := out.Write(buf[:n]); err != nil {
 						// Output to server
-						fmt.Fprintf(w, "Unable to write file to disk: %v", err)
+						_, _ = fmt.Fprintf(w, "Unable to write file to disk: %v", err)
 						// Output to console
 						log.Printf("Unable to write file to disk: %v", err)
 						// Send signal to server to shutdown
