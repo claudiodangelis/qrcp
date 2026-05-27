@@ -38,6 +38,17 @@ type tcpKeepAliveListener struct {
 	*net.TCPListener
 }
 
+// noReadFromConn wraps a net.Conn to hide ReadFrom from net/http. When the
+// underlying conn is a *net.TCPConn, Go's http.response.ReadFrom will call
+// (*net.TCPConn).ReadFrom for *os.File sources, which invokes sendfile(2).
+// On Darwin, the sendfile path corrupts responses for files larger than the
+// 512-byte sniff buffer: bytes are emitted as [file[512:], headers, file[:512]],
+// scrambling every GET. Hiding ReadFrom forces the response writer to fall
+// back to a plain Write loop, which serializes headers and body correctly.
+type noReadFromConn struct {
+	net.Conn
+}
+
 // Accept accepts TCP
 func (ln tcpKeepAliveListener) Accept() (net.Conn, error) {
 	tc, err := ln.AcceptTCP()
@@ -50,5 +61,5 @@ func (ln tcpKeepAliveListener) Accept() (net.Conn, error) {
 	if err := tc.SetKeepAlivePeriod(3 * time.Minute); err != nil {
 		panic(err)
 	}
-	return tc, nil
+	return noReadFromConn{Conn: tc}, nil
 }
