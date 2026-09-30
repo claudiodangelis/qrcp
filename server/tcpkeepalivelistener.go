@@ -44,11 +44,11 @@ func (ln tcpKeepAliveListener) Accept() (net.Conn, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := tc.SetKeepAlive(true); err != nil {
-		panic(err)
-	}
-	if err := tc.SetKeepAlivePeriod(3 * time.Minute); err != nil {
-		panic(err)
+	// Keepalives are best-effort: setting them can fail (e.g. EINVAL on macOS
+	// when the peer has already reset the connection), and that must not
+	// bring down the server. See #367.
+	if err := tc.SetKeepAlive(true); err == nil {
+		_ = tc.SetKeepAlivePeriod(3 * time.Minute)
 	}
 	return tc, nil
 }
