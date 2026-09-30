@@ -1,4 +1,5 @@
 # yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+version: 2
 before:
   hooks:
     - go mod download
@@ -29,11 +30,12 @@ checksum:
   name_template: 'checksums.txt'
 changelog:
   sort: asc
+  abbrev: 7
   filters:
     exclude:
-    - '^docs:'
-    - '^test:'
-    - '^chore:'
+    - '^docs(\(.*\))?:'
+    - '^test(\(.*\))?:'
+    - '^chore(\(.*\))?:'
 release:
   footer: |
     ## Downloads
@@ -41,8 +43,9 @@ release:
     |----------|------------------------------------------------------------------------------------------------------------------------------|
     | Linux    | [deb package](https://github.com/claudiodangelis/qrcp/releases/download/{{ .Tag }}/qrcp_{{ .Version }}_linux_amd64.deb)          |
     | Linux    | [RPM package](https://github.com/claudiodangelis/qrcp/releases/download/{{ .Tag }}/qrcp_{{ .Version }}_linux_amd64.rpm)          |
-    | macOS    | [macOS package](https://github.com/claudiodangelis/qrcp/releases/download/{{ .Tag }}/qrcp_{{ .Version }}_darwin_amd64.tar.gz)    |
-    | Windows  | [Windows package](https://github.com/claudiodangelis/qrcp/releases/download/{{ .Tag }}/qrcp_{{ .Version }}_windows_amd64.tar.gz) |
+    | macOS    | [macOS package (Apple Silicon)](https://github.com/claudiodangelis/qrcp/releases/download/{{ .Tag }}/qrcp_{{ .Version }}_darwin_arm64.tar.gz) |
+    | macOS    | [macOS package (Intel)](https://github.com/claudiodangelis/qrcp/releases/download/{{ .Tag }}/qrcp_{{ .Version }}_darwin_amd64.tar.gz) |
+    | Windows  | [Windows package](https://github.com/claudiodangelis/qrcp/releases/download/{{ .Tag }}/qrcp_{{ .Version }}_windows_amd64.zip)     |
 
     Refer to the list of assets below for all supported platform.
 nfpms:
