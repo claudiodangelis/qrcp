@@ -50,5 +50,5 @@ func (ln tcpKeepAliveListener) Accept() (net.Conn, error) {
 	if err := tc.SetKeepAlive(true); err == nil {
 		_ = tc.SetKeepAlivePeriod(3 * time.Minute)
 	}
-	return tc, nil
+	return wrapConn(tc), nil
 }
