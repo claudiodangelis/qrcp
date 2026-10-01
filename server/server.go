@@ -103,17 +103,13 @@ func (s *Server) Shutdown() {
 }
 
 func (s *Server) handleSend(w http.ResponseWriter, r *http.Request) {
-	if !strings.HasPrefix(r.Header.Get("User-Agent"), "Mozilla") {
-		// Terminal browser: serve file directly and signal shutdown
-		defer s.triggerShutdownOnce()
-		w.Header().Set("Content-Disposition", "attachment; filename=\""+
-			s.body.Filename+
-			"\"; filename*=UTF-8''"+
-			url.QueryEscape(s.body.Filename))
-		http.ServeFile(w, r, s.body.Path)
+	if isCLIClient(r.Header.Get("User-Agent")) {
+		// Command-line client: serve the file directly, no UI
+		s.handleSendFile(w, r)
 		return
 	}
-	// Web browser: serve the send UI
+	// Anything else (browsers, link previewers, QR apps) gets the send UI,
+	// which does not count as a transfer
 	serveTemplate("send", web.Send, w, struct {
 		DownloadURL string
 		Filename    string
@@ -124,18 +120,94 @@ func (s *Server) handleSend(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleSendFile(w http.ResponseWriter, r *http.Request) {
-	defer s.triggerShutdownOnce()
 	w.Header().Set("Content-Disposition", "attachment; filename=\""+
 		s.body.Filename+
 		"\"; filename*=UTF-8''"+
 		url.QueryEscape(s.body.Filename))
-	http.ServeFile(w, r, s.body.Path)
+	cw := &countingResponseWriter{ResponseWriter: w}
+	http.ServeFile(cw, r, s.body.Path)
+	// HEAD probes, partial ranges and aborted downloads (e.g. a mobile browser
+	// handing the download over to its download manager) must not stop the
+	// server: only a response that delivered the end of the file does
+	if s.deliveredLastByte(r, cw) {
+		s.triggerShutdownOnce()
+	}
+}
+
+// deliveredLastByte reports whether the response fully delivered a body
+// ending with the last byte of the file being sent
+func (s *Server) deliveredLastByte(r *http.Request, cw *countingResponseWriter) bool {
+	if r.Method == http.MethodHead {
+		return false
+	}
+	info, err := os.Stat(s.body.Path)
+	if err != nil {
+		return false
+	}
+	size := info.Size()
+	switch cw.status {
+	case http.StatusOK:
+		return cw.written == size
+	case http.StatusPartialContent:
+		var start, end, total int64
+		if _, err := fmt.Sscanf(cw.Header().Get("Content-Range"),
+			"bytes %d-%d/%d", &start, &end, &total); err != nil {
+			return false
+		}
+		return end == size-1 && cw.written == end-start+1
+	}
+	return false
 }
 
 func (s *Server) triggerShutdownOnce() {
 	s.fileServeOnce.Do(func() {
 		s.waitgroup.Done()
 	})
+}
+
+// countingResponseWriter records the status code and the number of body
+// bytes written to the client
+type countingResponseWriter struct {
+	http.ResponseWriter
+	status  int
+	written int64
+}
+
+func (cw *countingResponseWriter) WriteHeader(status int) {
+	if cw.status == 0 {
+		cw.status = status
+	}
+	cw.ResponseWriter.WriteHeader(status)
+}
+
+func (cw *countingResponseWriter) Write(b []byte) (int, error) {
+	if cw.status == 0 {
+		cw.status = http.StatusOK
+	}
+	n, err := cw.ResponseWriter.Write(b)
+	cw.written += int64(n)
+	return n, err
+}
+
+// cliUserAgents are lowercase User-Agent prefixes of command-line clients,
+// which receive the file directly instead of the send UI
+var cliUserAgents = []string{
+	"curl/", "wget/", "httpie/", "aria2/", "lynx/", "w3m/", "links",
+	"elinks/", "go-http-client/", "python-requests/", "python-urllib/",
+}
+
+// isCLIClient reports whether the User-Agent belongs to a command-line client
+func isCLIClient(userAgent string) bool {
+	ua := strings.ToLower(strings.TrimSpace(userAgent))
+	if ua == "" || strings.Contains(ua, "powershell/") {
+		return true
+	}
+	for _, prefix := range cliUserAgents {
+		if strings.HasPrefix(ua, prefix) {
+			return true
+		}
+	}
+	return false
 }
 
 func (s *Server) handleReceive(w http.ResponseWriter, r *http.Request) {
@@ -149,7 +221,7 @@ func (s *Server) handleReceive(w http.ResponseWriter, r *http.Request) {
 		filenames := util.ReadFilenames(s.outputDir)
 		reader, err := r.MultipartReader()
 		if err != nil {
-			_, _ = fmt.Fprintf(w, "Upload error: %v\n", err)
+			http.Error(w, fmt.Sprintf("Upload error: %v", err), http.StatusBadRequest)
 			log.Printf("Upload error: %v\n", err)
 			s.stopChannel <- true
 			return
@@ -162,13 +234,19 @@ func (s *Server) handleReceive(w http.ResponseWriter, r *http.Request) {
 			if err == io.EOF {
 				break
 			}
+			if err != nil {
+				http.Error(w, fmt.Sprintf("Upload error: %v", err), http.StatusBadRequest)
+				log.Printf("Upload error: %v\n", err)
+				s.stopChannel <- true
+				return
+			}
 			if part.FileName() == "" {
 				continue
 			}
 			fileName := getFileName(filepath.Base(part.FileName()), filenames)
 			out, err := os.Create(filepath.Join(s.outputDir, fileName))
 			if err != nil {
-				_, _ = fmt.Fprintf(w, "Unable to create the file for writing: %s\n", err)
+				http.Error(w, fmt.Sprintf("Unable to create the file for writing: %s", err), http.StatusInternalServerError)
 				log.Printf("Unable to create the file for writing: %s\n", err)
 				s.stopChannel <- true
 				return
@@ -182,7 +260,7 @@ func (s *Server) handleReceive(w http.ResponseWriter, r *http.Request) {
 			for {
 				n, err := part.Read(buf)
 				if err != nil && err != io.EOF {
-					_, _ = fmt.Fprintf(w, "Unable to write file to disk: %v", err)
+					http.Error(w, fmt.Sprintf("Upload interrupted: %v", err), http.StatusBadRequest)
 					fmt.Printf("Unable to write file to disk: %v", err)
 					s.stopChannel <- true
 					return
@@ -191,7 +269,7 @@ func (s *Server) handleReceive(w http.ResponseWriter, r *http.Request) {
 					break
 				}
 				if _, err := out.Write(buf[:n]); err != nil {
-					_, _ = fmt.Fprintf(w, "Unable to write file to disk: %v", err)
+					http.Error(w, fmt.Sprintf("Unable to write file to disk: %v", err), http.StatusInternalServerError)
 					log.Printf("Unable to write file to disk: %v", err)
 					s.stopChannel <- true
 					return

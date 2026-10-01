@@ -182,6 +182,8 @@
         progress::-moz-progress-bar { background: #2563eb; border-radius: 3px; }
 
         #upload-percent { font-size: 32px; color: #374151; text-align: center; }
+
+        #upload-error { font-size: 17px; color: #b91c1c; line-height: 1.5; text-align: center; }
     </style>
 </head>
 <body>
@@ -217,6 +219,7 @@
                 <progress id="upload-progress" value="0" max="100"></progress>
                 <span id="upload-percent">0%</span>
             </div>
+            <p id="upload-error" role="alert" style="display:none;margin-top:16px"></p>
         </form>
     </div>
     <script>
@@ -366,10 +369,17 @@
             document.getElementById('add-files-btn').disabled = true;
 
             var xhr = new XMLHttpRequest();
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState === 4) {
-                    document.write(xhr.response);
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    document.open();
+                    document.write(xhr.responseText);
+                    document.close();
+                } else {
+                    showUploadError(xhr.responseText.trim() || ('HTTP ' + xhr.status));
                 }
+            };
+            xhr.onerror = function() {
+                showUploadError('the connection to qrcp was lost');
             };
             xhr.upload.onprogress = function(e) {
                 if (e.lengthComputable) {
@@ -405,6 +415,15 @@
             xhr.open('POST', '{{.Route}}');
             xhr.send(formData);
         });
+
+        // qrcp stops after a failed upload, so the form is not re-enabled
+        function showUploadError(detail) {
+            document.getElementById('progress-container').style.display = 'none';
+            document.getElementById('submit').value = 'Transfer failed';
+            var el = document.getElementById('upload-error');
+            el.textContent = 'Transfer failed: ' + detail.replace(/\.$/, '') + '. Run qrcp receive again to retry.';
+            el.style.display = '';
+        }
     </script>
 </body>
 </html>
