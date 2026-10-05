@@ -121,6 +121,52 @@ func TestNew(t *testing.T) {
 				Reversed:  true,
 			},
 		},
+		{
+			"output-dir override", args{
+				app: application.App{
+					Flags: application.Flags{
+						Config:    filepath.Join(testdir, "full.yml"),
+						OutputDir: "/custom/output/dir",
+					},
+				},
+			},
+			Config{
+				Interface: foundIface,
+				Port:      18080,
+				Bind:      "10.20.30.40",
+				KeepAlive: false,
+				Path:      "random",
+				Secure:    false,
+				TlsKey:    "/path/to/key",
+				TlsCert:   "/path/to/cert",
+				FQDN:      "mylan.com",
+				Output:    "/custom/output/dir",
+				Reversed:  true,
+			},
+		},
+		{
+			"output override", args{
+				app: application.App{
+					Flags: application.Flags{
+						Config: filepath.Join(testdir, "full.yml"),
+						Output: "/explicit/output/dir",
+					},
+				},
+			},
+			Config{
+				Interface: foundIface,
+				Port:      18080,
+				Bind:      "10.20.30.40",
+				KeepAlive: false,
+				Path:      "random",
+				Secure:    false,
+				TlsKey:    "/path/to/key",
+				TlsCert:   "/path/to/cert",
+				FQDN:      "mylan.com",
+				Output:    "/explicit/output/dir",
+				Reversed:  true,
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

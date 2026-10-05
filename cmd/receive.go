@@ -13,6 +13,9 @@ import (
 
 func receiveCmdFunc(command *cobra.Command, args []string) error {
 	log := logger.New(app.Flags.Quiet)
+	if app.Flags.OutputDir != "" && app.Flags.Output == "" {
+		app.Flags.Output = app.Flags.OutputDir
+	}
 	// Load configuration
 	cfg := config.New(app)
 	// Create the server
@@ -22,6 +25,16 @@ func receiveCmdFunc(command *cobra.Command, args []string) error {
 	}
 	// Sets the output directory
 	if err := srv.ReceiveTo(cfg.Output); err != nil {
+		return err
+	}
+	outputDir := app.Flags.OutputDir
+	if outputDir == "" {
+		outputDir = app.Flags.Output
+	}
+	if outputDir == "" {
+		outputDir = cfg.Output
+	}
+	if err := srv.FileName(app.Flags.FileName, outputDir); err != nil {
 		return err
 	}
 	// Prints the URL to scan to screen
@@ -62,6 +75,10 @@ var receiveCmd = &cobra.Command{
 qrcp receive
 # Receive files in a specific directory
 qrcp receive --output /tmp
+# Receive files with a custom file name
+qrcp receive --file notes.txt
+# Receive files to stdout
+qrcp receive --file -
 `,
 	RunE: receiveCmdFunc,
 }
