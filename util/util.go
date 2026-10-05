@@ -171,3 +171,20 @@ func ReadFilenames(dir string) []string {
 	}
 	return filenames
 }
+
+// OutputIsPipe returns true if standard output is a pipe or redirected
+func OutputIsPipe() bool {
+	return isPipe(os.Stdout)
+}
+
+func isPipe(file *os.File) bool {
+	if file == nil {
+		return false
+	}
+	fi, err := file.Stat()
+	if err != nil {
+		return false
+	}
+	return fi.Mode()&os.ModeCharDevice == 0
+}
+
