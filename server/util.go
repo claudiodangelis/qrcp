@@ -4,17 +4,25 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"log"
 	"path/filepath"
 	"strings"
+
+	"github.com/claudiodangelis/qrcp/pages"
 )
 
-func serveTemplate(name string, tmpl string, w io.Writer, data interface{}) {
-	t, err := template.New(name).Parse(tmpl)
-	if err != nil {
-		panic(err)
-	}
+// The pages are parsed once: they are constants, so failing to parse one is
+// a bug, reported when qrcp starts (and by the tests) rather than in a handler
+var (
+	uploadPage = template.Must(template.New("upload").Parse(pages.Upload))
+	donePage   = template.Must(template.New("done").Parse(pages.Done))
+)
+
+// serveTemplate writes a page. Failing to write it means the client went
+// away, which must not prevent the handler from completing.
+func serveTemplate(t *template.Template, w io.Writer, data interface{}) {
 	if err := t.Execute(w, data); err != nil {
-		panic(err)
+		log.Printf("Unable to send the %s page: %v", t.Name(), err)
 	}
 }
 
