@@ -126,6 +126,23 @@ All configuration parameters can also be set via environment variables prefixed 
 
 ---
 
+## Troubleshooting
+
+If the phone can't open the URL, run:
+```sh
+qrcp doctor
+```
+It lists the network interfaces and points out the one that looks connected to the local network. It also checks the port, the firewall, VPNs, WSL networking and, with `--secure`, the TLS certificate, and suggests a fix for each problem it finds. It takes the same flags as the other commands, so you can check a specific setup with `qrcp doctor -i wlan0 -p 8080`. It never changes the configuration, and exits with code `1` if a check fails. On Windows and macOS, it only tries the port on `127.0.0.1`, so that the firewall doesn't ask whether to allow qrcp.
+
+The most common causes are:
+
+- **Wrong interface.** The phone and the computer must be on the same network, and qrcp must use the interface connected to it. Docker, virtual machine and VPN interfaces usually can't be reached from the phone. Choose one with `-i`, or save it with `qrcp config`.
+- **Firewall.** qrcp uses a random port by default. Set a fixed one with `--port` (or `port` in the configuration), and allow incoming TCP connections on it.
+- **Guest or public Wi-Fi.** Many of these networks block devices from reaching each other. Use another network, or connect the computer to the phone's hotspot.
+- **WSL 2.** With the default NAT networking, WSL can't be reached from other devices. On Windows 11 22H2 or later, add `networkingMode=mirrored` under `[wsl2]` in `%UserProfile%\.wslconfig`, run `wsl --shutdown`, and allow inbound connections in the Hyper-V firewall, as described in [Microsoft's WSL networking guide](https://learn.microsoft.com/windows/wsl/networking). Or use the Windows build of qrcp.
+
+---
+
 ## Advanced Usage
 
 ### Network Interface
@@ -138,6 +155,7 @@ To bind the web server to all interfaces:
 ```sh
 qrcp -i any MyDocument.pdf
 ```
+With `any` (or `--bind 0.0.0.0`), the URL uses the public IP address of your network, which qrcp looks up with online services. It only works if that address and port can be reached, e.g. with port forwarding on the router; a phone on the same Wi-Fi usually can't use it. To put a domain name in the URL instead, set `--fqdn`.
 
 ### HTTPS
 Enable secure transfers with HTTPS by providing a TLS certificate and key:

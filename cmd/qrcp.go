@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"errors"
+
 	"github.com/claudiodangelis/qrcp/application"
 	"github.com/spf13/cobra"
 )
@@ -14,6 +16,7 @@ func init() {
 	rootCmd.AddCommand(configCmd)
 	rootCmd.AddCommand(versionCmd)
 	rootCmd.AddCommand(completionCmd)
+	rootCmd.AddCommand(doctorCmd)
 	configCmd.AddCommand(migrateCmd)
 	// Global command flags
 	rootCmd.PersistentFlags().BoolVarP(&app.Flags.Quiet, "quiet", "q", false, "only print errors")
@@ -47,6 +50,9 @@ var rootCmd = &cobra.Command{
 // Execute the root command
 func Execute() error {
 	if err := rootCmd.Execute(); err != nil {
+		if errors.Is(err, errChecksFailed) {
+			return err
+		}
 		rootCmd.PrintErrf("Error: %v\nRun `qrcp help` for help.\n", err)
 		return err
 	}
