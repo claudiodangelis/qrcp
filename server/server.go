@@ -3,7 +3,9 @@ package server
 import (
 	"context"
 	"crypto/tls"
+	"errors"
 	"fmt"
+	"image"
 	"image/jpeg"
 	"io"
 	"log"
@@ -22,7 +24,6 @@ import (
 
 	"github.com/claudiodangelis/qrcp/body"
 	"github.com/claudiodangelis/qrcp/config"
-	"github.com/claudiodangelis/qrcp/pages"
 	"github.com/claudiodangelis/qrcp/util"
 	"gopkg.in/cheggaaa/pb.v1"
 )
@@ -38,9 +39,24 @@ type Server struct {
 	body        body.Body
 	outputDir   string
 	stopChannel chan bool
-	// expectParallelRequests is set to true when qrcp sends files, in order
-	// to support downloading of parallel chunks
-	expectParallelRequests bool
+	// mux routes the requests of this server. Only the route of the current
+	// mode is registered, by Send or ReceiveTo.
+	mux            *http.ServeMux
+	path           string
+	sendHandler    http.HandlerFunc
+	receiveHandler http.HandlerFunc
+	// sendRoute and receiveRoute register each route once, even if Send or
+	// ReceiveTo is called again
+	sendRoute    sync.Once
+	receiveRoute sync.Once
+	// mu protects sessionID and activeRequests
+	mu sync.Mutex
+	// sessionID identifies the browser the file is sent to
+	sessionID string
+	// activeRequests counts the requests of that browser in progress. The
+	// server stops when it drops to zero.
+	activeRequests int
+	sessionStop    sync.Once
 }
 
 // ReceiveTo sets the output directory
@@ -57,31 +73,104 @@ func (s *Server) ReceiveTo(dir string) error {
 	if !fileinfo.IsDir() {
 		return fmt.Errorf("%s is not a valid directory", output)
 	}
+	// Received files are named after the existing ones, so the directory
+	// must be readable
+	if err := checkReadable(output); err != nil {
+		return fmt.Errorf("unable to read %s: %w", output, err)
+	}
 	s.outputDir = output
+	s.receiveRoute.Do(func() {
+		s.mux.HandleFunc("/receive/"+s.path, s.receiveHandler)
+	})
+	return nil
+}
+
+// checkReadable reports whether the entries of dir can be listed, reading at
+// most one of them
+func checkReadable(dir string) error {
+	f, err := os.Open(dir)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = f.Close() }()
+	if _, err := f.ReadDir(1); err != nil && err != io.EOF {
+		return err
+	}
 	return nil
 }
 
 // Send adds a handler for sending the file
 func (s *Server) Send(p body.Body) {
 	s.body = p
-	s.expectParallelRequests = true
+	s.sendRoute.Do(func() {
+		s.mux.HandleFunc("/send/"+s.path, s.sendHandler)
+	})
 }
+
+// startSessionRequest admits a request of the browser the file is sent to.
+// The first request starts the session and gets its new ID, to be set as a
+// cookie; the following ones must present it and get an empty newID.
+// Exactly one request gets a new ID, even when several arrive at once.
+func (s *Server) startSessionRequest(cookieValue string) (newID string, err error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.sessionID == "" {
+		id, err := util.GetSessionID()
+		if err != nil {
+			return "", err
+		}
+		s.sessionID = id
+		s.activeRequests++
+		return id, nil
+	}
+	if cookieValue != s.sessionID {
+		return "", errMismatchingSession
+	}
+	s.activeRequests++
+	return "", nil
+}
+
+// endSessionRequest stops the server when the last request of the session
+// is completed
+func (s *Server) endSessionRequest() {
+	s.mu.Lock()
+	s.activeRequests--
+	done := s.activeRequests == 0
+	s.mu.Unlock()
+	if done {
+		// Like before, the end of the session stops the server once
+		s.sessionStop.Do(func() {
+			go func() { s.stopChannel <- true }()
+		})
+	}
+}
+
+var errMismatchingSession = errors.New("mismatching cookie")
+
+// cookieName is the name of the cookie that identifies the browser the file
+// is sent to
+const cookieName = "qrcp"
 
 // DisplayQR creates a handler for serving the QR code in the browser
 func (s *Server) DisplayQR(url string) {
 	const PATH = "/qr"
-	qrImg := qr.RenderImage(url)
-	http.HandleFunc(PATH, func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "image/jpeg")
-		if err := jpeg.Encode(w, qrImg, nil); err != nil {
-			panic(err)
-		}
-	})
+	s.mux.HandleFunc(PATH, qrHandler(qr.RenderImage(url)))
 	openBrowser(s.BaseURL + PATH)
 }
 
+// qrHandler serves the QR code as an image
+func qrHandler(img image.Image) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "image/jpeg")
+		if err := jpeg.Encode(w, img, nil); err != nil {
+			// The browser went away
+			log.Printf("Unable to send the QR code: %v", err)
+		}
+	}
+}
+
 // Wait for transfer to be completed, it waits forever if kept awlive
-func (s Server) Wait() error {
+func (s *Server) Wait() error {
 	<-s.stopChannel
 	if err := s.instance.Shutdown(context.Background()); err != nil {
 		log.Println(err)
@@ -95,14 +184,14 @@ func (s Server) Wait() error {
 }
 
 // Shutdown the server
-func (s Server) Shutdown() {
+func (s *Server) Shutdown() {
 	s.stopChannel <- true
 }
 
 // New instance of the server
 func New(cfg *config.Config) (*Server, error) {
 
-	app := &Server{}
+	app := &Server{mux: http.NewServeMux()}
 	// Get the address of the configured interface to bind the server to.
 	// If `bind` configuration parameter has been configured, it takes precedence
 	bind, err := util.GetInterfaceAddress(cfg.Interface)
@@ -126,6 +215,7 @@ func New(cfg *config.Config) (*Server, error) {
 	if path == "" {
 		path = util.GetRandomURLPath()
 	}
+	app.path = path
 	// Set the hostname
 	hostname := fmt.Sprintf("%s:%d", bind, port)
 	// Use external IP when using `interface: any`, unless a FQDN is set
@@ -159,7 +249,8 @@ func New(cfg *config.Config) (*Server, error) {
 		app.BaseURL, path)
 	// Create a server
 	httpserver := &http.Server{
-		Addr: host,
+		Addr:    host,
+		Handler: app.mux,
 		TLSConfig: &tls.Config{
 			MinVersion:               tls.VersionTLS12,
 			CurvePreferences:         []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256},
@@ -175,8 +266,6 @@ func New(cfg *config.Config) (*Server, error) {
 	}
 	// Create channel to send message to stop server
 	app.stopChannel = make(chan bool)
-	// Create cookie used to verify request is coming from first client to connect
-	cookie := http.Cookie{Name: "qrcp", Value: ""}
 	// Gracefully shutdown when an OS signal is received or when "q" is pressed
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt)
@@ -184,56 +273,43 @@ func New(cfg *config.Config) (*Server, error) {
 		<-sig
 		app.stopChannel <- true
 	}()
-	// The handler adds and removes from the sync.WaitGroup
-	// When the group is zero all requests are completed
-	// and the server is shutdown
-	var waitgroup sync.WaitGroup
-	waitgroup.Add(1)
-	var initCookie sync.Once
 	// Create handlers
 	// Send handler (sends file to caller)
-	http.HandleFunc("/send/"+path, func(w http.ResponseWriter, r *http.Request) {
+	app.sendHandler = func(w http.ResponseWriter, r *http.Request) {
+		// Without keep-alive, the file is sent to the first browser that
+		// connects, which gets a cookie, and the server stops when that
+		// browser's requests (possibly several, for parallel chunks) are done
 		if !cfg.KeepAlive && strings.HasPrefix(r.Header.Get("User-Agent"), "Mozilla") {
-			if cookie.Value == "" {
-				initCookie.Do(func() {
-					value, err := util.GetSessionID()
-					if err != nil {
-						log.Println("Unable to generate session ID", err)
-						app.stopChannel <- true
-						return
-					}
-					cookie.Value = value
-					http.SetCookie(w, &cookie)
-				})
-			} else {
-				// Check for the expected cookie and value
-				// If it is missing or doesn't match
-				// return a 400 status
-				rcookie, err := r.Cookie(cookie.Name)
-				if err != nil {
-					http.Error(w, err.Error(), http.StatusBadRequest)
-					return
-				}
-				if rcookie.Value != cookie.Value {
-					http.Error(w, "mismatching cookie", http.StatusBadRequest)
-					return
-				}
-				// If the cookie exits and matches
-				// this is an aadditional request.
-				// Increment the waitgroup
-				waitgroup.Add(1)
+			var cookieValue string
+			if rcookie, err := r.Cookie(cookieName); err == nil {
+				cookieValue = rcookie.Value
 			}
-			// Remove connection from the waitgroup when done
-			defer waitgroup.Done()
+			newID, err := app.startSessionRequest(cookieValue)
+			switch {
+			case errors.Is(err, errMismatchingSession):
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			case err != nil:
+				// As before, stop the server but still serve this request
+				log.Println("Unable to generate session ID", err)
+				app.sessionStop.Do(func() {
+					go func() { app.stopChannel <- true }()
+				})
+			default:
+				if newID != "" {
+					http.SetCookie(w, &http.Cookie{Name: cookieName, Value: newID})
+				}
+				defer app.endSessionRequest()
+			}
 		}
 		w.Header().Set("Content-Disposition", "attachment; filename=\""+
 			app.body.Filename+
 			"\"; filename*=UTF-8''"+
 			url.QueryEscape(app.body.Filename))
 		http.ServeFile(w, r, app.body.Path)
-	})
+	}
 	// Upload handler (serves the upload page)
-	http.HandleFunc("/receive/"+path, func(w http.ResponseWriter, r *http.Request) {
+	app.receiveHandler = func(w http.ResponseWriter, r *http.Request) {
 		htmlVariables := struct {
 			Route string
 			File  string
@@ -241,7 +317,14 @@ func New(cfg *config.Config) (*Server, error) {
 		htmlVariables.Route = "/receive/" + path
 		switch r.Method {
 		case "POST":
-			filenames := util.ReadFilenames(app.outputDir)
+			filenames, err := util.ReadFilenames(app.outputDir)
+			if err != nil {
+				// E.g. the output directory was removed: answer, and keep
+				// serving in case it comes back
+				log.Printf("Unable to read the output directory: %v", err)
+				http.Error(w, "Unable to read the output directory", http.StatusInternalServerError)
+				return
+			}
 			reader, err := r.MultipartReader()
 			if err != nil {
 				_, _ = fmt.Fprintf(w, "Upload error: %v\n", err)
@@ -252,10 +335,21 @@ func New(cfg *config.Config) (*Server, error) {
 			transferredFiles := []string{}
 			progressBar := pb.New64(r.ContentLength)
 			progressBar.ShowCounters = false
+			barStarted := false
 			for {
 				part, err := reader.NextPart()
 				if err == io.EOF {
 					break
+				}
+				if err != nil {
+					// A malformed upload: answer, and keep serving so that
+					// the user can try again
+					if barStarted {
+						progressBar.Finish()
+					}
+					log.Printf("Upload error: %v\n", err)
+					http.Error(w, fmt.Sprintf("Upload error: %v", err), http.StatusBadRequest)
+					return
 				}
 				// iIf part.FileName() is empty, skip this iteration.
 				if part.FileName() == "" {
@@ -280,6 +374,7 @@ func New(cfg *config.Config) (*Server, error) {
 				fmt.Println("Transferring file: ", out.Name())
 				progressBar.Prefix(out.Name())
 				progressBar.Start()
+				barStarted = true
 				buf := make([]byte, 1024)
 				for {
 					// Read a chunk
@@ -310,25 +405,19 @@ func New(cfg *config.Config) (*Server, error) {
 				}
 				transferredFiles = append(transferredFiles, out.Name())
 			}
-			progressBar.FinishPrint("File transfer completed")
+			if barStarted {
+				progressBar.FinishPrint("File transfer completed")
+			}
 			// Set the value of the variable to the actually transferred files
 			htmlVariables.File = strings.Join(transferredFiles, ", ")
-			serveTemplate("done", pages.Done, w, htmlVariables)
+			serveTemplate(donePage, w, htmlVariables)
 			if !cfg.KeepAlive {
 				app.stopChannel <- true
 			}
 		case "GET":
-			serveTemplate("upload", pages.Upload, w, htmlVariables)
+			serveTemplate(uploadPage, w, htmlVariables)
 		}
-	})
-	// Wait for all wg to be done, then send shutdown signal
-	go func() {
-		waitgroup.Wait()
-		if cfg.KeepAlive || !app.expectParallelRequests {
-			return
-		}
-		app.stopChannel <- true
-	}()
+	}
 	go func() {
 		netListener := tcpKeepAliveListener{listener.(*net.TCPListener)}
 		if cfg.Secure {

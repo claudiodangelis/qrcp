@@ -158,10 +158,10 @@ func FindIP(iface net.Interface) (string, error) {
 }
 
 // ReadFilenames from dir
-func ReadFilenames(dir string) []string {
+func ReadFilenames(dir string) ([]string, error) {
 	files, err := os.ReadDir(dir)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	// Create array of names of files which are stored in dir
 	// used later to set valid name for received files
@@ -169,5 +169,5 @@ func ReadFilenames(dir string) []string {
 	for _, fi := range files {
 		filenames = append(filenames, fi.Name())
 	}
-	return filenames
+	return filenames, nil
 }
