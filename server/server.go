@@ -34,11 +34,13 @@ type Server struct {
 	// SendURL is the URL used to send the file
 	SendURL string
 	// ReceiveURL is the URL used to Receive the file
-	ReceiveURL  string
-	instance    *http.Server
-	body        body.Body
-	outputDir   string
-	stopChannel chan bool
+	ReceiveURL string
+	instance   *http.Server
+	body       body.Body
+	outputDir  string
+	// stopped is closed when the server is asked to stop
+	stopped  chan struct{}
+	stopOnce sync.Once
 	// mux routes the requests of this server. Only the route of the current
 	// mode is registered, by Send or ReceiveTo.
 	mux            *http.ServeMux
@@ -56,7 +58,6 @@ type Server struct {
 	// activeRequests counts the requests of that browser in progress. The
 	// server stops when it drops to zero.
 	activeRequests int
-	sessionStop    sync.Once
 }
 
 // ReceiveTo sets the output directory
@@ -138,10 +139,7 @@ func (s *Server) endSessionRequest() {
 	done := s.activeRequests == 0
 	s.mu.Unlock()
 	if done {
-		// Like before, the end of the session stops the server once
-		s.sessionStop.Do(func() {
-			go func() { s.stopChannel <- true }()
-		})
+		s.Shutdown()
 	}
 }
 
@@ -169,9 +167,9 @@ func qrHandler(img image.Image) http.HandlerFunc {
 	}
 }
 
-// Wait for transfer to be completed, it waits forever if kept awlive
+// Wait for transfer to be completed, it waits forever if kept alive
 func (s *Server) Wait() error {
-	<-s.stopChannel
+	<-s.stopped
 	if err := s.instance.Shutdown(context.Background()); err != nil {
 		log.Println(err)
 	}
@@ -183,9 +181,14 @@ func (s *Server) Wait() error {
 	return nil
 }
 
-// Shutdown the server
+// Shutdown asks the server to stop, and returns without waiting: Wait does
+// the shutdown. Only the first call has an effect.
 func (s *Server) Shutdown() {
-	s.stopChannel <- true
+	if s.stopped == nil {
+		// Not a server returned by New without error
+		return
+	}
+	s.stopOnce.Do(func() { close(s.stopped) })
 }
 
 // New instance of the server
@@ -264,14 +267,14 @@ func New(cfg *config.Config) (*Server, error) {
 		},
 		TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler)),
 	}
-	// Create channel to send message to stop server
-	app.stopChannel = make(chan bool)
+	// Closed to stop the server, see Shutdown
+	app.stopped = make(chan struct{})
 	// Gracefully shutdown when an OS signal is received or when "q" is pressed
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt)
 	go func() {
 		<-sig
-		app.stopChannel <- true
+		app.Shutdown()
 	}()
 	// Create handlers
 	// Send handler (sends file to caller)
@@ -292,9 +295,7 @@ func New(cfg *config.Config) (*Server, error) {
 			case err != nil:
 				// As before, stop the server but still serve this request
 				log.Println("Unable to generate session ID", err)
-				app.sessionStop.Do(func() {
-					go func() { app.stopChannel <- true }()
-				})
+				app.Shutdown()
 			default:
 				if newID != "" {
 					http.SetCookie(w, &http.Cookie{Name: cookieName, Value: newID})
@@ -329,7 +330,7 @@ func New(cfg *config.Config) (*Server, error) {
 			if err != nil {
 				_, _ = fmt.Fprintf(w, "Upload error: %v\n", err)
 				log.Printf("Upload error: %v\n", err)
-				app.stopChannel <- true
+				app.Shutdown()
 				return
 			}
 			transferredFiles := []string{}
@@ -364,7 +365,7 @@ func New(cfg *config.Config) (*Server, error) {
 					// Output to console
 					log.Printf("Unable to create the file for writing: %s\n", err)
 					// Send signal to server to shutdown
-					app.stopChannel <- true
+					app.Shutdown()
 					return
 				}
 				defer func() { _ = out.Close() }()
@@ -385,7 +386,7 @@ func New(cfg *config.Config) (*Server, error) {
 						// Output to console
 						fmt.Printf("Unable to write file to disk: %v", err)
 						// Send signal to server to shutdown
-						app.stopChannel <- true
+						app.Shutdown()
 						return
 					}
 					if n == 0 {
@@ -398,7 +399,7 @@ func New(cfg *config.Config) (*Server, error) {
 						// Output to console
 						log.Printf("Unable to write file to disk: %v", err)
 						// Send signal to server to shutdown
-						app.stopChannel <- true
+						app.Shutdown()
 						return
 					}
 					progressBar.Add(n)
@@ -412,7 +413,7 @@ func New(cfg *config.Config) (*Server, error) {
 			htmlVariables.File = strings.Join(transferredFiles, ", ")
 			serveTemplate(donePage, w, htmlVariables)
 			if !cfg.KeepAlive {
-				app.stopChannel <- true
+				app.Shutdown()
 			}
 		case "GET":
 			serveTemplate(uploadPage, w, htmlVariables)
