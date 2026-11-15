@@ -7,12 +7,15 @@ import (
 	"io"
 	"log"
 	"mime/multipart"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
+	"syscall"
 	"testing"
 	"time"
 
@@ -336,16 +339,14 @@ func TestSessionStopsTheServerOnce(t *testing.T) {
 	if _, err := srv.startSessionRequest(id); err != nil {
 		t.Fatal(err)
 	}
-	srv.endSessionRequest() // zero again: no second stop
+	srv.endSessionRequest() // zero again: stopping again has no effect
 	select {
-	case <-srv.stopChannel:
-	case <-time.After(stopTimeout):
-		t.Fatal("no stop signal")
+	case <-srv.stopped:
+	default:
+		t.Fatal("the end of the session did not stop the server")
 	}
-	select {
-	case <-srv.stopChannel:
-		t.Fatal("a second stop signal was sent")
-	case <-time.After(200 * time.Millisecond):
+	if err := srv.Wait(); err != nil {
+		t.Fatal(err)
 	}
 }
 
@@ -436,5 +437,175 @@ func TestSendAndReceiveToCanBeCalledAgain(t *testing.T) {
 	}
 	if recv.outputDir != second {
 		t.Errorf("output directory not updated: %s", recv.outputDir)
+	}
+}
+
+// slowUpload posts a file whose content is written by the caller, so that
+// the test controls when the upload finishes
+type slowUpload struct {
+	pw   *io.PipeWriter
+	part io.Writer
+	form *multipart.Writer
+	done chan error
+}
+
+func startSlowUpload(t *testing.T, url, name string) *slowUpload {
+	t.Helper()
+	pr, pw := io.Pipe()
+	form := multipart.NewWriter(pw)
+	u := &slowUpload{pw: pw, form: form, done: make(chan error, 1)}
+	go func() {
+		resp, err := http.Post(url, form.FormDataContentType(), pr)
+		if err == nil {
+			_ = resp.Body.Close()
+		}
+		u.done <- err
+	}()
+	part, err := form.CreateFormFile("files", name)
+	if err != nil {
+		t.Fatal(err)
+	}
+	u.part = part
+	if _, err := part.Write([]byte("first half, ")); err != nil {
+		t.Fatal(err)
+	}
+	return u
+}
+
+// waitHandled waits until the handler is writing the file, i.e. the upload
+// is in progress on the server side
+func waitHandled(t *testing.T, path string) {
+	t.Helper()
+	deadline := time.Now().Add(stopTimeout)
+	for time.Now().Before(deadline) {
+		if _, err := os.Stat(path); err == nil {
+			return
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+	t.Fatalf("%s was never created", path)
+}
+
+// waitShuttingDown waits until the server stops accepting connections, i.e.
+// Wait has started the graceful shutdown
+func waitShuttingDown(t *testing.T, srv *Server) {
+	t.Helper()
+	addr := strings.TrimPrefix(srv.BaseURL, "http://")
+	deadline := time.Now().Add(stopTimeout)
+	for time.Now().Before(deadline) {
+		conn, err := net.DialTimeout("tcp", addr, time.Second)
+		// Only a refused connection proves the listener is closed; a timeout
+		// on a busy machine doesn't. Windows reports it with its own error
+		// code.
+		if err != nil && (errors.Is(err, syscall.ECONNREFUSED) || runtime.GOOS == "windows") {
+			return
+		}
+		if err != nil {
+			continue
+		}
+		_ = conn.Close()
+		time.Sleep(5 * time.Millisecond)
+	}
+	t.Fatal("the server never started shutting down")
+}
+
+// finish completes the upload and waits for the answer
+func (u *slowUpload) finish(t *testing.T) {
+	t.Helper()
+	_, _ = u.part.Write([]byte("second half"))
+	_ = u.form.Close()
+	_ = u.pw.Close()
+	if err := <-u.done; err != nil {
+		t.Fatalf("upload failed: %v", err)
+	}
+}
+
+func TestInterruptDuringUpload(t *testing.T) {
+	// CTRL+C or "q" while an upload is in progress: the upload completes,
+	// then qrcp exits. It used to hang, because the handler blocked on
+	// stopping a server that was already stopping.
+	srv, dir := receiveServer(t)
+	w := startWaiting(srv)
+	upload := startSlowUpload(t, srv.ReceiveURL, "a.txt")
+	waitHandled(t, filepath.Join(dir, "a.txt"))
+	srv.Shutdown()
+	waitShuttingDown(t, srv)
+	upload.finish(t)
+	if !w.stopped(stopTimeout) {
+		t.Fatal("the server did not stop")
+	}
+	if saved, _ := os.ReadFile(filepath.Join(dir, "a.txt")); string(saved) != "first half, second half" {
+		t.Errorf("saved %q", saved)
+	}
+}
+
+func TestConcurrentUploads(t *testing.T) {
+	// The second of two uploads finishing after the first one stopped the
+	// server used to hang qrcp
+	srv, dir := receiveServer(t)
+	w := startWaiting(srv)
+	second := startSlowUpload(t, srv.ReceiveURL, "b.txt")
+	waitHandled(t, filepath.Join(dir, "b.txt"))
+	first := startSlowUpload(t, srv.ReceiveURL, "a.txt")
+	waitHandled(t, filepath.Join(dir, "a.txt"))
+	first.finish(t)
+	waitShuttingDown(t, srv)
+	second.finish(t)
+	if !w.stopped(stopTimeout) {
+		t.Fatal("the server did not stop")
+	}
+	for _, name := range []string{"a.txt", "b.txt"} {
+		if saved, _ := os.ReadFile(filepath.Join(dir, name)); string(saved) != "first half, second half" {
+			t.Errorf("%s: saved %q", name, saved)
+		}
+	}
+}
+
+func TestShutdownNeverBlocks(t *testing.T) {
+	srv := newTestServer(t, false)
+	done := make(chan struct{})
+	go func() {
+		// Before Wait, several times: it used to block forever
+		for i := 0; i < 10; i++ {
+			srv.Shutdown()
+		}
+		close(done)
+	}()
+	select {
+	case <-done:
+	case <-time.After(stopTimeout):
+		t.Fatal("Shutdown blocked")
+	}
+	// The request made before Wait is kept
+	w := startWaiting(srv)
+	if !w.stopped(stopTimeout) {
+		t.Fatal("Wait did not see the request to stop")
+	}
+	// After Wait, and a second Wait
+	srv.Shutdown()
+	if err := srv.Wait(); err != nil {
+		t.Fatal(err)
+	}
+	// A Server returned by New with an error
+	(&Server{}).Shutdown()
+}
+
+func TestInterruptSignal(t *testing.T) {
+	// CTRL+C reaches the server as os.Interrupt
+	process, err := os.FindProcess(os.Getpid())
+	if err != nil {
+		t.Fatal(err)
+	}
+	srv, dir := receiveServer(t)
+	w := startWaiting(srv)
+	upload := startSlowUpload(t, srv.ReceiveURL, "a.txt")
+	waitHandled(t, filepath.Join(dir, "a.txt"))
+	if err := process.Signal(os.Interrupt); err != nil {
+		t.Skipf("can't send os.Interrupt on this platform: %v", err)
+	}
+	waitShuttingDown(t, srv)
+	upload.finish(t)
+	if !w.stopped(stopTimeout) {
+		t.Fatal("the server did not stop")
 	}
 }
