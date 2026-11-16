@@ -8,6 +8,7 @@ require (
 	github.com/adrg/xdg v0.5.3
 	github.com/asaskevich/govalidator v0.0.0-20200108200545-475eaeb16496
 	github.com/eiannone/keyboard v0.0.0-20200508000154-caf4b762e807
+	github.com/fatih/color v1.18.0
 	github.com/glendc/go-external-ip v0.1.0
 	github.com/jhoonb/archivex v0.0.0-20180718040744-0488e4ce1681
 	github.com/manifoldco/promptui v0.9.0
@@ -20,11 +21,11 @@ require (
 
 require (
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e // indirect
-	github.com/fatih/color v1.18.0 // indirect
 	github.com/fsnotify/fsnotify v1.8.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.2.1 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
+	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.9 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect
 	github.com/sagikazarmark/locafero v0.7.0 // indirect

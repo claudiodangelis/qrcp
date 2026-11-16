@@ -36,10 +36,7 @@ var interactive bool = false
 func New(app application.App) Config {
 	log := logger.New(app.Flags.Quiet)
 	v := getViperInstance(app)
-	var err error
-	cfg := Config{}
-
-	_, err = os.Stat(v.ConfigFileUsed())
+	_, err := os.Stat(v.ConfigFileUsed())
 	if os.IsNotExist(err) {
 		if err := os.MkdirAll(filepath.Dir(v.ConfigFileUsed()), os.ModeDir|os.ModePerm); err != nil {
 			panic(err)
@@ -55,53 +52,8 @@ func New(app application.App) Config {
 	if err := v.ReadInConfig(); err != nil {
 		panic(fmt.Errorf("fatal error config file: %s", err))
 	}
-	// Load file
-	cfg.Interface = v.GetString("interface")
-	cfg.Bind = v.GetString("bind")
-	cfg.Port = v.GetInt("port")
-	cfg.KeepAlive = v.GetBool("keepAlive")
-	cfg.Path = v.GetString("path")
-	cfg.Secure = v.GetBool("secure")
-	cfg.TlsKey = v.GetString("tls-key")
-	cfg.TlsCert = v.GetString("tls-cert")
-	cfg.FQDN = v.GetString("fqdn")
-	cfg.Output = v.GetString("output")
-	cfg.Reversed = v.GetBool("reversed")
-
-	// Override
-	if app.Flags.Interface != "" {
-		cfg.Interface = app.Flags.Interface
-	}
-	if app.Flags.Bind != "" {
-		cfg.Bind = app.Flags.Bind
-	}
-	if app.Flags.Port != 0 {
-		cfg.Port = app.Flags.Port
-	}
-	if app.Flags.KeepAlive {
-		cfg.KeepAlive = true
-	}
-	if app.Flags.Path != "" {
-		cfg.Path = app.Flags.Path
-	}
-	if app.Flags.Secure {
-		cfg.Secure = true
-	}
-	if app.Flags.TlsKey != "" {
-		cfg.TlsKey = app.Flags.TlsKey
-	}
-	if app.Flags.TlsCert != "" {
-		cfg.TlsCert = app.Flags.TlsCert
-	}
-	if app.Flags.FQDN != "" {
-		cfg.FQDN = app.Flags.FQDN
-	}
-	if app.Flags.Output != "" {
-		cfg.Output = app.Flags.Output
-	}
-	if app.Flags.Reversed {
-		cfg.Reversed = true
-	}
+	cfg := fromViper(v)
+	applyFlags(&cfg, app.Flags)
 
 	// Discover interface if it's not been set yet
 	if !interactive {
@@ -118,6 +70,90 @@ func New(app application.App) Config {
 	}
 
 	return cfg
+}
+
+// Load reads the configuration file, if it exists, and applies the flags and
+// environment variables. Unlike New, it never creates the file, chooses an
+// interface or writes anything, and it returns errors instead of panicking.
+// If the file can't be read, the error is returned with the configuration
+// from the flags and environment variables only.
+func Load(app application.App) (Config, error) {
+	if app.Flags.Config != "" && filepath.Ext(app.Flags.Config) == "" {
+		// getViperInstance takes the format from the extension, so read the
+		// environment variables only
+		v := viper.New()
+		readEnv(v, app)
+		cfg := fromViper(v)
+		applyFlags(&cfg, app.Flags)
+		return cfg, fmt.Errorf("the configuration file %s has no extension, such as .yml, to tell its format", app.Flags.Config)
+	}
+	v := getViperInstance(app)
+	var err error
+	if _, statErr := os.Stat(v.ConfigFileUsed()); statErr == nil {
+		if readErr := v.ReadInConfig(); readErr != nil {
+			err = fmt.Errorf("unable to read the configuration file %s: %w", v.ConfigFileUsed(), readErr)
+			v = getViperInstance(app)
+		}
+	} else if !os.IsNotExist(statErr) {
+		err = fmt.Errorf("unable to read the configuration file %s: %w", v.ConfigFileUsed(), statErr)
+	}
+	cfg := fromViper(v)
+	applyFlags(&cfg, app.Flags)
+	return cfg, err
+}
+
+// fromViper returns the configuration read by v
+func fromViper(v *viper.Viper) Config {
+	return Config{
+		Interface: v.GetString("interface"),
+		Bind:      v.GetString("bind"),
+		Port:      v.GetInt("port"),
+		KeepAlive: v.GetBool("keepAlive"),
+		Path:      v.GetString("path"),
+		Secure:    v.GetBool("secure"),
+		TlsKey:    v.GetString("tls-key"),
+		TlsCert:   v.GetString("tls-cert"),
+		FQDN:      v.GetString("fqdn"),
+		Output:    v.GetString("output"),
+		Reversed:  v.GetBool("reversed"),
+	}
+}
+
+// applyFlags overrides the configuration with the flags that are set
+func applyFlags(cfg *Config, flags application.Flags) {
+	if flags.Interface != "" {
+		cfg.Interface = flags.Interface
+	}
+	if flags.Bind != "" {
+		cfg.Bind = flags.Bind
+	}
+	if flags.Port != 0 {
+		cfg.Port = flags.Port
+	}
+	if flags.KeepAlive {
+		cfg.KeepAlive = true
+	}
+	if flags.Path != "" {
+		cfg.Path = flags.Path
+	}
+	if flags.Secure {
+		cfg.Secure = true
+	}
+	if flags.TlsKey != "" {
+		cfg.TlsKey = flags.TlsKey
+	}
+	if flags.TlsCert != "" {
+		cfg.TlsCert = flags.TlsCert
+	}
+	if flags.FQDN != "" {
+		cfg.FQDN = flags.FQDN
+	}
+	if flags.Output != "" {
+		cfg.Output = flags.Output
+	}
+	if flags.Reversed {
+		cfg.Reversed = true
+	}
 }
 
 func getViperInstance(app application.App) *viper.Viper {
@@ -139,10 +175,15 @@ func getViperInstance(app application.App) *viper.Viper {
 	}
 	v.SetConfigType(configType)
 	v.SetConfigFile(configFile)
+	readEnv(v, app)
+	return v
+}
+
+// readEnv makes v read the QRCP_* environment variables
+func readEnv(v *viper.Viper, app application.App) {
 	v.AutomaticEnv()
 	v.SetEnvPrefix(app.Name)
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_", "-", "_"))
-	return v
 }
 
 func Wizard(app application.App) error {
