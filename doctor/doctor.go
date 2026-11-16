@@ -74,8 +74,11 @@ type Env struct {
 	Interfaces func() (map[string]string, error)
 	// Candidates returns the interfaces qrcp offers when none is configured
 	Candidates func() (map[string]string, error)
-	Listen     func(address string) (net.Listener, error)
-	ReadFile   func(path string) ([]byte, error)
+	// Addresses returns all the addresses of this computer. Interfaces has
+	// one address per interface, while an interface can have more.
+	Addresses func() ([]net.IP, error)
+	Listen    func(address string) (net.Listener, error)
+	ReadFile  func(path string) ([]byte, error)
 	// Run runs a command and returns its standard output
 	Run func(name string, args ...string) (string, error)
 	Now func() time.Time
@@ -88,8 +91,21 @@ func SystemEnv(listAll bool) Env {
 		GOOS:       runtime.GOOS,
 		Interfaces: func() (map[string]string, error) { return util.Interfaces(true) },
 		Candidates: func() (map[string]string, error) { return util.Interfaces(listAll) },
-		Listen:     func(address string) (net.Listener, error) { return net.Listen("tcp", address) },
-		ReadFile:   os.ReadFile,
+		Addresses: func() ([]net.IP, error) {
+			addrs, err := net.InterfaceAddrs()
+			if err != nil {
+				return nil, err
+			}
+			var ips []net.IP
+			for _, addr := range addrs {
+				if ipnet, ok := addr.(*net.IPNet); ok {
+					ips = append(ips, ipnet.IP)
+				}
+			}
+			return ips, nil
+		},
+		Listen:   func(address string) (net.Listener, error) { return net.Listen("tcp", address) },
+		ReadFile: os.ReadFile,
 		Run: func(name string, args ...string) (string, error) {
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
@@ -411,9 +427,9 @@ func checkPort(cfg config.Config, t target, ifaces []util.Interface, env Env) Ch
 		return check
 	}
 	loopbackOnly := env.GOOS != "linux"
-	if loopbackOnly && cfg.Bind != "" && !isLocalAddress(cfg.Bind, ifaces) {
+	if loopbackOnly && cfg.Bind != "" && !isLocalAddress(cfg.Bind, ifaces, env) {
 		check.Status = Warn
-		check.Message = fmt.Sprintf("--bind %s is not among the addresses of the interfaces of this computer, so the server may fail to start", cfg.Bind)
+		check.Message = fmt.Sprintf("--bind %s is not an address of this computer, so the server may fail to start", cfg.Bind)
 		check.Hint = "use the address of the interface on the phone's network"
 		return check
 	}
@@ -482,13 +498,23 @@ func unbracketedIPv6(address string) bool {
 	return ip != nil && ip.To4() == nil
 }
 
-// isLocalAddress reports whether address is one of the addresses of the
-// interfaces, or one that listens on all of them. A name is assumed to be
+// isLocalAddress reports whether address is one of the addresses of this
+// computer, or one that listens on all of them. A name is assumed to be
 // local, since resolving it is up to the server.
-func isLocalAddress(address string, ifaces []util.Interface) bool {
+func isLocalAddress(address string, ifaces []util.Interface, env Env) bool {
 	ip := net.ParseIP(strings.Trim(address, "[]"))
 	if ip == nil || ip.IsUnspecified() || ip.IsLoopback() {
 		return true
+	}
+	// An interface can have more addresses than the one in ifaces
+	if env.Addresses != nil {
+		if addrs, err := env.Addresses(); err == nil {
+			for _, other := range addrs {
+				if other.Equal(ip) {
+					return true
+				}
+			}
+		}
 	}
 	for _, i := range ifaces {
 		if other := net.ParseIP(strings.Trim(i.IP, "[]")); other != nil && other.Equal(ip) {

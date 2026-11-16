@@ -39,6 +39,8 @@ jobs:
     needs: [ test, lint ]
     runs-on: ${{ matrix.os }}
     strategy:
+      # A failure on one system doesn't hide the results of the others
+      fail-fast: false
       matrix:
         os: [ ubuntu-24.04, macos-15, windows-latest ]
     steps:
@@ -84,6 +86,97 @@ jobs:
               Write-Host "Got: $($Request.Content)"
               exit 1
           }
+      - name: Check qrcp doctor on *nix
+        if: runner.os != 'Windows'
+        timeout-minutes: 5
+        run: |
+          go build
+          # The whole report from a real machine, for the log
+          set +e
+          ./qrcp doctor --json > doctor.json
+          CODE=$?
+          set -e
+          cat doctor.json
+          FAILED=$(jq -r .failed doctor.json)
+          if [[ "$FAILED" == "true" && $CODE != 1 ]] || [[ "$FAILED" == "false" && $CODE != 0 ]]; then
+              echo "exit code $CODE doesn't match failed=$FAILED"
+              exit 1
+          fi
+          FIREWALL=$(jq -r '.checks[] | select(.name == "firewall") | .message' doctor.json)
+          if [[ -z "$FIREWALL" || "$FIREWALL" == "unable to tell whether a firewall is active" ]]; then
+              echo "the firewall state wasn't determined: $FIREWALL"
+              exit 1
+          fi
+          # Add a second address to the interface of the default route, and
+          # check that --bind to each of its addresses doesn't warn or fail
+          if [[ "$(uname)" == "Darwin" ]]; then
+              IFACE=$(route -n get default | awk '/interface:/ {print $2}')
+              sudo ifconfig "$IFACE" alias 10.99.99.2 255.255.255.255
+              ADDRESSES=$(ifconfig "$IFACE" | awk '$1 == "inet" {print $2}')
+          else
+              IFACE=$(ip route show default | awk '{print $5; exit}')
+              sudo ip addr add 10.99.99.2/32 dev "$IFACE"
+              ADDRESSES=$(ip -4 -o addr show dev "$IFACE" | awk '{split($4, a, "/"); print a[1]}')
+          fi
+          for ADDRESS in $ADDRESSES; do
+              ./qrcp doctor --json -i "$IFACE" --bind "$ADDRESS" -p 1607 > bind.json || true
+              cat bind.json
+              PORT=$(jq -r '.checks[] | select(.name == "port") | .status' bind.json)
+              if [[ "$PORT" != "ok" && "$PORT" != "info" ]]; then
+                  echo "the port check is '$PORT' for --bind $ADDRESS, an address of $IFACE"
+                  exit 1
+              fi
+          done
+      - name: Check qrcp doctor on Windows
+        if: runner.os == 'Windows'
+        timeout-minutes: 5
+        run: |
+          go build
+          # The PowerShell query doctor runs, on its own
+          $Time = Measure-Command {
+              $Out = powershell -NoProfile -NonInteractive -Command "`$ProgressPreference = 'SilentlyContinue'; (Get-NetFirewallProfile | Where-Object { `$_.Enabled }).Count"
+          }
+          Write-Host "enabled firewall profiles: $Out (in $($Time.TotalSeconds)s)"
+          # The whole report from a real machine, for the log
+          ./qrcp doctor --json > doctor.json
+          $Code = $LASTEXITCODE
+          Get-Content doctor.json
+          $Report = Get-Content doctor.json -Raw | ConvertFrom-Json
+          if (($Report.failed -and $Code -ne 1) -or (-not $Report.failed -and $Code -ne 0)) {
+              throw "exit code $Code doesn't match failed=$($Report.failed)"
+          }
+          $Firewall = ($Report.checks | Where-Object name -eq 'firewall').message
+          if (-not $Firewall -or $Firewall -eq 'unable to tell whether a firewall is active') {
+              throw "the firewall state wasn't determined: $Firewall"
+          }
+          exit 0
+      # A separate step, so that the log of the previous one is kept if
+      # changing the network goes wrong
+      - name: Check qrcp doctor --bind on Windows
+        if: runner.os == 'Windows'
+        timeout-minutes: 5
+        run: |
+          # Add a second address to the interface of the default route, and
+          # check that --bind to each of its addresses doesn't warn or fail.
+          # It's an IPv6 one: a static IPv4 address would turn DHCP off and
+          # disconnect the runner, while IPv6 addresses add up. qrcp reports
+          # the IPv4 address of the interface, so this one is the second.
+          $Iface = (Get-NetRoute -DestinationPrefix 0.0.0.0/0 | Sort-Object RouteMetric | Select-Object -First 1).InterfaceAlias
+          New-NetIPAddress -InterfaceAlias $Iface -AddressFamily IPv6 -IPAddress fd00:99::2 -PrefixLength 128 -SkipAsSource $true | Out-Null
+          for ($i = 0; $i -lt 30 -and (Get-NetIPAddress -IPAddress fd00:99::2).AddressState -ne 'Preferred'; $i++) {
+              Start-Sleep -Seconds 1
+          }
+          Get-NetIPAddress -InterfaceAlias $Iface | Format-Table IPAddress, AddressFamily, AddressState, PrefixOrigin
+          $Addresses = @('[fd00:99::2]') + (Get-NetIPAddress -InterfaceAlias $Iface -AddressFamily IPv4).IPAddress
+          foreach ($Address in $Addresses) {
+              ./qrcp doctor --json -i $Iface --bind $Address -p 1607 > bind.json
+              Get-Content bind.json
+              $Port = ((Get-Content bind.json -Raw | ConvertFrom-Json).checks | Where-Object name -eq 'port').status
+              if ($Port -ne 'ok' -and $Port -ne 'info') {
+                  throw "the port check is '$Port' for --bind $Address, an address of $Iface"
+              }
+          }
+          exit 0
   release:
     runs-on: ubuntu-24.04
     needs: [ e2e ]
