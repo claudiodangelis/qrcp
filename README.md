@@ -132,7 +132,7 @@ If the phone can't open the URL, run:
 ```sh
 qrcp doctor
 ```
-It lists the network interfaces and points out the one that looks connected to the local network. It also checks the port, the firewall, VPNs, WSL networking and, with `--secure`, the TLS certificate, and suggests a fix for each problem it finds. It takes the same flags as the other commands, so you can check a specific setup with `qrcp doctor -i wlan0 -p 8080`. It never changes the configuration, and exits with code `1` if a check fails. On Windows and macOS, it only tries the port on `127.0.0.1`, so that the firewall doesn't ask whether to allow qrcp.
+It lists the network interfaces and points out the one that looks connected to the local network. It also checks the port, the firewall, VPNs, WSL networking and, with `--secure`, the TLS certificate, and suggests a fix for each problem it finds. It takes the same flags as the other commands, so you can check a specific setup with `qrcp doctor -i wlan0 -p 8080`. It only checks this computer: it can't test the phone or the Wi-Fi network. It never changes the configuration, and exits with code `1` if a check fails. Scripts and AI agents can use `qrcp doctor --json`, which prints the same report as JSON (see `qrcp help doctor` for its fields). On Windows and macOS, it only tries the port on `127.0.0.1`, so that the firewall doesn't ask whether to allow qrcp.
 
 The most common causes are:
 
