@@ -84,6 +84,73 @@ jobs:
               Write-Host "Got: $($Request.Content)"
               exit 1
           }
+      - name: Check qrcp doctor on *nix
+        if: runner.os != 'Windows'
+        run: |
+          go build
+          # The whole report from a real machine, for the log
+          set +e
+          ./qrcp doctor --json > doctor.json
+          CODE=$?
+          set -e
+          cat doctor.json
+          FAILED=$(jq -r .failed doctor.json)
+          if [[ "$FAILED" == "true" && $CODE != 1 ]] || [[ "$FAILED" == "false" && $CODE != 0 ]]; then
+              echo "exit code $CODE doesn't match failed=$FAILED"
+              exit 1
+          fi
+          FIREWALL=$(jq -r '.checks[] | select(.name == "firewall") | .message' doctor.json)
+          if [[ -z "$FIREWALL" || "$FIREWALL" == "unable to tell whether a firewall is active" ]]; then
+              echo "the firewall state wasn't determined: $FIREWALL"
+              exit 1
+          fi
+          # --bind to a second address of the interface
+          if [[ "$(uname)" == "Darwin" ]]; then
+              IFACE=$(route -n get default | awk '/interface:/ {print $2}')
+              sudo ifconfig "$IFACE" alias 10.99.99.2 255.255.255.255
+          else
+              IFACE=$(ip route show default | awk '{print $5; exit}')
+              sudo ip addr add 10.99.99.2/32 dev "$IFACE"
+          fi
+          ./qrcp doctor --json -i "$IFACE" --bind 10.99.99.2 -p 1607 > bind.json || true
+          cat bind.json
+          PORT=$(jq -r '.checks[] | select(.name == "port") | .status' bind.json)
+          if [[ "$PORT" != "ok" && "$PORT" != "info" ]]; then
+              echo "the port check is '$PORT' for a second address of $IFACE"
+              exit 1
+          fi
+      - name: Check qrcp doctor on Windows
+        if: runner.os == 'Windows'
+        run: |
+          go build
+          # The whole report from a real machine, for the log
+          ./qrcp doctor --json > doctor.json
+          $Code = $LASTEXITCODE
+          Get-Content doctor.json
+          $Report = Get-Content doctor.json -Raw | ConvertFrom-Json
+          if (($Report.failed -and $Code -ne 1) -or (-not $Report.failed -and $Code -ne 0)) {
+              Write-Host "exit code $Code doesn't match failed=$($Report.failed)"
+              exit 1
+          }
+          $Firewall = ($Report.checks | Where-Object name -eq 'firewall').message
+          if (-not $Firewall -or $Firewall -eq 'unable to tell whether a firewall is active') {
+              Write-Host "the firewall state wasn't determined: $Firewall"
+              exit 1
+          }
+          # --bind to a second address of the interface of the default route
+          $Iface = (Get-NetRoute -DestinationPrefix 0.0.0.0/0 | Sort-Object RouteMetric | Select-Object -First 1).InterfaceAlias
+          New-NetIPAddress -InterfaceAlias $Iface -IPAddress 10.99.99.2 -PrefixLength 32 -SkipAsSource $true | Out-Null
+          for ($i = 0; $i -lt 30 -and (Get-NetIPAddress -IPAddress 10.99.99.2).AddressState -ne 'Preferred'; $i++) {
+              Start-Sleep -Seconds 1
+          }
+          ./qrcp doctor --json -i "$Iface" --bind 10.99.99.2 -p 1607 > bind.json
+          Get-Content bind.json
+          $Port = ((Get-Content bind.json -Raw | ConvertFrom-Json).checks | Where-Object name -eq 'port').status
+          if ($Port -ne 'ok' -and $Port -ne 'info') {
+              Write-Host "the port check is '$Port' for a second address of $Iface"
+              exit 1
+          }
+          exit 0
   release:
     runs-on: ubuntu-24.04
     needs: [ e2e ]
