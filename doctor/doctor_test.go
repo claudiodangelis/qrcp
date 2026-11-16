@@ -617,6 +617,33 @@ func TestBindAddressNotOnThisComputerWithoutProbing(t *testing.T) {
 	}
 }
 
+func TestBindSecondAddressOfAnInterface(t *testing.T) {
+	// util.Interfaces reports one address per interface: 192.168.1.81 has
+	// a second address, 10.99.99.2, which is the one it reports
+	ifaces := map[string]string{"wlp4s0": "10.99.99.2", "lo": "127.0.0.1"}
+	for _, goos := range []string{"darwin", "windows"} {
+		env := fakeEnv(ifaces)
+		env.GOOS = goos
+		env.Addresses = func() ([]net.IP, error) {
+			return []net.IP{net.ParseIP("127.0.0.1"), net.ParseIP("192.168.1.81"), net.ParseIP("10.99.99.2")}, nil
+		}
+		for _, bind := range []string{"192.168.1.81", "10.99.99.2"} {
+			c := findCheck(t, Run(config.Config{Interface: "wlp4s0", Bind: bind}, env), "port")
+			if c.Status != OK {
+				t.Errorf("%s, --bind %s: %+v", goos, bind, c)
+			}
+		}
+		if c := findCheck(t, Run(config.Config{Interface: "wlp4s0", Bind: "10.9.9.9"}, env), "port"); c.Status != Warn {
+			t.Errorf("%s, --bind to another computer: %+v", goos, c)
+		}
+		// When the addresses can't be listed, those of ifaces are used
+		env.Addresses = func() ([]net.IP, error) { return nil, errors.New("failed") }
+		if c := findCheck(t, Run(config.Config{Interface: "wlp4s0", Bind: "10.99.99.2"}, env), "port"); c.Status != OK {
+			t.Errorf("%s, no addresses: %+v", goos, c)
+		}
+	}
+}
+
 func TestWSLMirroredNetworking(t *testing.T) {
 	const version = "Linux version 5.15.153.1-microsoft-standard-WSL2"
 	// wslinfo says so

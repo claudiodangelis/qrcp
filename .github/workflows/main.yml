@@ -39,6 +39,8 @@ jobs:
     needs: [ test, lint ]
     runs-on: ${{ matrix.os }}
     strategy:
+      # A failure on one system doesn't hide the results of the others
+      fail-fast: false
       matrix:
         os: [ ubuntu-24.04, macos-15, windows-latest ]
     steps:
