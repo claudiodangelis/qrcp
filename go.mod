@@ -1,14 +1,12 @@
 module github.com/claudiodangelis/qrcp
 
-go 1.21.0
-
-toolchain go1.24.1
+go 1.25.0
 
 require (
 	github.com/adrg/xdg v0.5.3
 	github.com/asaskevich/govalidator v0.0.0-20200108200545-475eaeb16496
 	github.com/eiannone/keyboard v0.0.0-20200508000154-caf4b762e807
-	github.com/fatih/color v1.18.0
+	github.com/fatih/color v1.19.0
 	github.com/glendc/go-external-ip v0.1.0
 	github.com/jhoonb/archivex v0.0.0-20180718040744-0488e4ce1681
 	github.com/manifoldco/promptui v0.9.0
@@ -36,7 +34,7 @@ require (
 	github.com/subosito/gotenv v1.6.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
-	golang.org/x/sys v0.29.0 // indirect
+	golang.org/x/sys v0.42.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
