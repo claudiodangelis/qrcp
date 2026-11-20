@@ -2,11 +2,20 @@ package logger
 
 import (
 	"fmt"
+	"os"
+
+	"github.com/claudiodangelis/qrcp/util"
 )
 
 // Print prints its argument if the --quiet flag is not passed
 func (l Logger) Print(args ...interface{}) {
-	if !l.quiet {
+	if l.quiet {
+		return
+	}
+
+	if util.OutputIsPipe() {
+		fmt.Fprintln(os.Stderr, args...)
+	} else {
 		fmt.Println(args...)
 	}
 }

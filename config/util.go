@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 	"fmt"
+	"os"
 
 	"github.com/claudiodangelis/qrcp/application"
 	"github.com/claudiodangelis/qrcp/util"
@@ -19,7 +20,11 @@ func chooseInterface(flags application.Flags) (string, error) {
 	}
 	if len(interfaces) == 1 && !interactive {
 		for name := range interfaces {
-			fmt.Printf("only one interface found: %s, using this one\n", name)
+			if util.OutputIsPipe() {
+				fmt.Fprintf(os.Stderr, "only one interface found: %s, using this one\n", name)
+			} else {
+				fmt.Printf("only one interface found: %s, using this one\n", name)
+			}
 			return name, nil
 		}
 	}
