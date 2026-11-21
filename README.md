@@ -1,8 +1,10 @@
-![Logo](docs/img/logo.svg)
+![Logo](.github/img/logo.svg)
 
 # $ qrcp
 
 Transfer files over Wi-Fi from your computer to a mobile device by scanning a QR code without leaving the terminal.
+
+**Website: [qrcp.sh](https://qrcp.sh)**: install instructions, docs, release notes and tutorials.
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/claudiodangelis/qrcp)](https://goreportcard.com/report/github.com/claudiodangelis/qrcp)
 
@@ -12,7 +14,7 @@ Join the **Telegram channel** [qrcp_dev](https://t.me/qrcp_dev) or the [@qrcp_de
 
 ## How does it work?
 
-![Screenshot](docs/img/screenshot.png)
+![Screenshot](.github/img/screenshot.png)
 
 `qrcp` binds a web server to the address of your Wi-Fi network interface on a random port and creates a handler for it. The default handler serves the content and exits the program when the transfer is complete. When used to receive files, `qrcp` serves an upload page and handles the transfer.
 
@@ -28,11 +30,11 @@ Most QR apps can detect URLs in decoded text and act accordingly (i.e., open the
 
 **Send files to mobile:**
 
-![screenshot](docs/img/demo.gif)
+![screenshot](.github/img/demo.gif)
 
 **Receive files from mobile:**
 
-![Screenshot](docs/img/mobile-demo.gif)
+![Screenshot](.github/img/mobile-demo.gif)
 
 ---
 
