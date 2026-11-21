@@ -115,10 +115,11 @@ qrcp --config /tmp/qrcp.yml MyDocument.pdf
 | `path`      | String  | Path to use in the URL. Defaults to a random string.                           |
 | `output`    | String  | Default directory to receive files. Defaults to the current working directory. |
 | `fqdn`      | String  | Fully qualified domain name to use in the URL instead of the IP address.       |
-| `keep-alive` | Bool    | Keep the server alive after transferring files. Defaults to `false`.           |
+| `keepAlive` | Bool    | Keep the server alive after transferring files. Defaults to `false`.           |
 | `secure`    | Bool    | Use HTTPS instead of HTTP. Defaults to `false`.                                |
 | `tls-cert`  | String  | Path to the TLS certificate. Used only when `secure: true`.                    |
 | `tls-key`   | String  | Path to the TLS key. Used only when `secure: true`.                            |
+| `reversed`  | Bool    | Print the QR code black on white. Defaults to `false`.                         |
 
 ### Environment Variables
 All configuration parameters can also be set via environment variables prefixed with `QRCP_`:
