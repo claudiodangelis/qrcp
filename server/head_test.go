@@ -323,9 +323,10 @@ func TestSendHEADDuringParallelRanges(t *testing.T) {
 		got, err := io.ReadAll(responses[i].Body)
 		_ = responses[i].Body.Close()
 		want := content
-		if i == 1 {
+		switch i {
+		case 1:
 			want = content[:2048]
-		} else if i == 2 {
+		case 2:
 			want = content[2048:]
 		}
 		if err != nil || !bytes.Equal(got, want) {
