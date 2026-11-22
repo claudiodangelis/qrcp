@@ -34,6 +34,12 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&app.Flags.TlsCert, "tls-cert", "", "path to TLS certificate to use with HTTPS")
 	rootCmd.PersistentFlags().StringVar(&app.Flags.TlsKey, "tls-key", "", "path to TLS private key to use with HTTPS")
 	rootCmd.PersistentFlags().BoolVarP(&app.Flags.Reversed, "reversed", "r", false, "Reverse QR code (black text on white background)")
+	// Send command flags, also taken by the root command, which is a shortcut
+	// of send
+	for _, c := range []*cobra.Command{rootCmd, sendCmd} {
+		c.Flags().StringVar(&app.Flags.Scheme, "scheme", "", "scheme to use in the URL instead of http or https, e.g. for apps that download files from their own links. The server still uses http or https")
+		c.Flags().BoolVarP(&app.Flags.WithName, "with-name", "w", false, "add the name of the file to the end of the URL")
+	}
 	// Receive command flags
 	receiveCmd.PersistentFlags().StringVarP(&app.Flags.Output, "output", "o", "", "output directory for receiving files")
 }

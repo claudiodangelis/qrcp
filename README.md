@@ -120,6 +120,8 @@ qrcp --config /tmp/qrcp.yml MyDocument.pdf
 | `tls-cert`  | String  | Path to the TLS certificate. Used only when `secure: true`.                    |
 | `tls-key`   | String  | Path to the TLS key. Used only when `secure: true`.                            |
 | `reversed`  | Bool    | Print the QR code black on white. Defaults to `false`.                         |
+| `scheme`    | String  | Scheme to use in the URL of `send` instead of `http` or `https`.               |
+| `withName`  | Bool    | Add the name of the file to the end of the URL of `send`. Defaults to `false`. |
 
 ### Environment Variables
 All configuration parameters can also be set via environment variables prefixed with `QRCP_`:
@@ -165,6 +167,14 @@ Enable secure transfers with HTTPS by providing a TLS certificate and key:
 ```sh
 qrcp --tls-cert /path/to/cert.pem --tls-key /path/to/cert.key MyDocument.pdf
 ```
+
+### Links for Other Apps
+Some apps download files from their own kind of link, which they recognize by the scheme at the start of the URL, and some need the URL to end with the name of the file. For example, the Zepp app installs watch faces on Amazfit watches from QR codes of links like `zpkd1://host/path/watchface.zpk`. When sending, `--scheme` puts another scheme in the URL instead of `http` or `https`, and `--with-name` (or `-w`) adds the name of the file to the end of the URL:
+```sh
+qrcp --scheme zpkd1 -w watchface.zpk
+# zpkd1://192.168.1.10:8080/send/abc/watchface.zpk
+```
+`--scheme` only changes the URL: the server still uses HTTP, or HTTPS with `--secure`, so the app must download the file with it. The two flags can also be used on their own: with `-w` only, the URL is `http://192.168.1.10:8080/send/abc/watchface.zpk`. The name of the file can be read by anyone who sees the URL or the QR code.
 
 ---
 

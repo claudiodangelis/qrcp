@@ -17,6 +17,8 @@ type Flags struct {
 	TlsKey            string
 	Output            string
 	Reversed          bool
+	Scheme            string
+	WithName          bool
 }
 
 type App struct {

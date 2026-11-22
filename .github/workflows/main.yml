@@ -68,6 +68,34 @@ jobs:
           if [[ "${TEST_CONTENT}" != "${CURL_OUTPUT}" ]]; then
               exit 1
           fi
+      - name: Check --scheme and --with-name on *nix
+        if: runner.os != 'Windows'
+        timeout-minutes: 2
+        run: |
+          go build
+          INTERFACE=lo
+          if [[ "$(uname)" == "Darwin" ]]; then
+              INTERFACE=lo0
+          fi
+          TEST_FILE="/tmp/watch face.zpk"
+          echo hello > "$TEST_FILE"
+          ./qrcp -i $INTERFACE -p 1608 --path test --scheme zpkd1 -w "$TEST_FILE" > qrcp.out 2>&1 &
+          QRCP_PID=$!
+          sleep 2
+          URL=$(grep -o 'zpkd1://[^ ]*' qrcp.out | head -1)
+          if [[ "$URL" != "zpkd1://127.0.0.1:1608/send/test/watch%20face.zpk" ]]; then
+              kill $QRCP_PID || true
+              cat qrcp.out
+              echo "unexpected URL: $URL"
+              exit 1
+          fi
+          # The server still uses http
+          CURL_OUTPUT=$(curl -s "http://${URL#zpkd1://}")
+          kill $QRCP_PID || true
+          if [[ "$CURL_OUTPUT" != "hello" ]]; then
+              echo "unexpected content: $CURL_OUTPUT"
+              exit 1
+          fi
       - name: Run tests on Windows
         if: runner.os == 'Windows'
         run: |

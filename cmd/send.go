@@ -68,6 +68,8 @@ qrcp /path/file1.gif /path/file2.gif
 qrcp /path/directory
 # Send file.gif by creating a webserver on port 8080
 qrcp --port 8080 /path/file.gif
+# Send watchface.zpk with a URL like zpkd1://192.168.1.10:8080/send/abc/watchface.zpk
+qrcp --scheme zpkd1 --with-name watchface.zpk
 `,
 	Args: cobra.MinimumNArgs(1),
 	RunE: sendCmdFunc,
