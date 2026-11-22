@@ -148,6 +148,9 @@ func applyFlags(cfg *Config, flags application.Flags) {
 	if flags.FQDN != "" {
 		cfg.FQDN = flags.FQDN
 	}
+	if flags.OutputDir != "" {
+		cfg.Output = flags.OutputDir
+	}
 	if flags.Output != "" {
 		cfg.Output = flags.Output
 	}

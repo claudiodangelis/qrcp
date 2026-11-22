@@ -1,3 +1,5 @@
 qr-filetransfer
 qrcp
 dist
+._*
+.DS_Store

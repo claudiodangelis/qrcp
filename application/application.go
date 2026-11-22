@@ -16,6 +16,8 @@ type Flags struct {
 	TlsCert           string
 	TlsKey            string
 	Output            string
+	OutputDir         string
+	FileName          string
 	Reversed          bool
 }
 
