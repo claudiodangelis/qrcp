@@ -87,3 +87,56 @@ func TestLoadWithoutExtension(t *testing.T) {
 		t.Errorf("the flags or the environment were not applied: %+v", cfg)
 	}
 }
+
+func TestLoadReadsSchemeAndWithName(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "config.yml")
+	if err := os.WriteFile(path, []byte("scheme: zpkd1\nwithName: true\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	cfg, err := Load(appWithConfig(path))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.Scheme != "zpkd1" || !cfg.WithName {
+		t.Errorf("unexpected configuration %+v", cfg)
+	}
+}
+
+func TestLoadAppliesSchemeAndWithNameFlags(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "config.yml")
+	if err := os.WriteFile(path, []byte("scheme: zpkd1\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	app := appWithConfig(path)
+	app.Flags.Scheme = "custom"
+	app.Flags.WithName = true
+	cfg, err := Load(app)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.Scheme != "custom" || !cfg.WithName {
+		t.Errorf("the flags were not applied: %+v", cfg)
+	}
+}
+
+func TestLoadReadsSchemeAndWithNameFromEnvironment(t *testing.T) {
+	t.Setenv("QRCP_SCHEME", "zpkd1")
+	t.Setenv("QRCP_WITHNAME", "true")
+	cfg, err := Load(appWithConfig(filepath.Join(t.TempDir(), "config.yml")))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.Scheme != "zpkd1" || !cfg.WithName {
+		t.Errorf("unexpected configuration %+v", cfg)
+	}
+}
+
+func TestSchemeAndWithNameDefaults(t *testing.T) {
+	cfg, err := Load(appWithConfig(filepath.Join(t.TempDir(), "config.yml")))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.Scheme != "" || cfg.WithName {
+		t.Errorf("unexpected defaults %+v", cfg)
+	}
+}

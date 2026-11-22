@@ -16,6 +16,7 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 	"sync"
@@ -33,6 +34,10 @@ type Server struct {
 	BaseURL string
 	// SendURL is the URL used to send the file
 	SendURL string
+	// sendURLPrefix is SendURL without the name of the file
+	sendURLPrefix string
+	// withName adds the name of the file to the end of SendURL
+	withName bool
 	// ReceiveURL is the URL used to Receive the file
 	ReceiveURL string
 	instance   *http.Server
@@ -105,7 +110,40 @@ func (s *Server) Send(p body.Body) {
 	s.body = p
 	s.sendRoute.Do(func() {
 		s.mux.HandleFunc("/send/"+s.path, s.sendHandler)
+		if s.withName {
+			s.mux.HandleFunc("/send/"+s.path+"/", s.namedSendHandler)
+		}
 	})
+	s.SendURL = s.sendURLPrefix
+	if s.withName {
+		s.SendURL += "/" + url.PathEscape(p.Filename)
+	}
+}
+
+// namedSendHandler sends the file when the URL ends with its name. The name is
+// checked here, and not by the route, because Send can change the file.
+func (s *Server) namedSendHandler(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/send/"+s.path+"/"+s.body.Filename {
+		http.NotFound(w, r)
+		return
+	}
+	s.sendHandler(w, r)
+}
+
+// validScheme matches a URL scheme, as defined by RFC 3986
+var validScheme = regexp.MustCompile(`^[A-Za-z][A-Za-z0-9+.-]*$`)
+
+// sendScheme returns the scheme to use in SendURL: custom, if set, or else
+// protocol. A trailing "://" is ignored.
+func sendScheme(custom, protocol string) (string, error) {
+	if custom == "" {
+		return protocol, nil
+	}
+	scheme := strings.TrimSuffix(custom, "://")
+	if !validScheme.MatchString(scheme) {
+		return "", fmt.Errorf(`invalid scheme %q: it must start with a letter, followed by letters, digits, "+", "-" or "."`, custom)
+	}
+	return scheme, nil
 }
 
 // startSessionRequest admits a request of the browser the file is sent to.
@@ -194,7 +232,16 @@ func (s *Server) Shutdown() {
 // New instance of the server
 func New(cfg *config.Config) (*Server, error) {
 
-	app := &Server{mux: http.NewServeMux()}
+	app := &Server{mux: http.NewServeMux(), withName: cfg.WithName}
+	// The custom scheme only changes SendURL: the server uses http or https
+	protocol := "http"
+	if cfg.Secure {
+		protocol = "https"
+	}
+	scheme, err := sendScheme(cfg.Scheme, protocol)
+	if err != nil {
+		return nil, err
+	}
 	// Get the address of the configured interface to bind the server to.
 	// If `bind` configuration parameter has been configured, it takes precedence
 	bind, err := util.GetInterfaceAddress(cfg.Interface)
@@ -241,13 +288,9 @@ func New(cfg *config.Config) (*Server, error) {
 		hostname = fmt.Sprintf("%s:%d", cfg.FQDN, port)
 	}
 	// Set URLs
-	protocol := "http"
-	if cfg.Secure {
-		protocol = "https"
-	}
 	app.BaseURL = fmt.Sprintf("%s://%s", protocol, hostname)
-	app.SendURL = fmt.Sprintf("%s/send/%s",
-		app.BaseURL, path)
+	app.sendURLPrefix = fmt.Sprintf("%s://%s/send/%s", scheme, hostname, path)
+	app.SendURL = app.sendURLPrefix
 	app.ReceiveURL = fmt.Sprintf("%s/receive/%s",
 		app.BaseURL, path)
 	// Create a server

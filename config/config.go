@@ -29,6 +29,8 @@ type Config struct {
 	FQDN      string `yaml:",omitempty"`
 	Output    string `yaml:",omitempty"`
 	Reversed  bool   `yaml:",omitempty"`
+	Scheme    string `yaml:",omitempty"`
+	WithName  bool   `yaml:",omitempty"`
 }
 
 var interactive bool = false
@@ -116,6 +118,8 @@ func fromViper(v *viper.Viper) Config {
 		FQDN:      v.GetString("fqdn"),
 		Output:    v.GetString("output"),
 		Reversed:  v.GetBool("reversed"),
+		Scheme:    v.GetString("scheme"),
+		WithName:  v.GetBool("withName"),
 	}
 }
 
@@ -153,6 +157,12 @@ func applyFlags(cfg *Config, flags application.Flags) {
 	}
 	if flags.Reversed {
 		cfg.Reversed = true
+	}
+	if flags.Scheme != "" {
+		cfg.Scheme = flags.Scheme
+	}
+	if flags.WithName {
+		cfg.WithName = true
 	}
 }
 
