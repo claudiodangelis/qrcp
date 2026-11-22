@@ -55,8 +55,8 @@ type Server struct {
 	mu sync.Mutex
 	// sessionID identifies the browser the file is sent to
 	sessionID string
-	// activeRequests counts the requests of that browser in progress. The
-	// server stops when it drops to zero.
+	// activeRequests counts the non-HEAD requests of that browser in progress.
+	// The server stops when it drops to zero.
 	activeRequests int
 }
 
@@ -279,15 +279,27 @@ func New(cfg *config.Config) (*Server, error) {
 	// Create handlers
 	// Send handler (sends file to caller)
 	app.sendHandler = func(w http.ResponseWriter, r *http.Request) {
-		// Without keep-alive, the file is sent to the first browser that
-		// connects, which gets a cookie, and the server stops when that
-		// browser's requests (possibly several, for parallel chunks) are done
+		// Without keep-alive, the first non-HEAD browser request gets a
+		// session cookie. The server stops when that browser's requests
+		// (possibly several, for parallel chunks) are done.
 		if !cfg.KeepAlive && strings.HasPrefix(r.Header.Get("User-Agent"), "Mozilla") {
 			var cookieValue string
 			if rcookie, err := r.Cookie(cookieName); err == nil {
 				cookieValue = rcookie.Value
 			}
-			newID, err := app.startSessionRequest(cookieValue)
+			var newID string
+			var err error
+			if r.Method == http.MethodHead {
+				// Metadata requests must not claim or complete a download,
+				// but still respect the browser of an existing session.
+				app.mu.Lock()
+				if app.sessionID != "" && cookieValue != app.sessionID {
+					err = errMismatchingSession
+				}
+				app.mu.Unlock()
+			} else {
+				newID, err = app.startSessionRequest(cookieValue)
+			}
 			switch {
 			case errors.Is(err, errMismatchingSession):
 				http.Error(w, err.Error(), http.StatusBadRequest)
@@ -300,7 +312,9 @@ func New(cfg *config.Config) (*Server, error) {
 				if newID != "" {
 					http.SetCookie(w, &http.Cookie{Name: cookieName, Value: newID})
 				}
-				defer app.endSessionRequest()
+				if r.Method != http.MethodHead {
+					defer app.endSessionRequest()
+				}
 			}
 		}
 		w.Header().Set("Content-Disposition", "attachment; filename=\""+
