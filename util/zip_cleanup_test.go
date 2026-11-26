@@ -59,7 +59,7 @@ func TestZipFilesKeepsCompletedArchive(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.Remove(name)
+	defer func() { _ = os.Remove(name) }()
 	if filepath.Dir(name) != tmp || !strings.HasSuffix(name, ".zip") {
 		t.Fatalf("unexpected archive name %q", name)
 	}
@@ -67,7 +67,7 @@ func TestZipFilesKeepsCompletedArchive(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer zr.Close()
+	defer func() { _ = zr.Close() }()
 	if len(zr.File) != 1 || zr.File[0].Name != "plain.txt" {
 		t.Fatalf("entries=%v", zr.File)
 	}
@@ -75,7 +75,7 @@ func TestZipFilesKeepsCompletedArchive(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer r.Close()
+	defer func() { _ = r.Close() }()
 	data, err := io.ReadAll(r)
 	if err != nil || string(data) != "content" {
 		t.Fatalf("data=%q err=%v", data, err)
