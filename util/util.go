@@ -39,13 +39,29 @@ func ZipFiles(files []string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	archiveName := tmpfile.Name()
+	complete := false
+	defer func() {
+		if !complete {
+			// Close the ZIP writer before its file, then remove the partial
+			// archive. Preserve the original error returned to the caller.
+			if zip.Writer != nil {
+				_ = zip.Writer.Close()
+			}
+			if tmpfile != nil {
+				_ = tmpfile.Close()
+			}
+			_ = os.Remove(archiveName)
+		}
+	}()
 	if err := tmpfile.Close(); err != nil {
 		return "", err
 	}
 	if err := os.Rename(tmpfile.Name(), tmpfile.Name()+".zip"); err != nil {
 		return "", err
 	}
-	tmpfile, err = os.OpenFile(tmpfile.Name()+".zip", os.O_RDWR, 0644)
+	archiveName += ".zip"
+	tmpfile, err = os.OpenFile(archiveName, os.O_RDWR, 0644)
 	if err != nil {
 		return "", err
 	}
@@ -81,6 +97,7 @@ func ZipFiles(files []string) (string, error) {
 		return "", err
 	}
 
+	complete = true
 	return zip.Name, nil
 }
 
