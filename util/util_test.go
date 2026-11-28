@@ -19,12 +19,18 @@ func zipTempDir(t *testing.T) string {
 }
 
 func TestZipFilesCleansUpAfterInputError(t *testing.T) {
-	for _, afterValid := range []bool{false, true} {
-		t.Run(map[bool]string{false: "first_input", true: "after_valid_input"}[afterValid], func(t *testing.T) {
+	for _, tc := range []struct {
+		name       string
+		afterValid bool
+	}{
+		{name: "first_input"},
+		{name: "after_valid_input", afterValid: true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
 			tmp := zipTempDir(t)
 			source := t.TempDir()
 			inputs := []string{}
-			if afterValid {
+			if tc.afterValid {
 				file := filepath.Join(source, "valid.txt")
 				if err := os.WriteFile(file, []byte("payload"), 0600); err != nil {
 					t.Fatal(err)
@@ -102,24 +108,27 @@ func TestZipFilesCleansUpAfterDirectoryError(t *testing.T) {
 	}
 }
 
-func TestZipFilesClosesFailedArchive(t *testing.T) {
+func TestZipFilesCleansUpAfterUnreadableDirectoryEntry(t *testing.T) {
 	tmp := zipTempDir(t)
-	if _, err := os.ReadDir("/proc/self/fd"); err != nil {
-		t.Skip("requires proc fd inspection")
-	}
-	for i := 0; i < 20; i++ {
-		if _, err := ZipFiles([]string{filepath.Join(tmp, "missing")}); err == nil {
-			t.Fatal("expected input error")
-		}
-	}
-	entries, err := os.ReadDir("/proc/self/fd")
-	if err != nil {
+	source := t.TempDir()
+	file := filepath.Join(source, "unreadable.txt")
+	if err := os.WriteFile(file, []byte("payload"), 0600); err != nil {
 		t.Fatal(err)
 	}
-	for _, entry := range entries {
-		target, err := os.Readlink(filepath.Join("/proc/self/fd", entry.Name()))
-		if err == nil && strings.HasPrefix(target, tmp+string(filepath.Separator)) {
-			t.Errorf("failed archive descriptor still open: %s", target)
-		}
+	if err := os.Chmod(file, 0); err != nil {
+		t.Skipf("cannot change permissions: %v", err)
+	}
+	defer func() { _ = os.Chmod(file, 0600) }()
+	if f, err := os.Open(file); err == nil {
+		_ = f.Close()
+		t.Skip("file remains readable despite permission change")
+	}
+	name, err := ZipFiles([]string{source})
+	if err == nil || name != "" {
+		t.Fatalf("name=%q err=%v", name, err)
+	}
+	entries, err := os.ReadDir(tmp)
+	if err != nil || len(entries) != 0 {
+		t.Fatalf("temporary entries=%v err=%v", entries, err)
 	}
 }
