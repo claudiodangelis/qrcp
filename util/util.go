@@ -33,72 +33,50 @@ func Expand(input string) string {
 }
 
 // ZipFiles and return the resulting zip's filename
-func ZipFiles(files []string) (string, error) {
-	zip := new(archivex.ZipFile)
-	tmpfile, err := os.CreateTemp("", "qrcp")
+func ZipFiles(files []string) (_ string, err error) {
+	tmpfile, err := os.CreateTemp("", "qrcp-*.zip")
 	if err != nil {
 		return "", err
 	}
-	archiveName := tmpfile.Name()
-	complete := false
 	defer func() {
-		if !complete {
-			// Close the ZIP writer before its file, then remove the partial
-			// archive. Preserve the original error returned to the caller.
-			if zip.Writer != nil {
-				_ = zip.Writer.Close()
-			}
-			if tmpfile != nil {
-				_ = tmpfile.Close()
-			}
-			_ = os.Remove(archiveName)
+		if err != nil {
+			_ = tmpfile.Close()
+			_ = os.Remove(tmpfile.Name())
 		}
 	}()
-	if err := tmpfile.Close(); err != nil {
-		return "", err
-	}
-	if err := os.Rename(tmpfile.Name(), tmpfile.Name()+".zip"); err != nil {
-		return "", err
-	}
-	archiveName += ".zip"
-	tmpfile, err = os.OpenFile(archiveName, os.O_RDWR, 0644)
-	if err != nil {
-		return "", err
-	}
+
+	zip := new(archivex.ZipFile)
 	if err := zip.CreateWriter(tmpfile.Name(), tmpfile); err != nil {
 		return "", err
 	}
-
 	for _, filename := range files {
-		fileinfo, err := os.Stat(filename)
-		if err != nil {
+		if err := addToZip(zip, filename); err != nil {
 			return "", err
 		}
-		if fileinfo.IsDir() {
-			if err := zip.AddAll(filename, true); err != nil {
-				return "", err
-			}
-		} else {
-			file, err := os.Open(filename)
-			if err != nil {
-				return "", err
-			}
-			defer func() { _ = file.Close() }()
-			if err := zip.Add(filename, file, fileinfo); err != nil {
-				return "", err
-			}
-		}
 	}
-
 	if err := zip.Writer.Close(); err != nil {
 		return "", err
 	}
 	if err := tmpfile.Close(); err != nil {
 		return "", err
 	}
+	return tmpfile.Name(), nil
+}
 
-	complete = true
-	return zip.Name, nil
+func addToZip(zip *archivex.ZipFile, filename string) error {
+	fileinfo, err := os.Stat(filename)
+	if err != nil {
+		return err
+	}
+	if fileinfo.IsDir() {
+		return zip.AddAll(filename, true)
+	}
+	file, err := os.Open(filename)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = file.Close() }()
+	return zip.Add(filename, file, fileinfo)
 }
 
 // GetRandomURLPath returns a random string of 4 alphanumeric characters
